@@ -2,7 +2,7 @@
 
 in-path fzf || return 0
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll,ctrl-p:toggle-preview,alt-w:change-preview-window(50%|60%|40%)' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
+FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll,alt-p:toggle-preview,alt-w:change-preview-window(50%|60%|40%)' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
@@ -29,13 +29,28 @@ _fzf_comprun () {
   esac
 }
 
+fzf-query-history () {
+  echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
+}
+
+fzf-preview-file() {
+  fzf-preview-header "$1"
+  ( echo "Type: $(file --brief --mime "$1")"
+    stat "$1"
+    echo "RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')"
+  ) | tr -s " " | column -t -d -s":" -l2 -o":" -C right
+}
+
+fzf-preview-bat() {
+  bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
+}
+
 fzf-preview-header() {
   [ -z "$1" ] || echo "$1"
-  printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
+  printf "%*s" ${FZF_PREVIEW_COLUMNS:-${#1}} | sed 's/ /┈/g'
   echo
 }
-# must be exported for "fzf --preview .." executed in sub shell
-export -f fzf-preview-header
+export -f fzf-preview-header fzf-preview-bat fzf-preview-file fzf-query-history
 
 fzf-fn() {
   local _re _defs
@@ -63,6 +78,7 @@ fzf-fn() {
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
       fzf --bind "enter:become(echo declare -f {1})" \
+          $(fzf-query-history) \
           --list-label " Bash function(s) " \
           --list-border rounded \
           --no-sort \
@@ -79,6 +95,26 @@ fzf-fn() {
 }
 complete -A function fzf-fn
 
+if in-path locate ; then
+
+  fzf-locate() {
+    if [ $# -gt 0 ] ; then
+
+      plocate "$@" | \
+      fzf --border none \
+          $(fzf-query-history) \
+          --list-label " plocate $* " \
+          --preview 'fzf-preview-file {1}' \
+          --preview-label " File info " \
+          --preview-window '50%,~2:wrap'
+
+    else
+      fn-usage "<locate args>"
+    fi
+  }
+  
+fi
+
 if in-path man ; then
 
   fzf-man() {
@@ -90,6 +126,7 @@ if in-path man ; then
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
     fzf --border-label "Manual pages" \
+        $(fzf-query-history) \
         --multi \
         --query "$1" \
         --prompt='man> ' \
@@ -112,10 +149,10 @@ fzf-ps() {
   local _ps
   _ps="ps aux --sort=-%cpu | column -t -l 11"
   eval "$_ps" | \
-  fzf --bind="ctrl-r:reload(eval \"$_ps\"),?:toggle-preview" \
+  fzf --bind="ctrl-r:reload(eval \"$_ps\")" \
       --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
+      $(fzf-query-history) \
       --header-lines 1 \
-      --history "$FZF_HISTORY_DIR/fps.history" \
       --hscroll-off=800 \
       --list-border none \
       --no-sort \
@@ -143,11 +180,11 @@ if in-path rg ; then
           --border-label-pos "3:bottom" \
           --color "hl:-1:underline,hl+:-1:underline:reverse" \
           --delimiter : \
-          --extended \
-          --history "$FZF_HISTORY_DIR/frg.history" \
+          --extended \ \
+          $(fzf-query-history) \
           --list-border none \
           --no-multi \
-          --preview 'bat --color=always {1} --highlight-line {2}' \
+          --preview 'fzf-preview-bat --highlight-line {2} {1}' \
           --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
           --smart-case
 
@@ -166,11 +203,11 @@ fzf-apply() {
     while [ 1 ] ; do
 
       eval "_selected=($(fzf --multi \
-                             --history "$FZF_HISTORY_DIR/fselect.history" \
+                             $(fzf-query-history) \
                              --print0 \
                              --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                              --border-label-pos "2:bottom" \
-                             --preview 'file -i {1}; echo; ls -ld {1}' | \
+                             --preview 'fzf-preview-file {1}' | \
                          xargs -0 -i@ echo '"@"'))"
 
       [ ${#_selected[@]} -gt 0 ] || return 0
@@ -189,15 +226,15 @@ Sample:
 fzf-units() {
   systemctl --plain | \
   sed '/^$/,$d' | \
-  fzf --bind "enter:become(echo systemctl status,restart,stop {}),?:toggle-preview" \
-      --border-label " Systemd Units. \"?\" toggles preview window. " \
+  fzf --bind "enter:become(echo systemctl status,restart,stop {+1})" \
+      --border-label " Systemd Units. \"alt-p\" toggles preview window. " \
       --header-lines 1 \
-      --history "$FZF_HISTORY_DIR/funits.history" \
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status {1} --lines 100; fzf-preview-header; echo; systemctl cat {1}" \
+      --preview "systemctl status --lines 100 -- {1}; fzf-preview-header; systemctl cat -- {1}" \
       --preview-label " Unit status, recent journal entries and spec " \
       --query "$1" \
+      $(fzf-query-history) \
       --reverse
 }
