@@ -26,6 +26,16 @@ find_last() {
 }
 complete -A directory find_last
 
+fn-usage() {
+  echo -e "Usage: ${FUNCNAME[1]} $1"
+  return 2
+}
+
+fn-error() {
+  echo -e "${FUNCNAME[1]}: $1" >&2
+  return 1
+}
+
 h() {
   local _cnt _color
   if [[ "$1" =~ ^-(a|-all)$ ]] ; then
@@ -83,6 +93,14 @@ history_cleanup() {
   true
 }
 
+in-path() {
+  type -fp "$1" >/dev/null
+}
+
+is-fn() {
+  declare -F "$1" >/dev/null
+}
+
 lm() {
   l --color=always "$@" |& m -p lm
 }
@@ -132,6 +150,29 @@ if in-path keepassxc-cli ; then
   }
   
 fi
+
+new-alias() {
+  if [ $# -eq 2 ] ; then
+    
+    local _cmd
+    _cmd="${2%% *}"
+  
+    if in-path "$_cmd" || is-fn "$_cmd" ; then
+    
+      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='\\$2'" || eval "alias -- $1='$2'"
+
+    else
+
+      return 0
+
+    fi
+
+  else
+
+    fn-usage "<alias> \"<cmd>\""
+    
+  fi
+}
 
 parse_git_branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'

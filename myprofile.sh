@@ -2,53 +2,12 @@
 #
 # Load all myprofile scripts in order defined in "sequence" file.
 #
-# To load all myprofile scripts during initialization of interactive shell processes the symbolic
-# link "/etc/profile.d/zz-myprofile.sh" must point to this script. Might be created by calling this
-# script with argument "--install".
+# To load all myprofile scripts during initialization of interactive shell processes
+# - for all logins the symbolic link "/etc/profile.d/zz-myprofile.sh" or
+# - "~/.bash_profile" sources this script
 #
-# myprofile() might be called during bash session on demand to reload a (maybe updated) myprofile
-# script.
-
-in-path() {
-  type -fp "$1" >/dev/null
-}
-
-is-fn() {
-  declare -F "$1" >/dev/null
-}
-
-fn-usage() {
-  echo -e "Usage: ${FUNCNAME[1]} $1"
-  return 2
-}
-
-fn-error() {
-  echo -e "${FUNCNAME[1]}: $1" >&2
-  return 1
-}
-
-new-alias() {
-  if [ $# -eq 2 ] ; then
-    
-    local _cmd
-    _cmd="${2%% *}"
-  
-    if in-path "$_cmd" || is-fn "$_cmd" ; then
-    
-      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='\\$2'" || eval "alias -- $1='$2'"
-
-    else
-
-      return 0
-
-    fi
-
-  else
-
-    fn-usage "<alias> \"<cmd>\""
-    
-  fi
-}
+# During bash session myprofile() might be called on demand to (re)load (maybe updated) myprofile
+# scripts.
 
 myprofile() {
   local _src _script _verbose
@@ -56,16 +15,18 @@ myprofile() {
   _src="$(realpath "${BASH_SOURCE[0]}")"
 
   case "$1" in
-       -h|--help) fn-usage "[--help | --install | --verbose [{script}]]"; return 0;;
+       -h|--help) echo "Usage: $FUNCNAME [--help | --install | --verbose [{script}]]";
+                  return 0;;
     -i|--install) if [[ "$(id -u)" == "0" ]] ; then
                     ln -sfv "$_src" /etc/profile.d/zz-myprofile.sh
-                    return 0
                   else
-                    fn-error "--install requires root permission!"
-                    return 1
-                  fi;;
+                    sed -i '~$_src~d' ~/.bash_profile
+                    echo -e "\nsource $_src" >>~/.bash_profile
+                  fi
+                  return 0;;
     -v|--verbose) _verbose=echo; shift;;
-              -*) fn-error "Unsupported option: $1"; return 1;;
+              -*) echo "Unsupported option: $1" >&2;
+                  return 1;;
   esac
 
   for _script in $([ $# -gt 0 ] && echo "$@" || cat "${_src%/*}/$FUNCNAME.sequence") ; do
@@ -75,7 +36,7 @@ myprofile() {
 
     if ! source "${_src%/*}/$_script" ; then
       
-      fn-error "Load of myprofile script \"$_script\" has failed!"
+      echo "Load of myprofile script \"$_script\" has failed!" >&2
       return 1
       
     fi
