@@ -1,7 +1,7 @@
 common
 env
-functions
 aliases
+functions
 fzf
 packages
 podman
