@@ -5,11 +5,11 @@ in-path ffmpeg || return 0
 new-alias ffmpeg "ffmpeg -hide_banner"
 new-alias ffprobe "ffprobe -hide_banner"
 
-_ffprobes_filter() {
+_ffprobes-filter() {
   find "$1" -type f -printf '%P\0' | xargs -r0 file -i | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
 }
 
-_ffprobes_all() {
+_ffprobes-all() {
   find "$1" -type f -printf '%P\n'
 }
 
@@ -32,14 +32,14 @@ ffprobes() {
 
     local -a _selected
 
-    eval "_selected=($($([ -n "$_all" ] && echo _ffprobes_all || echo _ffprobes_filter) "$1" | \
+    eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                        sort | \
                        fzf --bind 'alt-p:execute-silent(vlc {1})' \
                            --border none \
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview 'echo {}; fzf_preview_hrule; ffprobe -hide_banner {}' \
+                           --preview 'echo {}; fzf-preview-hrule; ffprobe -hide_banner {}' \
                            --preview-label " ffprobe output (alt-p: play curr. item) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
