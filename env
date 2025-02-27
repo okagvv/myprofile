@@ -6,23 +6,36 @@ fi
 
 cleanup-path
 
-export HISTTIMEFORMAT="%m-%d %T "
-export HISTSIZE=1000
+export BAT_THEME="Coldark-Cold"
+export DELTA_FEATURES=default
 export HISTCONTROL=ignoreboth:erasedups
-export EDITOR=vim
+export HISTSIZE=1000
+export HISTTIMEFORMAT="%m-%d %T "
 export LESS='-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t'
 export LESSBINFMT='*u\%X'
 export LESSCHARSET='utf-8'
 export LESSKEY_SYSTEM=/etc/lesskey
-export SYSTEMD_COLORS=0
 export LIBVIRT_DEFAULT_URI=qemu:///system
-export BAT_THEME="Coldark-Cold"
 export PROMPT_DIRTRIM=5
 export PS4='+ ${FUNCNAME[0]} $LINENO: '
+export SUDO_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass
+export SYSTEMD_COLORS=0
 
-if in-path starship && [ -e ~/.config/starship.toml ] ; then
+if [ -d ~/.emacs.d ] ; then
+
+  export ALTERNATE_EDITOR="emacs-gtk+x11"
+  export EDITOR="emacsclient -n"
+  export GIT_EDITOR="emacsclient"
+
+else
+
+  export EDITOR=vim
+
+fi
+
+if in-path starship && [ -s ~/.config/starship.toml ] ; then
   
-  eval "$(starship init "$(basename $SHELL)")"
+  eval "$(starship init "${SHELL##*/}")"
   
 else
   

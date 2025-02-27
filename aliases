@@ -48,11 +48,6 @@ if [[ "$(id -u)" == "0" ]] ; then
   new-alias iotop 'iotop -a -c -o -P'
   new-alias myiostat 'iostat -xmt 1'
   
-else
-
-  new-alias journalctl 'journalctl --user'
-  new-alias systemctl 'systemctl --user'
-
 fi
 
 if [ -s ~/.fetchmailrc ] ; then
