@@ -58,9 +58,12 @@ uriencode() {
   gojq -nr --arg v "$1" '$v|@uri';
 }
 
+xtrace_fn=
 xtrace() {
-  # Enable xtrace until return from current block. Insert a line like
-  # eval "$(xtrace)"
-  # starts the trace with next line until current block ends.
-  echo "set -x; trap 'set +x; trap - RETURN' RETURN"
+  # Enable xtrace until return from calling function. 
+  xtrace_fn="${FUNCNAME[1]}"
+  [ -n "$xtrace_fn" ] || return 0
+  echo "-===- Start trace of $xtrace_fn() -===-"
+  trap 'if [[ "$FUNCNAME" == "$xtrace_fn" ]] ; then set +x; trap - RETURN; xtrace_fn=; echo "-===- Stopped trace of $xtrace_fn() -===-"; fi' RETURN
+  set -x
 }
