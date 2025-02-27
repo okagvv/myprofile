@@ -50,7 +50,7 @@ RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1
 EOF
 
   case "$_mime" in
-    *audio*|*video*) fzf-preview-header; ffprobe "$1";;
+    *audio*|*video*) fzf-preview-header; ffprobes --yaml "$1";;
     *rpm*) fzf-preview-header; rpm -qip "$1";;
   esac
 }

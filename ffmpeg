@@ -10,28 +10,56 @@ in-path ffmpeg || return 0
 }
 
 ffprobes() {
-  local _f
-  for _f in "$@" ; do
+  local _input _yaml
 
-    # files not applicable as ffprobe input are ignored silently
-    if file -i "$_f" 2>/dev/null | grep --silent -E '(audio|video)/' ; then
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [--yaml] file ..";;
+      -y|--yaml) _yaml=y;;
+              *) break;;
+    esac
+    shift
+  done
 
-      ffprobe "$_f"
+  for _input in "$@" ; do
+
+    if file -i "$_input" 2>/dev/null | grep --silent -E '(audio|video)/' ; then
+
+      if [ -n "$_yaml" ] ; then
+
+        ffprobe -hide_banner -loglevel quiet -of json -pretty -show_error \
+                -show_entries "stream=index,codec_long_name,sample_aspect_ratio,display_aspect_ratio,width,height,channel_layout,channels,avg_frame_rate,profile,pix_fmt,level,bit_rate,duration:stream_tags=language,GENERATOR:format=format_long_name,duration,size,bit_rate:format_tags:chapter=start_time,end_time:chapter_tags:stream_disposition=default" \
+                -i  "$_input" | \
+        gojq --yaml-output '[ .format, .streams[], .programs[], .chapters[] ]' | \
+        sed -r '/end_time:/ { N; s/\n// };s/(end_time: "[^"]+") +(.+)$/\2 \1/' | \
+        bat --language yaml --color always --paging never --style header-filename --file-name "$_input"
+        echo
+        
+      else
+
+        ffprobe -i "$_input" |& grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
+
+      fi
+
+    else
+
+      fn-error "No audio or video file: $_input"
 
     fi
-
-  done 2>&1 | grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
+  done
 }
+export -f ffprobes
 
 fzf-ffprobes() (
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
   # list input. Use of --all avoids this but may add files not supported by ffprobe a/o vlc.
 
-  while [[ "$1" =~ ^-+[[:alnum:]]+$ ]] ; do
+  while [ $# -gt 0 ] ; do
     case "$1" in
        -a|--all) _all=y;;
       -h|--help) fn-usage "[--help] <files> | [--all] [--play] <dir> [<query>]"; return 0;;
       -p|--play) _cmd="vlc";;
+              *) break;;
     esac
     shift
   done
@@ -39,11 +67,11 @@ fzf-ffprobes() (
   if [[ $# -gt 0 && -d "$1" ]] ; then
 
     _ffprobes-all() {
-      find "$1" -type f -printf '%P\n'
+      find "$1" -type f -printf '%p\n'
     }
 
     _ffprobes-filter() {
-      find "$1" -type f -printf '%P\0' | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
+      find "$1" -type f -printf '%p\0' | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
     }
 
     eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
