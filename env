@@ -44,7 +44,7 @@ if [ -n "$PS1" ] ; then
 
   else
 
-    export PS1="\$? \u@\h:\$(abbr-pwd) (\e[31m\$(git branch --show-current 2>/dev/null || echo ?)\e[0m) \$ "
+    export PS1="\$? \u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
 
   fi
 fi
