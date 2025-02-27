@@ -73,14 +73,6 @@ f() {
 }
 complete -A function f
 
-ffprobes() {
-  local _f
-  for _f in "$@" ; do
-    ffprobe "$_f"
-  done 2>&1 | \
-  grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
-}
-
 find_last() {
   find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
   sed -r 's/(:[0-9]{2})\.[0-9]+~/\1~/' | \
@@ -202,11 +194,18 @@ funits() {
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status {1} --lines 100; printf %*s \$FZF_PREVIEW_COLUMNS | tr ' ' =; echo; systemctl cat {1}" \
+      --preview "systemctl status {1} --lines 100; fzf_preview_hrule; echo; systemctl cat {1}" \
       --preview-label " Unit status, recent journal entries and spec " \
       --query "$1" \
       --reverse
 }
+
+fzf_preview_hrule() {
+  printf "%*s" $FZF_PREVIEW_COLUMNS | tr ' ' =
+  echo
+}
+# must be exported for "fzf --preview .." executed in sub shell
+export -f fzf_preview_hrule
 
 h() {
   local _cnt _color
@@ -304,6 +303,23 @@ m() {
                   "$@"
 }
 complete -o default m
+
+myalias() {
+  if [ $# -eq 2 ] ; then
+    
+    local _cmd
+    _cmd="${2%% *}"
+  
+    in_path "$_cmd" || return 0
+    
+    [[ "$1" == "$_cmd" ]] && eval "alias $1='\\$2'" || eval "alias $1='$2'"
+
+  else
+
+    myfunusage "<alias> \"<cmd>\""
+    
+  fi
+}
 
 myjournalctl() {
   journalctl --no-hostname --output=short-iso "$@"

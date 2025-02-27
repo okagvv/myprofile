@@ -2,15 +2,12 @@
 
 alias -- -='cd -'
 alias ..='cd ..'
-alias alsamixer='alsamixer --no-color'
-alias cal='cal --three --monday --week --iso'
 alias clr='\rm -vf *~ .*~ *.o .saves-* \#*\#'
 alias df='\df --no-sync --print-type --human-readable --portability --exclude-type=devtmpfs --exclude-type=overlay --total'
 alias dmesg='\dmesg --ctime --decode --color=always --level=emerg,alert,crit,err,warn,notice --nopager | m ++G'
 alias du='\du -xkhc --max-depth=1'
 alias failed='systemctl list-units --failed'
 alias file='\file -Pelf_phnum=1000'
-alias ffprobe='\ffprobe -hide_banner'
 alias inet='ss -f inet -napro'
 alias inetevents='inet -E'
 alias ipstat='ip -s -h -c -d address show scope global dynamic'
@@ -24,7 +21,6 @@ alias l='/bin/ls --format=long --classify --all --color=auto --time-style="+%F %
 alias lsblk='\lsblk --tree --output NAME,MAJ:MIN,HOTPLUG,DISC-GRAN,DISC-MAX,RM,RO,SIZE,TYPE,FSTYPE,LABEL,PATH,MOUNTPOINT'
 alias mounted='findmnt -A -o TARGET,SOURCE,FSTYPE,SIZE,USE%'
 alias origin='cd "$(git remote get-url --push origin)"'
-alias pstree='\pstree --unicode --arguments --long --uid-changes --show-pids --security-context --thread-names --ns-changes --show-pgids'
 alias rmemptydir='find . -empty -type d -print0 | xargs -r -0 rmdir --verbose'
 alias remotes='git remote -v | cut -f1 -d"(" | uniq | column -t'
 alias rsyncp='nice ionice -c2 -n7 rsync --archive --whole-file --backup --progress --human-readable --itemize-changes --hard-links'
@@ -32,29 +28,33 @@ alias rsyncpanon='rsyncp --no-perms --no-owner --no-group'
 alias sane='stty sane'
 alias sysmounted='systemctl --type mount'
 alias tig='env TERM=xterm tig'
-alias trans2de='\trans -t de'
-alias trans2en='\trans -t en'
 alias vi='env TERM=xterm vim'
 
-type -fP dfc >/dev/null      && alias dfc='dfc -WfsdTw -q mount'
-type -fP starship >/dev/null && alias st='eval "$(starship init bash)"'
-type -fP tmux >/dev/null     && alias tmux='tmux -2'
-type -fP tree >/dev/null     && alias tree='\tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
+myalias alsamixer 'alsamixer --no-color'
+myalias cal 'cal --three --monday --week --iso'
+myalias pstree 'pstree --unicode --arguments --long --uid-changes --show-pids --security-context --thread-names --ns-changes --show-pgids'
+myalias dfc 'dfc -WfsdTw -q mount'
+myalias st 'eval "$(starship init bash)"'
+myalias tmux 'tmux -2'
+myalias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
+myalias trans2de 'trans -t de'
+myalias trans2en 'trans -t en'
 
 if [[ "$(id -u)" == "0" ]] ; then
 
-  alias avctoday='ausearch -ts today -m avc'
-  alias avcyesterday='ausearch -ts yesterday -m avc'
-  alias avcrecent='ausearch -ts recent -m avc'
   alias boot_blame='systemd-analyze blame'
   alias boot_times='systemd-analyze plot | display -'
-  alias dstat='\dstat --time --load --vmstat --net --swap --io'
-  alias iotop='\iotop -a -c -o -P'
-  alias myiostat='iostat -xmt 1'
 
+  myalias avctoday 'ausearch -ts today -m avc'
+  myalias avcyesterday 'ausearch -ts yesterday -m avc'
+  myalias avcrecent 'ausearch -ts recent -m avc'
+  myalias dstat 'dstat --time --load --vmstat --net --swap --io'
+  myalias iotop 'iotop -a -c -o -P'
+  myalias myiostat 'iostat -xmt 1'
+  
 else
 
-  alias journalctl='journalctl --user'
+  alias journalctl='\journalctl --user'
   alias systemctl='\systemctl --user'
 
 fi
@@ -62,7 +62,7 @@ fi
 if [ -s ~/.fetchmailrc ] ; then
 
   alias imap=/usr/bin/fetchmail
-  alias imapstats='rg --color always -a " (error|querying|messages for) " ~/.fetchmail.log | grep -a -v GSSAPI | tail'
+  myalias imapstats 'rg --color always -a " (error|querying|messages for) " ~/.fetchmail.log | grep -a -v GSSAPI | tail'
   # complete imap p/1/"(`sed -r -n 's%^poll ([^ ]+) .*%\1%p' ~/.fetchmailrc | tr '\n' ' '`)"/
 
 fi
