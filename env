@@ -24,7 +24,7 @@ export SYSTEMD_COLORS=0
 
 if [ -d ~/.emacs.d ] ; then
 
-  export ALTERNATE_EDITOR="emacs-gtk+x11"
+  [ -z "$DISPLAY" ] || export ALTERNATE_EDITOR="emacs-gtk+x11"
   export EDITOR="emacsclient -n"
   export GIT_EDITOR="emacsclient"
 
@@ -34,7 +34,7 @@ else
 
 fi
 
-[ -s /usr/libexec/openssh/gnome-ssh-askpass ] && export SUDO_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass
+[[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass
 
 if [ -n "$PS1" ] ; then
 
@@ -44,7 +44,7 @@ if [ -n "$PS1" ] ; then
 
   else
 
-    export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\] (\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
+    export PS1="\$? \u@\h:\$(abbr-pwd) (\e[31m\$(git branch --show-current 2>/dev/null || echo ?)\e[0m) \$ "
 
   fi
 fi
