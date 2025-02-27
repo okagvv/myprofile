@@ -83,11 +83,14 @@ rpm-verify() {
 }
 
 # everything below
-# .. requires root permission and
+# .. requires root permission,
 [[ "$(id -u)" == "0" ]] || return 0
 
-# .. is only applicable if dnf is installed 
+# .. is only applicable if dnf is installed and
 in_path dnf || return 0
+
+# .. system not booted via rpm-ostree
+rpm-ostree status --booted 2>/dev/null && return 0
 
 rpm-freshen() {
   if [ $# -gt 0 ] ; then
