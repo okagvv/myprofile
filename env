@@ -20,20 +20,6 @@ export BAT_THEME="Coldark-Cold"
 export PROMPT_DIRTRIM=5
 export PS4='+ ${FUNCNAME[0]} $LINENO: '
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 2 --preview-label-pos 2 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll,ctrl-p:toggle-preview,alt-w:change-preview-window(50%|60%|40%)' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
-export FZF_HISTORY_DIR="$HOME/.config/fzf"
-[ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
-
-if [[ "$(id -u)" == "0" ]] ; then
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33"
-
-else
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:230,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33"
-
-fi
-
 if in-path starship && [ -e ~/.config/starship.toml ] ; then
   
   eval "$(starship init "$(basename $SHELL)")"
@@ -43,4 +29,3 @@ else
   export PS1="\$? \u@\h:\$(abbr_pwd)\[\033[31m\]\$(parse_git_branch)\[\033[00m\] \$ "
   
 fi
-

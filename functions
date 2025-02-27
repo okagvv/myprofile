@@ -1,25 +1,5 @@
 # -*- shell-script -*-
 
-_fzf_comprun() {
-  # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
-  local cmd=$1
-  shift
-
-  case "$cmd" in
-        cd) fzf --preview "tree -C -d -L 5 {} | head -200" "$@" ;;
-    export|\
-     unset) fzf --preview "eval 'echo \$'{}" "$@" ;;
-         *) fzf --preview "bat -n --color=always {}" "$@" ;;
-  esac
-}
-
-fzf_preview_hrule() {
-  printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
-  echo
-}
-# must be exported for "fzf --preview .." executed in sub shell
-export -f fzf_preview_hrule
-
 a() {
   alias "$@" | m -p "bash aliases"
 }
@@ -38,47 +18,7 @@ e() {
   printenv -0 | grep -zvE "^PS1=" | sort -z | tr '\000' '\n' | m -p "environment variables"
 }
 
-f() {
-  local _re _defs
-  local -a _fns
 
-  if [[ $# -eq 1 ]] ; then
-
-    case "$1" in
-      all) _re=".*";;
-       ~*) _re="${1#*~}";;
-        *) _re="^$1$";;
-    esac
-
-    _fns=($(declare -F | sed -r -n 's/^declare -f ([[:print:]]+)$/\1/;/'"$_re"'/p'))
-
-    if [ ${#_fns[@]} -eq 1 ] ; then
-
-      declare -f ${_fns[0]}
-
-    elif [ ${#_fns[@]} -gt 1 ] ; then
-
-      _defs="$(mktemp --suffix=.fundef)"
-      declare -f ${_fns[@]} >"$_defs"
-
-      echo ${_fns[@]} | \
-      tr ' ' '\n' | \
-      fzf --bind "enter:become(echo declare -f {1})" \
-          --list-label " Bash function(s) " \
-          --list-border rounded \
-          --no-sort \
-          --preview "awk '/^{1} \(\)/,/^\}/' $_defs" \
-          --preview-label " Function definition " \
-          --preview-window 'up,50%,+{2}+2/2,~2:wrap' || true
-
-      rm -f "$_defs"
-
-    fi
-  fi
-
-  [ ${#_fns[@]} -gt 0 ] || fn-usage "<function>|all|~regexp"
-}
-complete -A function f
 
 find_last() {
   find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
@@ -87,132 +27,6 @@ find_last() {
   sort -k2dr -k3dr
 }
 complete -A directory find_last
-
-if in-path man ; then
-
-  fman() {
-    # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
-    # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
-    # fonts referenced in some manual pages.
-    man -k . | \
-    sort | \
-    sed -r 's/\) *- */\)~/' | \
-    column -t -s"~" -l2 | \
-    fzf --border-label "Manual pages" \
-        --query "$1" \
-        --prompt='man> ' \
-        --preview-window '50%,~2:wrap' \
-        --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
-    tr -d '()' | \
-    awk '{printf "%s ", $2} {print $1}' | \
-    xargs -r man # '
-  }
-
-fi
-
-fps() {
-  # TODO: Select via option from several ps columns sets.
-  # CAUTION: Some default column widths in ps output are unbalanced. Fixing this by configuring
-  # fixed column widths causes waste of horizontal space.
-  # High --hscroll-off value ensures that a match in a long command line is visible. With "h" the
-  # effect of --hscroll-off can be toggled. In addition a preview window containg the wraped line
-  # can be toggled on demand via "?".
-  local _ps
-  _ps="ps aux --sort=-%cpu | column -t -l 11"
-  eval "$_ps" | \
-  fzf --bind="ctrl-r:reload(eval \"$_ps\"),?:toggle-preview" \
-      --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
-      --header-lines 1 \
-      --history "$FZF_HISTORY_DIR/fps.history" \
-      --hscroll-off=800 \
-      --list-border none \
-      --no-sort \
-      --preview 'echo {}' \
-      --preview-window "down:3:hidden:wrap" \
-      --query "$1" \
-      --reverse
-}
-
-if in-path rg ; then
-  
-  frg() {
-    # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
-
-    if [ $# -gt 0 ] ; then
-
-      local _editor_args
-      # It is assumed that $EDITOR is set to "vim" or "emacsclient".
-      [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
-
-      rg --color=always --hidden --line-number --no-heading --smart-case "$*" |
-      fzf --ansi \
-          --bind "enter:execute($EDITOR $_editor_args)" \
-          --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
-          --border-label-pos "3:bottom" \
-          --color "hl:-1:underline,hl+:-1:underline:reverse" \
-          --delimiter : \
-          --extended \
-          --history "$FZF_HISTORY_DIR/frg.history" \
-          --list-border none \
-          --no-multi \
-          --preview 'bat --color=always {1} --highlight-line {2}' \
-          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
-          --smart-case
-
-    else
-
-      fn-usage "<ripgrep args>"
-
-    fi
-  }
-
-fi
-
-fselect() {
-  if [ $# -gt 0 ] ; then
-
-    local -a _selected
-
-    while [ 1 ] ; do
-
-      eval "_selected=($(fzf --multi \
-                             --history "$FZF_HISTORY_DIR/fselect.history" \
-                             --print0 \
-                             --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
-                             --border-label-pos "2:bottom" \
-                             --preview 'file -i {1}; echo; ls -ld {1}' | \
-                         xargs -0 -i@ echo '"@"'))"
-
-      [ ${#_selected[@]} -gt 0 ] || return 0
-
-      "$@" "${_selected[@]}"
-
-    done
-
-  else
-
-    fn-usage "<cmd> [<args>]
-Sample:
-\$ $FUNCNAME rm -iv"
-
-  fi
-}
-
-funits() {
-  systemctl --plain | \
-  sed '/^$/,$d' | \
-  fzf --bind "enter:become(echo systemctl status,restart,stop {}),?:toggle-preview" \
-      --border-label " Systemd Units. \"?\" toggles preview window. " \
-      --header-lines 1 \
-      --history "$FZF_HISTORY_DIR/funits.history" \
-      --list-label " Systemd unit(s) " \
-      --multi \
-      --no-sort \
-      --preview "systemctl status {1} --lines 100; fzf_preview_hrule; echo; systemctl cat {1}" \
-      --preview-label " Unit status, recent journal entries and spec " \
-      --query "$1" \
-      --reverse
-}
 
 h() {
   local _cnt _color
