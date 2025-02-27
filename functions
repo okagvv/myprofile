@@ -5,11 +5,11 @@ a() {
 }
 complete -A alias a
 
-abbr_pwd() {
+abbr-pwd() {
   sed -E -e "s:^${HOME}:~:;s:^.+((/[^/]+){3})$:…\1:;s:([^/]{4})[^/]{4,}([^/]{4})/:\1…\2/:g" <<< "$PWD"
 }
 
-cleanup_path() {
+cleanup-path() {
   export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
 }
 
@@ -18,13 +18,13 @@ e() {
   printenv -0 | grep -zvE "^PS1=" | sort -z | tr '\000' '\n' | m -p "environment variables"
 }
 
-find_last() {
+find-last() {
   find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
   sed -r 's/(:[0-9]{2})\.[0-9]+~/\1~/' | \
   column -t -s~ -o'  ' | \
   sort -k2dr -k3dr
 }
-complete -A directory find_last
+complete -A directory find-last
 
 fn-usage() {
   echo -e "Usage: ${FUNCNAME[1]} $1"
@@ -48,7 +48,7 @@ h() {
   history | grep --color=never -E "${1:-.*}" | tail -$_cnt | grep --colour=$_color -E "${1:-.*}"
 }
 
-history_cleanup() {
+history-cleanup() {
   # remove sensible a/o undesired entries from bash history
   # args: "$remove_regexp" .. [-- "$keep_regexp" ..]
 
@@ -85,7 +85,7 @@ history_cleanup() {
     cat "$HISTFILE" >"$_histfile"
     HISTFILE="$_histfile"
 
-    history -s : history_cleanup
+    history -s : history-cleanup
     sleep 1
 
   fi
@@ -174,7 +174,7 @@ new-alias() {
   fi
 }
 
-parse_git_branch() {
+parse-git-branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
 
@@ -253,6 +253,6 @@ mysu() {
 }
 complete -A command -o default mysu
 
-oom_killed() {
+oom-killed() {
   myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
 }

@@ -4,7 +4,7 @@ if [[ -d $HOME/.local/bin && ! $PATH == ?(*:)$HOME/.local/bin?(:*) ]] ; then
   export PATH+=":$HOME/.local/bin"
 fi
 
-cleanup_path
+cleanup-path
 
 export HISTTIMEFORMAT="%m-%d %T "
 export HISTSIZE=1000
@@ -26,6 +26,6 @@ if in-path starship && [ -e ~/.config/starship.toml ] ; then
   
 else
   
-  export PS1="\$? \u@\h:\$(abbr_pwd)\[\033[31m\]\$(parse_git_branch)\[\033[00m\] \$ "
+  export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\]\$(parse-git-branch)\[\033[00m\] \$ "
   
 fi

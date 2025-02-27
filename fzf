@@ -29,14 +29,14 @@ _fzf_comprun () {
   esac
 }
 
-fzf_preview_hrule() {
+fzf-preview-hrule() {
   printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
   echo
 }
 # must be exported for "fzf --preview .." executed in sub shell
-export -f fzf_preview_hrule
+export -f fzf-preview-hrule
 
-fzf_fn() {
+fzf-fn() {
   local _re _defs
   local -a _fns
 
@@ -80,7 +80,7 @@ complete -A function f
 
 if in-path man ; then
 
-  fzf_man() {
+  fzf-man() {
     # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
     # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
     # fonts referenced in some manual pages.
@@ -101,7 +101,7 @@ if in-path man ; then
 
 fi
 
-fzf_ps() {
+fzf-ps() {
   # TODO: Select via option from several ps columns sets.
   # CAUTION: Some default column widths in ps output are unbalanced. Fixing this by configuring
   # fixed column widths causes waste of horizontal space.
@@ -126,7 +126,7 @@ fzf_ps() {
 
 if in-path rg ; then
   
-  fzf_rg() {
+  fzf-rg() {
     # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
 
     if [ $# -gt 0 ] ; then
@@ -159,7 +159,7 @@ if in-path rg ; then
 
 fi
 
-fzf_apply() {
+fzf-apply() {
   if [ $# -gt 0 ] ; then
 
     local -a _selected
@@ -189,7 +189,7 @@ Sample:
   fi
 }
 
-fzf_units() {
+fzf-units() {
   systemctl --plain | \
   sed '/^$/,$d' | \
   fzf --bind "enter:become(echo systemctl status,restart,stop {}),?:toggle-preview" \
@@ -199,7 +199,7 @@ fzf_units() {
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status {1} --lines 100; fzf_preview_hrule; echo; systemctl cat {1}" \
+      --preview "systemctl status {1} --lines 100; fzf-preview-hrule; echo; systemctl cat {1}" \
       --preview-label " Unit status, recent journal entries and spec " \
       --query "$1" \
       --reverse

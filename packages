@@ -1,30 +1,30 @@
 # -*- shell-script -*-
 
-_rpm_inspect_scope() {
+_rpm-inspect-scope() {
   rpm --query --$1 "$2" | \
   fzf --border none \
       --list-label " ${1^} in package \"$2\" " \
       --multi \
-      --preview 'echo {}; fzf_preview_hrule; less {} | bat -n --color=always --file-name={}' \
+      --preview 'echo {}; fzf-preview-hrule; less {} | bat -n --color=always --file-name={}' \
       --preview-window '60%:~2:wrap' | \
   xargs -r
 }
 
-rpm_changelog() {
-  [ $# -eq 1 ] && _rpm_inspect_scope changelog "$1" || fn-usage "<package>"
+rpm-changelog() {
+  [ $# -eq 1 ] && _rpm-inspect-scope changelog "$1" || fn-usage "<package>"
 }
 
-rpm_conf() {
-  [ $# -eq 1 ] && _rpm_inspect_scope configfiles "$1" || fn-usage "<package>"
+rpm-conf() {
+  [ $# -eq 1 ] && _rpm-inspect-scope configfiles "$1" || fn-usage "<package>"
 }
 
-rpm_docs() {
-  [ $# -eq 1 ] && _rpm_inspect_scope docfiles "$1" || fn-usage "<package>"
+rpm-docs() {
+  [ $# -eq 1 ] && _rpm-inspect-scope docfiles "$1" || fn-usage "<package>"
 }
 
-_rpm_history_preview_docs() {
+_rpm-history-preview-docs() {
   echo "${1^} doc file for package \"$2\""
-  fzf_preview_hrule
+  fzf-preview-hrule
 
   local -a _patterns
   case "$1" in
@@ -58,31 +58,31 @@ _rpm_history_preview_docs() {
   fi
 }
 
-_rpm_history_preview() {
+_rpm-history-preview() {
   echo "$1 package \"$3\""
-  fzf_preview_hrule
+  fzf-preview-hrule
   rpm -q $2 "$3"
 }
 
-export -f _rpm_history_preview _rpm_history_preview_docs
+export -f _rpm-history-preview _rpm-history-preview-docs
 
-rpm_history() {
+rpm-history() {
   local _default
-  _default='_rpm_history_preview "Changelog of" --changelog {6}'
+  _default='_rpm-history-preview "Changelog of" --changelog {6}'
 
   LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
   sort --reverse | \
   cut --characters=12- | \
   column --table --separator "*" | \
-  fzf --bind='alt-c:+change-preview(_rpm_history_preview "Config files in" --configfiles {6})' \
-      --bind='alt-d:+change-preview(_rpm_history_preview "Doc files in" --docfiles {6})' \
-      --bind='alt-f:+change-preview(_rpm_history_preview "Files in" -l {6})' \
-      --bind='alt-i:+change-preview(_rpm_history_preview "Info for" -i {6})' \
+  fzf --bind='alt-c:+change-preview(_rpm-history-preview "Config files in" --configfiles {6})' \
+      --bind='alt-d:+change-preview(_rpm-history-preview "Doc files in" --docfiles {6})' \
+      --bind='alt-f:+change-preview(_rpm-history-preview "Files in" -l {6})' \
+      --bind='alt-i:+change-preview(_rpm-history-preview "Info for" -i {6})' \
       --bind="alt-l:+change-preview($_default)" \
-      --bind='alt-r:+change-preview(_rpm_history_preview_docs readme {6})' \
-      --bind='alt-s:+change-preview(_rpm_history_preview "Scripts in" --scripts --triggers {6})' \
-      --bind='alt-u:+change-preview(_rpm_history_preview_docs changelog {6})' \
-      --bind='alt-v:+change-preview(_rpm_history_preview "Verify files of" "--verify --verbose" {6})' \
+      --bind='alt-r:+change-preview(_rpm-history-preview-docs readme {6})' \
+      --bind='alt-s:+change-preview(_rpm-history-preview "Scripts in" --scripts --triggers {6})' \
+      --bind='alt-u:+change-preview(_rpm-history-preview-docs changelog {6})' \
+      --bind='alt-v:+change-preview(_rpm-history-preview "Verify files of" "--verify --verbose" {6})' \
       --border-label " Package install history " \
       --list-border rounded \
       --list-label " Matching packages " \
@@ -96,7 +96,7 @@ rpm_history() {
   awk '{ printf "%s ", $6 } END { printf "\n" }'
 }
 
-rpm_info() {
+rpm-info() {
   rpm -qa "$@" | \
   fzf --border-label " Package infos " \
       --list-label " Matching packages " \
@@ -104,7 +104,7 @@ rpm_info() {
       --preview-label " Package info, changelog and files "
 }
 
-rpm_owner() {
+rpm-owner() {
   if [ $# -gt 0 ] ; then
 
     local _f __f
@@ -122,7 +122,7 @@ rpm_owner() {
   fi
 }
 
-rpm_status() {
+rpm-status() {
   if [ $# -gt 0 ] ; then
     rpm --query --list --state --verbose "$@" 2>&1 | less
   else
@@ -130,7 +130,7 @@ rpm_status() {
   fi
 }
 
-rpm_verify() {
+rpm-verify() {
   if [ $# -gt 0 ] ; then
     rpm --verify --verbose "$@" 2>&1 | less
   else
@@ -148,7 +148,7 @@ in-path dnf || return 0
 # .. system not booted via rpm-ostree
 rpm-ostree status --booted 2>/dev/null && return 0
 
-rpm_freshen() {
+rpm-freshen() {
   if [ $# -gt 0 ] ; then
     rpm --freshen --verbose --hash "$@" 2>&1 | less
   else
