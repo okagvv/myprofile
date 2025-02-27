@@ -33,16 +33,24 @@ fzf-query-history () {
   echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
 }
 
-fzf-preview-file() {
-  fzf-preview-header "$1"
-  ( echo "Type: $(file --brief --mime "$1")"
-    stat "$1"
-    echo "RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')"
-  ) | tr -s " " | column -t -d -s":" -l2 -o":" -C right
-}
-
 fzf-preview-bat() {
   bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
+}
+
+fzf-preview-file() {
+  local _mime
+  _mime="$(file --brief --mime "$1")"
+
+  fzf-preview-header "$1"
+  cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
+Type: $_mime
+$(stat "$1")
+RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
+EOF
+
+  case "$_mime" in
+    *audio*|*video*) fzf-preview-header; ffprobe "$1";;
+  esac
 }
 
 fzf-preview-header() {
@@ -104,11 +112,11 @@ fzf-apply() {
 
       eval "_selected=($(fzf --multi \
                              $(fzf-query-history) \
-                             --print0 \
                              --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                              --border-label-pos "2:bottom" \
-                             --preview 'fzf-preview-file {1}' | \
-                         xargs -0 -i@ echo '"@"'))"
+                             --preview 'fzf-preview-file {}' \
+                             --print0 | \
+                         xargs -0 -r -i@ echo '"@"'))"
 
       [ ${#_selected[@]} -gt 0 ] || return 0
 
@@ -132,15 +140,18 @@ if in-path locate ; then
       fzf --border none \
           $(fzf-query-history) \
           --list-label " plocate $* " \
-          --preview 'fzf-preview-file {1}' \
+          --multi \
+          --preview 'fzf-preview-file {}' \
           --preview-label " File info " \
-          --preview-window '50%,~2:wrap'
-
+          --preview-window '50%,~2:wrap' \
+          --print0 | \
+      xargs -0 -r -i@ echo -n '"@" '
+      
     else
       fn-usage "<locate args>"
     fi
   }
-  
+
 fi
 
 if in-path man ; then
@@ -183,6 +194,7 @@ fzf-ps() {
       --header-lines 1 \
       --hscroll-off=800 \
       --list-border none \
+      --multi \
       --no-sort \
       --preview 'echo {}' \
       --preview-window "down:3:hidden:wrap" \
@@ -191,7 +203,7 @@ fzf-ps() {
 }
 
 if in-path rg ; then
-  
+
   fzf-rg() {
     # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
 
