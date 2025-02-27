@@ -1,9 +1,9 @@
 common
-functions
 env
+functions
+aliases
 fzf
 packages
 podman
 k8s
 ffmpeg
-aliases
