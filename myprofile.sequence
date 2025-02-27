@@ -1,4 +1,5 @@
 functions
-profile
+env
 packages
 k8s
+aliases

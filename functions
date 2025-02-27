@@ -13,9 +13,6 @@ _fzf_comprun() {
   esac
 }
 
-# remove potential aliases conflicting with following functions
-unalias e f h lm lmt history_cleanup genpasswd uriencode vsc 2>/dev/null || true
-
 a() {
   alias "$@" | m -p "bash aliases"
 }
@@ -102,7 +99,7 @@ fman() {
   column -t -s"~" -l2 | \
   fzf --bind "?:toggle-preview" \
       --border-label "Manual pages" \
-      --query "${1:+"'$1"}" \
+      --query "$1" \
       --prompt='man> ' \
       --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
   tr -d '()' | \
@@ -150,11 +147,13 @@ frg() {
         --border-label-pos "3:bottom" \
         --color "hl:-1:underline,hl+:-1:underline:reverse" \
         --delimiter : \
+        --extended \
         --history "$FZF_HISTORY_DIR/frg.history" \
         --list-border none \
         --no-multi \
         --preview 'bat --color=always {1} --highlight-line {2}' \
-        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+        --smart-case
 
   else
 
