@@ -1,65 +1,63 @@
 # -*- mode: Shell-script -*-
 
-alias -- -='cd -'
-alias ..='cd ..'
-alias clr='\rm -vf *~ .*~ *.o .saves-* \#*\#'
-alias df='\df --no-sync --print-type --human-readable --portability --exclude-type=devtmpfs --exclude-type=overlay --total'
-alias dmesg='\dmesg --ctime --decode --color=always --level=emerg,alert,crit,err,warn,notice --nopager | m ++G'
-alias du='\du -xkhc --max-depth=1'
-alias failed='systemctl list-units --failed'
-alias file='\file -Pelf_phnum=1000'
-alias inet='ss -f inet -napro'
-alias inetevents='inet -E'
-alias ipstat='ip -s -h -c -d address show scope global dynamic'
-alias jboot='myjournalctl --boot --lines=all --pager-end'
-alias jerr='myjournalctl -b -e -p 0..4'
-alias jtoday='myjournalctl --since today --pager-end --lines=all'
-alias jtodaylong='myjournalctl --since today --catalog --pager-end --lines=all'
-alias jtodaywarn='myjournalctl --priority=emerg..notice --since today --pager-end --lines=all'
-alias list_deps='systemctl list-dependencies "$(systemctl get-default)"'
-alias l='/bin/ls --format=long --classify --all --color=auto --time-style="+%F %T"'
-alias lsblk='\lsblk --tree --output NAME,MAJ:MIN,HOTPLUG,DISC-GRAN,DISC-MAX,RM,RO,SIZE,TYPE,FSTYPE,LABEL,PATH,MOUNTPOINT'
-alias mounted='findmnt -A -o TARGET,SOURCE,FSTYPE,SIZE,USE%'
-alias origin='cd "$(git remote get-url --push origin)"'
-alias rmemptydir='find . -empty -type d -print0 | xargs -r -0 rmdir --verbose'
-alias remotes='git remote -v | cut -f1 -d"(" | uniq | column -t'
-alias sane='stty sane'
-alias sysmounted='systemctl --type mount'
-alias tig='env TERM=xterm tig'
-alias vi='env TERM=xterm vim'
-
+myalias - 'cd -'
+myalias .. 'cd ..'
 myalias alsamixer 'alsamixer --no-color'
 myalias cal 'cal --three --monday --week --iso'
-myalias pstree 'pstree --unicode --arguments --long --uid-changes --show-pids --security-context --thread-names --ns-changes --show-pgids'
+myalias clr 'rm -vf *~ .*~ *.o .saves-* \#*\#'
+myalias df 'df --no-sync --print-type --human-readable --portability --exclude-type=devtmpfs --exclude-type=overlay --total'
 myalias dfc 'dfc -WfsdTw -q mount'
+myalias dmesg 'dmesg --ctime --decode --color=always --level=emerg,alert,crit,err,warn,notice --nopager | m ++G'
+myalias du 'du -xkhc --max-depth=1'
+myalias failed 'systemctl list-units --failed'
+myalias file 'file -Pelf_phnum=1000'
+myalias inet 'ss -f inet -napro'
+myalias inetevents 'inet -E'
+myalias ipstat 'ip -s -h -c -d address show scope global dynamic'
+myalias jboot 'myjournalctl --boot --lines=all --pager-end'
+myalias jerr 'myjournalctl -b -e -p 0..4'
+myalias jtoday 'myjournalctl --since today --pager-end --lines=all'
+myalias jtodaylong 'myjournalctl --since today --catalog --pager-end --lines=all'
+myalias jtodaywarn 'myjournalctl --priority=emerg..notice --since today --pager-end --lines=all'
+myalias l '/bin/ls --format=long --classify --all --color=auto --time-style="+%F %T"'
+myalias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
+myalias lsblk 'lsblk --tree --output NAME,MAJ:MIN,HOTPLUG,DISC-GRAN,DISC-MAX,RM,RO,SIZE,TYPE,FSTYPE,LABEL,PATH,MOUNTPOINT'
+myalias mounted 'findmnt -A -o TARGET,SOURCE,FSTYPE,SIZE,USE%'
+myalias origin 'cd "$(git remote get-url --push origin)"'
+myalias pstree 'pstree --unicode --arguments --long --uid-changes --show-pids --security-context --thread-names --ns-changes --show-pgids'
+myalias remotes 'git remote -v | cut -f1 -d"(" | uniq | column -t'
+myalias rmemptydir 'find . -empty -type d -print0 | xargs -r -0 rmdir --verbose'
+myalias sane 'stty sane'
 myalias st 'eval "$(starship init bash)"'
+myalias sysmounted 'systemctl --type mount'
+myalias tig 'env TERM=xterm tig'
 myalias tmux 'tmux -2'
-myalias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
 myalias trans2de 'trans -t de'
 myalias trans2en 'trans -t en'
+myalias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
+myalias vi 'env TERM=xterm vim'
 
 if [[ "$(id -u)" == "0" ]] ; then
 
-  alias boot_blame='systemd-analyze blame'
-  alias boot_times='systemd-analyze plot | display -'
-
+  myalias avcrecent 'ausearch -ts recent -m avc'
   myalias avctoday 'ausearch -ts today -m avc'
   myalias avcyesterday 'ausearch -ts yesterday -m avc'
-  myalias avcrecent 'ausearch -ts recent -m avc'
+  myalias boot_blame 'systemd-analyze blame'
+  myalias boot_times 'systemd-analyze plot | display -'
   myalias dstat 'dstat --time --load --vmstat --net --swap --io'
   myalias iotop 'iotop -a -c -o -P'
   myalias myiostat 'iostat -xmt 1'
   
 else
 
-  alias journalctl='\journalctl --user'
-  alias systemctl='\systemctl --user'
+  myalias journalctl 'journalctl --user'
+  myalias systemctl 'systemctl --user'
 
 fi
 
 if [ -s ~/.fetchmailrc ] ; then
 
-  alias imap=/usr/bin/fetchmail
+  myalias imap fetchmail
   myalias imapstats 'rg --color always -a " (error|querying|messages for) " ~/.fetchmail.log | grep -a -v GSSAPI | tail'
   # complete imap p/1/"(`sed -r -n 's%^poll ([^ ]+) .*%\1%p' ~/.fetchmailrc | tr '\n' ' '`)"/
 

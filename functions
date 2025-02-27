@@ -88,24 +88,28 @@ find_last() {
 }
 complete -A directory find_last
 
-fman() {
-  # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
-  # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
-  # fonts referenced in some manual pages.
-  man -k . | \
-  sort | \
-  sed -r 's/\) *- */\)~/' | \
-  column -t -s"~" -l2 | \
-  fzf --bind "?:toggle-preview" \
-      --border-label "Manual pages" \
-      --query "$1" \
-      --prompt='man> ' \
-      --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
-  tr -d '()' | \
-  awk '{printf "%s ", $2} {print $1}' | \
-  xargs -r man
-  # '
-}
+if in_path man ; then
+
+  fman() {
+    # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
+    # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
+    # fonts referenced in some manual pages.
+    man -k . | \
+    sort | \
+    sed -r 's/\) *- */\)~/' | \
+    column -t -s"~" -l2 | \
+    fzf --bind "?:toggle-preview" \
+        --border-label "Manual pages" \
+        --query "$1" \
+        --prompt='man> ' \
+        --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
+    tr -d '()' | \
+    awk '{printf "%s ", $2} {print $1}' | \
+    xargs -r man
+    # '
+  }
+
+fi
 
 fps() {
   # TODO: Select via option from several ps columns sets.
@@ -130,36 +134,40 @@ fps() {
       --reverse
 }
 
-frg() {
-  # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
+if in_path rg ; then
+  
+  frg() {
+    # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
 
-  if [ $# -gt 0 ] ; then
+    if [ $# -gt 0 ] ; then
 
-    local _editor_args
-    # It is assumed that $EDITOR is set to "vim" or "emacsclient".
-    [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
+      local _editor_args
+      # It is assumed that $EDITOR is set to "vim" or "emacsclient".
+      [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
 
-    rg --color=always --hidden --line-number --no-heading --smart-case "$*" |
-    fzf --ansi \
-        --bind "enter:execute($EDITOR $_editor_args)" \
-        --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
-        --border-label-pos "3:bottom" \
-        --color "hl:-1:underline,hl+:-1:underline:reverse" \
-        --delimiter : \
-        --extended \
-        --history "$FZF_HISTORY_DIR/frg.history" \
-        --list-border none \
-        --no-multi \
-        --preview 'bat --color=always {1} --highlight-line {2}' \
-        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
-        --smart-case
+      rg --color=always --hidden --line-number --no-heading --smart-case "$*" |
+      fzf --ansi \
+          --bind "enter:execute($EDITOR $_editor_args)" \
+          --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
+          --border-label-pos "3:bottom" \
+          --color "hl:-1:underline,hl+:-1:underline:reverse" \
+          --delimiter : \
+          --extended \
+          --history "$FZF_HISTORY_DIR/frg.history" \
+          --list-border none \
+          --no-multi \
+          --preview 'bat --color=always {1} --highlight-line {2}' \
+          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+          --smart-case
 
-  else
+    else
 
-    myfunusage "<ripgrep args>"
+      myfunusage "<ripgrep args>"
 
-  fi
-}
+    fi
+  }
+
+fi
 
 fselect() {
   if [ $# -gt 0 ] ; then
@@ -264,10 +272,6 @@ history_cleanup() {
   true
 }
 
-in_path() {
-  type -fp "$1" >/dev/null
-}
-
 lm() {
   l --color=always "$@" |& m -p lm
 }
@@ -318,40 +322,48 @@ parse_git_branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
 
-pdfgrep() {
-  /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
-}
-
-rsyncp() {
-  local -a _opts
-  _opts=(--archive --backup --hard-links --human-readable --itemize-changes --progress --whole-file)
+if in_path pdfgrep ; then
   
-  while [ $# -gt 1 ] ; do
-    case "$1" in
-        -h|--help) myfunusage "[--dry] [--remove] <source-dir>/? <target-dir>"; return 0;;
-         -d|--dry) _opts+=(--dry-run --verbose);;
-      -r|--remove) _opts+=(--delete-delay);;
-                *) break;;
-    esac
-    shift
-  done
+  pdfgrep() {
+    /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
+  }
 
-  if [[ $# -ge 2 && -d "${@: -2:1}" && -d "${@: -1}" ]] ; then
-    
-    if [[ "$(stat -f -c %T "${@: -1}" 2>/dev/null)" =~ ^(nfs|exfat|fuseblk)$ ]] ; then
+fi
 
-      _opts+=(--no-perms --no-owner --no-group)
-      
+if in_path rsync ; then
+  
+  rsyncp() {
+    local -a _opts
+    _opts=(--archive --backup --hard-links --human-readable --itemize-changes --progress --whole-file)
+
+    while [ $# -gt 1 ] ; do
+      case "$1" in
+          -h|--help) myfunusage "[--dry] [--remove] <source-dir>/? <target-dir>"; return 0;;
+           -d|--dry) _opts+=(--dry-run --verbose);;
+        -r|--remove) _opts+=(--delete-delay);;
+                  *) break;;
+      esac
+      shift
+    done
+
+    if [[ $# -ge 2 && -d "${@: -2:1}" && -d "${@: -1}" ]] ; then
+
+      if [[ "$(stat -f -c %T "${@: -1}" 2>/dev/null)" =~ ^(nfs|exfat|fuseblk)$ ]] ; then
+
+        _opts+=(--no-perms --no-owner --no-group)
+
+      fi
+
+      ionice -c2 -n7 rsync "${_opts[@]}" "$@"
+
+    else
+
+      myfunerr "Source (${@: -2:1}) a/o target (${@: -1}) directories do not exist!"
+
     fi
-  
-    ionice -c2 -n7 rsync "${_opts[@]}" "$@"
+  }
 
-  else
-
-    myfunerr "Source (${@: -2:1}) a/o target (${@: -1}) directories do not exist!"
-
-  fi
-}
+fi
 
 uriencode() {
   gojq -nr --arg v "$1" '$v|@uri';
