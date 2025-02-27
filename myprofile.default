@@ -5,5 +5,5 @@ functions
 fzf
 packages
 podman
-k8s
+#k8s
 ffmpeg
