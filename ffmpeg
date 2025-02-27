@@ -24,10 +24,8 @@ ffprobes() {
 }
 
 fzf-ffprobes() (
-  # This is a sub-shell function, i.e. 
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
-  # list input. Use of --all avoids this but may cause error messages in preview window for
-  # unsupported file formats.
+  # list input. Use of --all avoids this but may add files not supported by ffprobe a/o vlc.
 
   while [[ "$1" =~ ^-+[[:alnum:]]+$ ]] ; do
     case "$1" in
@@ -50,22 +48,23 @@ fzf-ffprobes() (
 
     eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                        sort | \
-                       fzf --bind 'alt-v:execute-silent(vlc {1})' \
+                       fzf --bind 'alt-v:execute-silent(vlc {})' \
                            --border none \
                            $(fzf-query-history) \
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview 'fzf-preview-header {}; ffprobe -hide_banner {}' \
+                           --preview 'fzf-preview-file {}' \
                            --preview-label " ffprobe output (alt-v: play via VLC) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
-                           --query "$2" | \
-                       xargs -0 -i@ echo '"@"'))"
+                           --query "$2" \
+                           --reverse | \
+                       xargs -0 -i@ echo '\"@\"'))"
 
     [ ${#_selected[@]} -gt 0 ] || return 0
 
-    ${_cmd:-echo} "${_selected[@]}"
+    eval ${_cmd:-echo} "${_selected[@]}"
 
   else
 
