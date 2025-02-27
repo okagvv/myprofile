@@ -40,7 +40,7 @@ fzf-preview-bat() {
 fzf-preview-file() {
   local _mime _size
   _mime="$(file --brief --mime "$1")"
-  _size="$(du -h "$1" | cut -f1)"
+  _size="$(du -sh "$1" | cut -f1)"
   
   fzf-preview-header "File \"$1\""
   cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
@@ -49,10 +49,14 @@ $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %
 RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
 EOF
 
-  case "$_mime" in
-    *audio*|*video*) fzf-preview-header; ffprobes --yaml "$1";;
-    *rpm*) fzf-preview-header; rpm -qip "$1";;
-  esac
+  if [[ -r "$1" && -s "$1" ]] ; then
+    case "$_mime" in
+      *audio*|*video*) fzf-preview-header; ffprobes --yaml "$1";;
+      *rpm*) fzf-preview-header; rpm -qip "$1";;
+      *text*) fzf-preview-bat "$1";;
+      *zip*|*java-archive*) fzf-preview-header; unzip -l "$1";;
+    esac
+  fi
 }
 
 fzf-preview-header() {
@@ -148,7 +152,8 @@ if in-path locate ; then
           --preview-window '50%,~2:wrap' \
           --print0 | \
       xargs -0 -r -i@ echo -n '"@" '
-
+      echo
+      
     else
       fn-usage "<locate args>"
     fi
