@@ -1,3 +1,5 @@
+# -*- shell-script -*-
+
 _fzf_comprun() {
   # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
   local cmd=$1
@@ -106,6 +108,7 @@ fman() {
   tr -d '()' | \
   awk '{printf "%s ", $2} {print $1}' | \
   xargs -r man
+  # '
 }
 
 fps() {
@@ -301,11 +304,6 @@ complete -o default m
 
 myjournalctl() {
   journalctl --no-hostname --output=short-iso "$@"
-}
-
-myfunusage() {
-  echo -e "Usage: ${FUNCNAME[1]} $1"
-  return 2
 }
 
 mypassgen() {
