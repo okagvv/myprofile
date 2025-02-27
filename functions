@@ -76,7 +76,7 @@ f() {
     fi
   fi
 
-  [ ${#_fns[@]} -gt 0 ] || myfunusage "<function>|all|~regexp"
+  [ ${#_fns[@]} -gt 0 ] || fn-usage "<function>|all|~regexp"
 }
 complete -A function f
 
@@ -88,7 +88,7 @@ find_last() {
 }
 complete -A directory find_last
 
-if in_path man ; then
+if in-path man ; then
 
   fman() {
     # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
@@ -101,6 +101,7 @@ if in_path man ; then
     fzf --border-label "Manual pages" \
         --query "$1" \
         --prompt='man> ' \
+        --preview-window '50%,~2:wrap' \
         --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
     tr -d '()' | \
     awk '{printf "%s ", $2} {print $1}' | \
@@ -132,7 +133,7 @@ fps() {
       --reverse
 }
 
-if in_path rg ; then
+if in-path rg ; then
   
   frg() {
     # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
@@ -160,7 +161,7 @@ if in_path rg ; then
 
     else
 
-      myfunusage "<ripgrep args>"
+      fn-usage "<ripgrep args>"
 
     fi
   }
@@ -190,7 +191,7 @@ fselect() {
 
   else
 
-    myfunusage "<cmd> [<args>]
+    fn-usage "<cmd> [<args>]
 Sample:
 \$ $FUNCNAME rm -iv"
 
@@ -284,7 +285,7 @@ m() {
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-           -h|--help) myfunusage "[-p|--prompt \"text\"]"; return 0;;
+           -h|--help) fn-usage "[-p|--prompt \"text\"]"; return 0;;
       -[pP]|--prompt) _prompt="$2"; shift 2;;
                    *) break;;
     esac
@@ -310,7 +311,7 @@ myjournalctl() {
   journalctl --no-hostname --output=short-iso "$@"
 }
 
-if in_path keepassxc-cli ; then
+if in-path keepassxc-cli ; then
   
   mypassgen() {
     #CAUTION: Vault (root) token must not contain dots!
@@ -324,7 +325,7 @@ parse_git_branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
 }
 
-if in_path pdfgrep ; then
+if in-path pdfgrep ; then
   
   pdfgrep() {
     /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
@@ -332,7 +333,7 @@ if in_path pdfgrep ; then
 
 fi
 
-if in_path rsync ; then
+if in-path rsync ; then
   
   rsyncp() {
     local -a _opts
@@ -340,7 +341,7 @@ if in_path rsync ; then
 
     while [ $# -gt 1 ] ; do
       case "$1" in
-          -h|--help) myfunusage "[--dry] [--remove] <source-dir>/? <target-dir>"; return 0;;
+          -h|--help) fn-usage "[--dry] [--remove] <source-dir>/? <target-dir>"; return 0;;
            -d|--dry) _opts+=(--dry-run --verbose);;
         -r|--remove) _opts+=(--delete-delay);;
                   *) break;;
@@ -362,7 +363,7 @@ if in_path rsync ; then
 
     else
 
-      myfunerr "Source (${@: -2:1}) a/o target (${@: -1}) directories do not exist!"
+      fn-error "Source (${@: -2:1}) a/o target (${@: -1}) directories do not exist!"
 
     fi
   }
@@ -383,7 +384,7 @@ juser() {
     shift
     myjournalctl --pager-end _UID="$_uid" "$@"
   else
-    myfunusage "user [journalct options]"
+    fn-usage "user [journalct options]"
   fi
 }
 complete -A user -o default juser
@@ -394,7 +395,7 @@ mysu() {
     if [ $# -ge 2 ] ; then
       su $(stat -c %U "${*: -1}") -c "$(printf "'%s' " "${@}")"
     else
-      myfunusage "command [options|args] file"
+      fn-usage "command [options|args] file"
     fi
 }
 complete -A command -o default mysu

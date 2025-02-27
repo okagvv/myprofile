@@ -9,27 +9,31 @@
 # myprofile() might be called during bash session on demand to reload a (maybe updated) myprofile
 # script.
 
-in_path() {
+in-path() {
   type -fp "$1" >/dev/null
 }
 
-myfunusage() {
+is-fn() {
+  declare -F "$1" >/dev/null
+}
+
+fn-usage() {
   echo -e "Usage: ${FUNCNAME[1]} $1"
   return 2
 }
 
-myfunerr() {
+fn-error() {
   echo -e "${FUNCNAME[1]}: $1" >&2
   return 1
 }
 
-myalias() {
+new-alias() {
   if [ $# -eq 2 ] ; then
     
     local _cmd
     _cmd="${2%% *}"
   
-    if in_path "$_cmd" || declare -F "$_cmd" >/dev/null ; then
+    if in-path "$_cmd" || is-fn "$_cmd" ; then
     
       [[ "$1" == "$_cmd" ]] && eval "alias -- $1='\\$2'" || eval "alias -- $1='$2'"
 
@@ -41,7 +45,7 @@ myalias() {
 
   else
 
-    myfunusage "<alias> \"<cmd>\""
+    fn-usage "<alias> \"<cmd>\""
     
   fi
 }
@@ -52,15 +56,16 @@ myprofile() {
   _src="$(realpath "${BASH_SOURCE[0]}")"
 
   case "$1" in
-       -h|--help) myfunusage "[--help | --install | --verbose [{script}]]"; return 0;;
+       -h|--help) fn-usage "[--help | --install | --verbose [{script}]]"; return 0;;
     -i|--install) if [[ "$(id -u)" == "0" ]] ; then
                     ln -sfv "$_src" /etc/profile.d/zz-myprofile.sh
                     return 0
                   else
-                    myfunerr "--install requires root permission!"
+                    fn-error "--install requires root permission!"
                     return 1
                   fi;;
     -v|--verbose) _verbose=echo; shift;;
+              -*) fn-error "Unsupported option: $1"; return 1;;
   esac
 
   for _script in $([ $# -gt 0 ] && echo "$@" || cat "${_src%/*}/$FUNCNAME.sequence") ; do
@@ -70,7 +75,7 @@ myprofile() {
 
     if ! source "${_src%/*}/$_script" ; then
       
-      myfunerr "Load of myprofile script \"$_script\" has failed!"
+      fn-error "Load of myprofile script \"$_script\" has failed!"
       return 1
       
     fi

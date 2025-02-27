@@ -1,9 +1,9 @@
 # -*- shell-script -*-
 
-in_path ffmpeg || return 0
+in-path ffmpeg || return 0
 
-myalias ffmpeg "ffmpeg -hide_banner"
-myalias ffprobe "ffprobe -hide_banner"
+new-alias ffmpeg "ffmpeg -hide_banner"
+new-alias ffprobe "ffprobe -hide_banner"
 
 _ffprobes_filter() {
   find "$1" -type f -printf '%P\0' | xargs -r0 file -i | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
@@ -22,7 +22,7 @@ ffprobes() {
   while [[ "$1" =~ ^-+[[:alnum:]]+$ ]] ; do
     case "$1" in
        -a|--all) _all=y;;
-      -h|--help) myfunusage "[--help] <files> | [--all] [--play] <dir> [<query>]"; return 0;;
+      -h|--help) fn-usage "[--help] <files> | [--all] [--play] <dir> [<query>]"; return 0;;
       -p|--play) _cmd="vlc";;
     esac
     shift
@@ -67,7 +67,7 @@ ffprobes() {
 
   else
 
-    myfunerr "Missing path argument(s)!"
+    fn-error "Missing path argument(s)!"
 
   fi
 }
