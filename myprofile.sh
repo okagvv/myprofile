@@ -14,6 +14,28 @@ myfunusage() {
   return 2
 }
 
+myfunerr() {
+  echo -e "${FUNCNAME[1]}: $1" >&2
+  return 1
+}
+
+myalias() {
+  if [ $# -eq 2 ] ; then
+    
+    local _cmd
+    _cmd="${2%% *}"
+  
+    in_path "$_cmd" || return 0
+    
+    [[ "$1" == "$_cmd" ]] && eval "alias $1='\\$2'" || eval "alias $1='$2'"
+
+  else
+
+    myfunusage "<alias> \"<cmd>\""
+    
+  fi
+}
+
 myprofile() {
   local _src _script _verbose
 
@@ -25,7 +47,7 @@ myprofile() {
                     ln -sfv "$_src" /etc/profile.d/zz-myprofile.sh
                     return 0
                   else
-                    echo "$FUNCNAME: --install requires root permission!" >&2
+                    myfunerr "--install requires root permission!"
                     return 1
                   fi;;
     -v|--verbose) _verbose=echo; shift;;
@@ -37,8 +59,10 @@ myprofile() {
     [ -z "$_verbose" ] || echo "Source \"$_script\"."
 
     if ! source "${_src%/*}/$_script" ; then
-      echo "Load of myprofile script \"$_script\" has failed!" >&2
+      
+      myfunerr "Load of myprofile script \"$_script\" has failed!"
       return 1
+      
     fi
 
   done
