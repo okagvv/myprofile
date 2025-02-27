@@ -38,7 +38,7 @@ fn-usage() {
 }
 
 fn-error() {
-  echo -e "\e[32m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  echo -e "\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
   return 1
 }
 
