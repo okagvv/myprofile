@@ -1,0 +1,139 @@
+# -*- shell-script -*-
+# bash functions preferably in interactive shells
+
+a() {
+  alias "$@" | m -p "bash aliases"
+}
+complete -A alias a
+
+e() {
+  # list current shell environment excluding
+  # - $PS1 (shell prompt may embed escape sequences distorting output)
+  # - $BASH_FUNC* (intermediate bash variables)
+  printenv -0 | grep -zvE "^(BASH_FUNC|PS1=)" | sort -z | tr '\000' '\n' | m -p "shell environment"
+}
+
+h() {
+  local _cnt _color
+  if [[ "$1" =~ ^-(a|-all)$ ]] ; then
+    shift
+    _cnt=$HISTSIZE
+  else
+    _cnt="42"
+  fi
+  [ $# -gt 0 ] && _color=auto || _color=never
+  history | grep --color=never -E "${1:-.*}" | tail -$_cnt | grep --colour=$_color -E "${1:-.*}"
+}
+
+history-cleanup() {
+  # remove sensible a/o undesired entries from bash history
+  # args: "$remove_regexp" .. [-- "$keep_regexp" ..]
+
+  if [ -n "$HISTFILE" ] ; then
+
+    local _pattern _histfile _keep _drop
+    _drop="(${FUNCNAME[0]}"
+
+    for _pattern in "$@" ; do
+
+      if [[ "$_pattern" == "--" ]] ; then
+        _keep="(~§~§~"
+      elif [ -n "$_keep" ] ; then
+        _keep+="|$_pattern"
+      else
+        _drop+="|$_pattern"
+      fi
+
+    done
+
+    _drop+=")"
+    [ -z "$_keep" ] && _keep="~§~§~" || _keep+=")"
+
+    _histfile="$HISTFILE"
+
+    eval "$(history |
+            sed -rn '/'"$_keep"'/d;s/^ *([0-9]+) .*'"$_drop"'.*/\1/ip' |
+            sort --numeric-sort --reverse |
+            xargs --no-run-if-empty --replace=@ echo history -d @)"
+
+    # Work-around for "history -w" failing to update history file mounted into a container.
+    HISTFILE="$(mktemp --suffix=.history --tmpdir bash_XXXXXX)"
+    history -w
+    cat "$HISTFILE" >"$_histfile"
+    HISTFILE="$_histfile"
+
+    history -s : history-cleanup
+    sleep 1
+
+  fi
+
+  true
+}
+
+l() {
+  /usr/bin/ls --format=long --classify --all --color=auto --time-style="+%F %T" "$@"
+}
+
+lm() {
+  l --color=always "$@" |& m -p lm
+}
+
+lmt() {
+  l --color=always --sort=time "$@" |& m -p lmt
+}
+complete -o bashdefault -o default l lmt lm
+
+m() {
+  local _prompt
+
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+           -h|--help) fn-usage "[-p|--prompt \"text\"]"; return 0;;
+      -[pP]|--prompt) _prompt="$2 "; shift 2;;
+                   *) break;;
+    esac
+  done
+
+  LESS= TERM=xterm less --hilite-search \
+                        --ignore-case \
+                        --no-{histdups,init,vbell} \
+                        --prompt="s$_prompt?f%f.?lt line %lt?L/%L. .?e(END)" \
+                        --quit-if-one-screen \
+                        --squeeze-blank-lines \
+                        --status-line \
+                        --tilde \
+                        --use-color \
+                        "$@"
+}
+complete -o default m
+
+new-alias() {
+  if [ $# -eq 2 ] ; then
+    
+    local _cmd
+    _cmd="${2%% *}"
+  
+    if in-path "$_cmd" || is-fn "$_cmd" ; then
+    
+      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='\\$2'" || eval "alias -- $1='$2'"
+
+    else
+
+      return 0
+
+    fi
+
+  else
+
+    fn-usage "<alias> \"<cmd>\""
+    
+  fi
+}
+
+if in-path pdfgrep ; then
+  
+  pdfgrep() {
+    /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
+  }
+
+fi
