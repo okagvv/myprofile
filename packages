@@ -69,15 +69,15 @@ _fzf-rpm() {
   local _default
   _default='_rpm-preview "Changelog of" --changelog {-1}'
 
-  fzf --bind='alt-c:+change-preview(_rpm-preview "Config files in" --configfiles {-1})' \
-      --bind='alt-d:+change-preview(_rpm-preview "Doc files in" --docfiles {-1})' \
-      --bind='alt-f:+change-preview(_rpm-preview "Files in" -l {-1})' \
-      --bind='alt-i:+change-preview(_rpm-preview "Info for" -i {-1})' \
-      --bind="alt-l:+change-preview($_default)" \
-      --bind='alt-r:+change-preview(_rpm-preview-docs readme {-1})' \
-      --bind='alt-s:+change-preview(_rpm-preview "Scripts in" "--scripts --triggers" {-1})' \
-      --bind='alt-u:+change-preview(_rpm-preview-docs changelog {-1})' \
-      --bind='alt-v:+change-preview(_rpm-preview "Verify files of" "--verify --verbose" {-1})' \
+  fzf --bind='alt-c:change-preview(_rpm-preview "Config files in" --configfiles {-1})' \
+      --bind='alt-d:change-preview(_rpm-preview "Doc files in" --docfiles {-1})' \
+      --bind='alt-F:change-preview(_rpm-preview "Files in" -l {-1})' \
+      --bind='alt-i:change-preview(_rpm-preview "Info for" -i {-1})' \
+      --bind="alt-l:change-preview($_default)" \
+      --bind='alt-r:change-preview(_rpm-preview-docs readme {-1})' \
+      --bind='alt-S:change-preview(_rpm-preview "Scripts in" "--scripts --triggers" {-1})' \
+      --bind='alt-u:change-preview(_rpm-preview-docs changelog {-1})' \
+      --bind='alt-V:change-preview(_rpm-preview "Verify files of" "--verify --verbose" {-1})' \
       --border-label " $1 " \
       $(fzf-query-history) \
       --list-border rounded \
@@ -85,7 +85,7 @@ _fzf-rpm() {
       --multi \
       --no-sort \
       --preview "$_default" \
-      --preview-label " Use alt-{c,d,f,i,l,r,s,u,v} to change information scope. " \
+      --preview-label " Use alt-{c,d,F,i,l,r,S,u,V} to change information scope. " \
       --preview-window '60%,~2:wrap' \
       --query "$2" \
       --reverse | \
@@ -211,7 +211,7 @@ _fzf-dnf-packages() {
 
   # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
   fzf --bind "alt-i:change-preview($_default)" \
-      --bind "alt-f:change-preview(fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
+      --bind "alt-F:change-preview(fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
       --bind 'enter:become(echo {+1})' \
       --border-label " $1 " \
       --header-lines 1 \
@@ -219,7 +219,7 @@ _fzf-dnf-packages() {
       --list-label " $2 " \
       --multi \
       --no-sort \
-      --preview-label " Package info (Use alt-i/alt-f for info/files) " \
+      --preview-label " Package info (Use alt-i/alt-F for info/files) " \
       --preview-window 'right,65%,wrap' \
       --preview "$_default" \
       --reverse \
