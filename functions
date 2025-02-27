@@ -13,12 +13,12 @@ _fzf_comprun() {
   esac
 }
 
-_fzf_preview_hrule() {
-  printf "%*s" $FZF_PREVIEW_COLUMNS | tr ' ' '┈'
+fzf_preview_hrule() {
+  printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
   echo
 }
 # must be exported for "fzf --preview .." executed in sub shell
-export -f _fzf_preview_hrule
+export -f fzf_preview_hrule
 
 a() {
   alias "$@" | m -p "bash aliases"
@@ -209,7 +209,7 @@ funits() {
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status {1} --lines 100; _fzf_preview_hrule; echo; systemctl cat {1}" \
+      --preview "systemctl status {1} --lines 100; fzf_preview_hrule; echo; systemctl cat {1}" \
       --preview-label " Unit status, recent journal entries and spec " \
       --query "$1" \
       --reverse
