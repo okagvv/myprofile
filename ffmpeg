@@ -39,7 +39,7 @@ ffprobes() {
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview 'echo {}; fzf_preview_hrule; ffprobe -hide_banner {}' \
+                           --preview 'echo {}; fzf-preview-hrule; ffprobe -hide_banner {}' \
                            --preview-label " ffprobe output (alt-p: play curr. item) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \

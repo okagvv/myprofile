@@ -25,18 +25,24 @@ rpm-docs() {
   fi
 }
 
-_rpm-history_preview_changes() {
-  echo "Upstream changelog for package \"$1\""
-  fzf_preview_hrule
+_rpm-history_preview_docs() {
+  echo "${1^} doc file for package \"$2\""
+  fzf-preview-hrule
 
-  local _docs _kind _log
-  _docs="$(rpm --query --docfiles "$1")"
+  local -a _patterns
+  case "$1" in
+    changelog) _patterns=(changelog release news changes);;
+            *) _patterns=(readme);;
+  esac
+  
+  local _docs _pattern _log
+  _docs="$(rpm --query --docfiles "$2")"
 
   if [ ${#_docs[@]} -gt 0 ] ; then
     
-    for _kind in changelog release news changes ; do
+    for _pattern in "${_patterns[@]}" ; do
 
-      _log="$(grep -i -E "/[^/]*$_kind[^/]*$" <<<"$_docs" | head -1)"
+      _log="$(grep -i -E "/[^/]*$_pattern[^/]*$" <<<"$_docs" | head -1)"
 
       if [ -n "$_log" ] ; then
 
@@ -46,7 +52,7 @@ _rpm-history_preview_changes() {
       fi    
     done
     
-    echo "No changelog file identified in package doc files."
+    echo "No ${1^} file identified in package doc files."
 
   else
 
@@ -57,11 +63,11 @@ _rpm-history_preview_changes() {
 
 _rpm-history_preview() {
   echo "$1 package \"$3\""
-  fzf_preview_hrule
+  fzf-preview-hrule
   rpm -q $2 "$3"
 }
 
-export -f _rpm-history_preview _rpm-history_preview_changes
+export -f _rpm-history_preview _rpm-history_preview_docs
 
 rpm-history() {
   local _default
@@ -76,8 +82,9 @@ rpm-history() {
       --bind='alt-f:+change-preview(_rpm-history_preview "Files in" -l {6})' \
       --bind='alt-i:+change-preview(_rpm-history_preview "Info for" -i {6})' \
       --bind="alt-l:+change-preview($_default)" \
+      --bind='alt-r:+change-preview(_rpm-history_preview_docs readme {6})' \
       --bind='alt-s:+change-preview(_rpm-history_preview "Scripts in" --scripts --triggers {6})' \
-      --bind='alt-u:+change-preview(_rpm-history_preview_changes {6})' \
+      --bind='alt-u:+change-preview(_rpm-history_preview_docs changelog {6})' \
       --bind='alt-v:+change-preview(_rpm-history_preview "Verify files of" "--verify --verbose" {6})' \
       --border-label " Package install history " \
       --list-border rounded \
@@ -85,7 +92,7 @@ rpm-history() {
       --multi \
       --no-sort \
       --preview "$_default" \
-      --preview-label " Select package information kind via alt-{c,d,f,i,l,s,u,v}. " \
+      --preview-label " Select package information kind via alt-{c,d,f,i,l,r,s,u,v}. " \
       --preview-window '60%,~2:wrap' \
       --query "$1" \
       --reverse | \
