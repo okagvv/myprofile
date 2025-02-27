@@ -1,45 +1,42 @@
 # -*- shell-script -*-
 
-rpm-changelog() {
-  if [ $# -gt 0 ] ; then
-    rpm --query --verbose --changelog "$@" 2>&1 | less
-  else
-    fn-usage "package .."
-  fi
+_rpm_inspect_scope() {
+  rpm --query --$1 "$2" | \
+  fzf --border none \
+      --list-label " ${1^} in package \"$2\" " \
+      --multi \
+      --preview 'echo {}; fzf_preview_hrule; less {} | bat -n --color=always --file-name={}' \
+      --preview-window '60%:~2:wrap' | \
+  xargs -r
 }
 
-rpm-conf() {
-  if [ $# -gt 0 ] ; then
-    rpm --query --list --configfiles --state --verbose "$@" 2>&1 | less
-  else
-    fn-usage "package .."
-  fi
+rpm_changelog() {
+  [ $# -eq 1 ] && _rpm_inspect_scope changelog "$1" || fn-usage "<package>"
 }
 
-rpm-docs() {
-  if [ $# -gt 0 ] ; then
-    rpm --query --list --docfiles --verbose "$@" | \
-    fzf
-  else
-    fn-usage "package .."
-  fi
+rpm_conf() {
+  [ $# -eq 1 ] && _rpm_inspect_scope configfiles "$1" || fn-usage "<package>"
 }
 
-_rpm-history_preview_docs() {
+rpm_docs() {
+  [ $# -eq 1 ] && _rpm_inspect_scope docfiles "$1" || fn-usage "<package>"
+}
+
+_rpm_history_preview_docs() {
   echo "${1^} doc file for package \"$2\""
-  fzf-preview-hrule
+  fzf_preview_hrule
 
   local -a _patterns
   case "$1" in
     changelog) _patterns=(changelog release news changes);;
             *) _patterns=(readme);;
   esac
-  
+
   local _docs _pattern _log
   _docs="$(rpm --query --docfiles "$2")"
 
   if [ ${#_docs[@]} -gt 0 ] ; then
-    
+
     for _pattern in "${_patterns[@]}" ; do
 
       _log="$(grep -i -E "/[^/]*$_pattern[^/]*$" <<<"$_docs" | head -1)"
@@ -48,58 +45,58 @@ _rpm-history_preview_docs() {
 
         cat "$_log"
         return 0
-        
-      fi    
+
+      fi      
     done
-    
+
     echo "No ${1^} file identified in package doc files."
 
   else
 
     echo "Package contains no doc files!"
-    
+
   fi
 }
 
-_rpm-history_preview() {
+_rpm_history_preview() {
   echo "$1 package \"$3\""
-  fzf-preview-hrule
+  fzf_preview_hrule
   rpm -q $2 "$3"
 }
 
-export -f _rpm-history_preview _rpm-history_preview_docs
+export -f _rpm_history_preview _rpm_history_preview_docs
 
-rpm-history() {
+rpm_history() {
   local _default
-  _default='_rpm-history_preview "Changelog of" --changelog {6}'
-  
-  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
+  _default='_rpm_history_preview "Changelog of" --changelog {6}'
+
+  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
   sort --reverse | \
   cut --characters=12- | \
-  column -t | \
-  fzf --bind='alt-c:+change-preview(_rpm-history_preview "Config files in" --configfiles {6})' \
-      --bind='alt-d:+change-preview(_rpm-history_preview "Doc files in" --docfiles {6})' \
-      --bind='alt-f:+change-preview(_rpm-history_preview "Files in" -l {6})' \
-      --bind='alt-i:+change-preview(_rpm-history_preview "Info for" -i {6})' \
+  column --table --separator "*" | \
+  fzf --bind='alt-c:+change-preview(_rpm_history_preview "Config files in" --configfiles {6})' \
+      --bind='alt-d:+change-preview(_rpm_history_preview "Doc files in" --docfiles {6})' \
+      --bind='alt-f:+change-preview(_rpm_history_preview "Files in" -l {6})' \
+      --bind='alt-i:+change-preview(_rpm_history_preview "Info for" -i {6})' \
       --bind="alt-l:+change-preview($_default)" \
-      --bind='alt-r:+change-preview(_rpm-history_preview_docs readme {6})' \
-      --bind='alt-s:+change-preview(_rpm-history_preview "Scripts in" --scripts --triggers {6})' \
-      --bind='alt-u:+change-preview(_rpm-history_preview_docs changelog {6})' \
-      --bind='alt-v:+change-preview(_rpm-history_preview "Verify files of" "--verify --verbose" {6})' \
+      --bind='alt-r:+change-preview(_rpm_history_preview_docs readme {6})' \
+      --bind='alt-s:+change-preview(_rpm_history_preview "Scripts in" --scripts --triggers {6})' \
+      --bind='alt-u:+change-preview(_rpm_history_preview_docs changelog {6})' \
+      --bind='alt-v:+change-preview(_rpm_history_preview "Verify files of" "--verify --verbose" {6})' \
       --border-label " Package install history " \
       --list-border rounded \
       --list-label " Matching packages " \
       --multi \
       --no-sort \
       --preview "$_default" \
-      --preview-label " Select package information kind via alt-{c,d,f,i,l,r,s,u,v}. " \
+      --preview-label " Use alt-{c,d,f,i,l,r,s,u,v} to change information scope. " \
       --preview-window '60%,~2:wrap' \
       --query "$1" \
       --reverse | \
   awk '{ printf "%s ", $6 } END { printf "\n" }'
 }
 
-rpm-info() {
+rpm_info() {
   rpm -qa "$@" | \
   fzf --border-label " Package infos " \
       --list-label " Matching packages " \
@@ -107,7 +104,7 @@ rpm-info() {
       --preview-label " Package info, changelog and files "
 }
 
-rpm-owner() {
+rpm_owner() {
   if [ $# -gt 0 ] ; then
 
     local _f __f
@@ -119,13 +116,13 @@ rpm-owner() {
       echo "$__f: $(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
 
     done
-    
+
   else
     fn-usage "file .."
   fi
 }
 
-rpm-status() {
+rpm_status() {
   if [ $# -gt 0 ] ; then
     rpm --query --list --state --verbose "$@" 2>&1 | less
   else
@@ -133,7 +130,7 @@ rpm-status() {
   fi
 }
 
-rpm-verify() {
+rpm_verify() {
   if [ $# -gt 0 ] ; then
     rpm --verify --verbose "$@" 2>&1 | less
   else
@@ -151,7 +148,7 @@ in-path dnf || return 0
 # .. system not booted via rpm-ostree
 rpm-ostree status --booted 2>/dev/null && return 0
 
-rpm-freshen() {
+rpm_freshen() {
   if [ $# -gt 0 ] ; then
     rpm --freshen --verbose --hash "$@" 2>&1 | less
   else
@@ -226,7 +223,7 @@ dnf-remove() {
 
 dnf-search() {
   if [ $# -gt 0 ] ; then
-    
+
     dnf search --cacheonly --quiet "$@" | \
     grep -v = | \
     sort | \
@@ -252,7 +249,7 @@ dnf-requires() {
   else
     fn-usage "package"
   fi
-}	
+}
 
 dnf-recommends() {
   if [ $# -gt 0 ] ; then
@@ -279,4 +276,3 @@ dnf-testing() {
 }
 
 new-alias updateinfo 'dnf updateinfo --info'
-
