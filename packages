@@ -5,7 +5,7 @@ _rpm-inspect-scope() {
   fzf --border none \
       --list-label " ${1^} in package \"$2\" " \
       --multi \
-      --preview 'fzf-preview-hrule {}; less {} | bat -n --color=always --file-name={}' \
+      --preview 'fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
       --preview-window '60%:~2:wrap' | \
   xargs -r
 }
@@ -23,7 +23,7 @@ rpm-docs() {
 }
 
 _rpm-preview-docs() {
-  fzf-preview-hrule "${1^} doc file for package \"$2\""
+  fzf-preview-header "${1^} doc file for package \"$2\""
 
   local -a _patterns
   case "$1" in
@@ -58,7 +58,7 @@ _rpm-preview-docs() {
 }
 
 _rpm-preview() {
-  fzf-preview-hrule "$1 package \"$3\""
+  fzf-preview-header "$1 package \"$3\""
   rpm --query $2 "$3"
 }
 
@@ -197,7 +197,7 @@ _fzf-dnf-packages() {
 
   # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
   fzf --bind "alt-i:+change-preview($default)" \
-      --bind "alt-f:+change-preview(fzf-preview-hrule \"Files in package {1}\"; dnf repoquery --quiet --list {1})" \
+      --bind "alt-f:+change-preview(fzf-preview-header \"Files in package {1}\"; dnf repoquery --quiet --list {1})" \
       --border-label " $1 " \
       --header-lines 1 \
       --list-label " $2 " \

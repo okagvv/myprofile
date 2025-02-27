@@ -2,6 +2,7 @@ functions
 env
 fzf
 packages
+podman
 k8s
 ffmpeg
 aliases
