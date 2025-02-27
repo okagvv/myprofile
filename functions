@@ -105,8 +105,7 @@ if in_path man ; then
         --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
     tr -d '()' | \
     awk '{printf "%s ", $2} {print $1}' | \
-    xargs -r man
-    # '
+    xargs -r man # '
   }
 
 fi
@@ -193,7 +192,7 @@ fselect() {
   else
 
     myfunusage "<cmd> [<args>]
-Samples:
+Sample:
 \$ $FUNCNAME rm -iv"
 
   fi
@@ -312,11 +311,15 @@ myjournalctl() {
   journalctl --no-hostname --output=short-iso "$@"
 }
 
-mypassgen() {
-  #CAUTION: Vault (root) token must not contain dots!
-  keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
-                         --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
-}
+if in_path keepassxc-cli ; then
+  
+  mypassgen() {
+    #CAUTION: Vault (root) token must not contain dots!
+    keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
+                           --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
+  }
+  
+fi
 
 parse_git_branch() {
   git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
@@ -348,11 +351,13 @@ if in_path rsync ; then
 
     if [[ $# -ge 2 && -d "${@: -2:1}" && -d "${@: -1}" ]] ; then
 
-      if [[ "$(stat -f -c %T "${@: -1}" 2>/dev/null)" =~ ^(nfs|exfat|fuseblk)$ ]] ; then
-
-        _opts+=(--no-perms --no-owner --no-group)
-
-      fi
+      local _dir
+      for _dir in "${@: -2}" ; do
+        if [[ "$(stat -f -c %T "$_dir" 2>/dev/null)" =~ ^(nfs|exfat|fuseblk)$ ]] ; then
+          _opts+=(--no-perms --no-owner --no-group)
+          break
+        fi
+      done
 
       ionice -c2 -n7 rsync "${_opts[@]}" "$@"
 

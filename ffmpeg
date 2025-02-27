@@ -67,8 +67,7 @@ ffprobes() {
 
   else
 
-    echo "Missing path argument(s)!" >&2
-    false
+    myfunerr "Missing path argument(s)!"
 
   fi
 }
