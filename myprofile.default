@@ -1,6 +1,7 @@
 common
 env
 functions
+interactive
 aliases
 fzf
 packages
