@@ -5,35 +5,9 @@ a() {
 }
 complete -A alias a
 
-abbr-pwd() {
-  sed -E -e "s:^${HOME}:~:;s:^.+((/[^/]+){3})$:…\1:;s:([^/]{4})[^/]{4,}([^/]{4})/:\1…\2/:g" <<< "$PWD"
-}
-
-cleanup-path() {
-  export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
-}
-
 e() {
   # list current environment without $PS1 (shell prompt may embed escape sequences distorting output)
   printenv -0 | grep -zvE "^PS1=" | sort -z | tr '\000' '\n' | m -p "environment variables"
-}
-
-find-last() {
-  find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
-  sed -r 's/(:[0-9]{2})\.[0-9]+~/\1~/' | \
-  column -t -s~ -o'  ' | \
-  sort -k2dr -k3dr
-}
-complete -A directory find-last
-
-fn-usage() {
-  echo -e "Usage: ${FUNCNAME[1]} $1"
-  return 2
-}
-
-fn-error() {
-  echo -e "${FUNCNAME[1]}: $1" >&2
-  return 1
 }
 
 h() {
@@ -93,14 +67,6 @@ history-cleanup() {
   true
 }
 
-in-path() {
-  type -fp "$1" >/dev/null
-}
-
-is-fn() {
-  declare -F "$1" >/dev/null
-}
-
 lm() {
   l --color=always "$@" |& m -p lm
 }
@@ -135,20 +101,6 @@ m() {
                   "$@"
 }
 complete -o default m
-
-myjournalctl() {
-  journalctl --no-hostname --output=short-iso "$@"
-}
-
-if in-path keepassxc-cli ; then
-  
-  mypassgen() {
-    #CAUTION: Vault (root) token must not contain dots!
-    keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
-                           --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
-  }
-  
-fi
 
 new-alias() {
   if [ $# -eq 2 ] ; then
@@ -221,15 +173,6 @@ if in-path rsync ; then
   }
 
 fi
-
-uriencode() {
-  gojq -nr --arg v "$1" '$v|@uri';
-}
-
-xtrace() {
-  # Enable xtrace until return from current block. Apply as eval "$(xtrace)".
-  echo "set -x; trap 'set +x; trap - RETURN' RETURN"
-}
 
 if [[ ! "$(id -u)" == "0" ]] ; then
 
