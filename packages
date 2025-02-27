@@ -1,0 +1,216 @@
+# Some rpm and dnf related functions and aliases for use in interactive bash sessions.
+
+rpm-changelog() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --verbose --changelog "$@" 2>&1 | less
+  else
+    myfunusage "package .."
+  fi
+}
+
+rpm-conf() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --list --configfiles --state --verbose "$@" 2>&1 | less
+  else
+    myfunusage "package .."
+  fi
+}
+
+rpm-docs() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --list --docfiles --verbose "$@" 2>&1 | less
+  else
+    myfunusage "package .."
+  fi
+}
+
+rpm-history() {
+  # "fzf .. --no-sort .." required to preserve sorting by date for filtered list
+  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' "$@" 2>&1 | \
+  sort --reverse | \
+  cut --characters=12- | \
+  column -t | \
+  fzf --border-label " Package install history " \
+      --list-border rounded \
+      --list-label " Matching packages " \
+      --no-sort \
+      --preview 'rpm -qi --changelog {6}' \
+      --preview-label " Package info and changelog " \
+      --reverse
+}
+
+rpm-info() {
+  rpm -qa "$@" | \
+  fzf --border-label " Package infos " \
+      --list-label " Matching packages " \
+      --preview "rpm -qilv --changelog {1}" \
+      --preview-label " Package info, changelog and files "
+}
+
+rpm-owner() {
+  if [ $# -gt 0 ] ; then
+
+    local _f __f
+    for _f in "$@" ; do
+
+      [[ -e "$_f" || "$_f" = /* ]] && __f="$_f" || __f="$(/usr/bin/which "$_f" 2>/dev/null)"
+      [[ -z "$__f" ]] && __f="$_f"
+
+      echo "$__f: $(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
+
+    done
+    
+  else
+    myfunusage "file .."
+  fi
+}
+
+rpm-status() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --list --state --verbose "$@" 2>&1 | less
+  else
+    myfunusage "package .."
+  fi
+}
+
+rpm-verify() {
+  if [ $# -gt 0 ] ; then
+    rpm --verify --verbose "$@" 2>&1 | less
+  else
+    myfunusage "package .."
+  fi
+}
+
+if [[ "$(id -u)" == "0" ]] ; then
+
+  _dnf_repoquery() {
+    dnf repoquery --cacheonly --quiet "$@"
+  }
+  
+  dnf-list() {
+    if [ $# -gt 0 ] ; then
+      _dnf_repoquery --qf='%10{repoid} %{buildtime} %{installtime} %-10{downloadsize}->%10{installsize} %{name}-%{evr}.%{arch}\n\t\t\t\t\t\t    %{summary}' "$*"
+    else
+      myfunusage "package .."
+    fi
+  }
+
+  dnf-files() {
+    if [ $# -gt 0 ] ; then
+      _dnf_repoquery --list "$*"
+    else
+      myfunusage "package"
+    fi
+  }
+
+  dnf-history() {
+    dnf history | \
+    tail -n +3 | \
+    awk -v "FS=|" '{ print $1 "|" $3 "|" $2 } BEGIN { print "No | Timestamp | Scope\n" }' | \
+    tr -s ' ' | \
+    column -t -s "|" -o "|" -l 3 | \
+    fzf --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
+        --border-label " DNF history " \
+        --no-sort \
+        --reverse \
+        --header-lines 1 \
+        --list-label " DNF transaction(s) " \
+        --preview "dnf history info {1}" \
+        --preview-label " DNF transaction info " \
+        --preview-window "40%,~1:wrap"
+  }
+
+  dnf-install() {
+    _dnf_repoquery --queryformat '%{name}' | \
+    sort --ignore-case | \
+    fzf --border-label " Install packages via DNF " \
+        --list-label " Available DNF packages " \
+        --multi \
+        --no-sort \
+        --preview-label " Package description " \
+        --preview-window 'right,65%,wrap' \
+        --preview 'dnf --cacheonly --quiet info {1}' \
+        --query "$1" | \
+    xargs -ro sudo dnf install
+  }
+
+  dnf-remove() {
+    rpm -qa --qf '%{NAME}\n' "$@" | \
+    sort --ignore-case | \
+    fzf --border-label " Remove packages via DNF " \
+        --list-label " Installed packages " \
+        --multi \
+        --no-sort \
+        --preview-label " Package description " \
+        --preview-window 'right,65%,wrap' \
+        --preview 'rpm -qa --info {1}' \
+        --query "$1" | \
+    xargs -ro sudo dnf remove
+  }
+
+  dnf-search() {
+    if [ $# -gt 0 ] ; then
+      
+      dnf search --cacheonly --quiet "$@" | \
+      grep -v = | \
+      sort | \
+      uniq | \
+      fzf --multi \
+          --list-label " Matching packages " \
+          --border-label " Search package to install " \
+          --preview-label " Package info " \
+          --preview-window 'right,50%,wrap' \
+          --preview 'dnf --cacheonly --quiet info {1}' | \
+      xargs -ro sudo dnf install
+      
+    else
+
+      myfunusage "pattern"
+      
+    fi
+  }
+
+  dnf-requires() {
+    if [ $# -gt 0 ] ; then
+      _dnf_repoquery --requires --resolve "$*"
+    else
+      myfunusage "package"
+    fi
+  }	
+
+  dnf-recommends() {
+    if [ $# -gt 0 ] ; then
+      _dnf_repoquery --recommends --resolve "$*"
+    else
+      myfunusage "package"
+    fi
+  }
+
+  dnf-suggests() {
+    if [ $# -gt 0 ] ; then
+      _dnf_repoquery --suggests --resolve "$*"
+    else
+      myfunusage "package"
+    fi
+  }
+
+  dnf-testing() {
+    if [ $# -gt 0 ] ; then
+      dnf --enablerepo updates-testing "$@"
+    else
+      myfunusage "dnf-args"
+    fi
+  }
+
+  rpm-freshen() {
+    if [ $# -gt 0 ] ; then
+      rpm --freshen --verbose --hash "$@" 2>&1 | less
+    else
+      myfunusage "rpmfile"
+    fi
+  }
+
+  alias updateinfo='dnf updateinfo --info'
+
+fi
+

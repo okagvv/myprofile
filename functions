@@ -1,0 +1,357 @@
+_fzf_comprun() {
+  # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
+  local cmd=$1
+  shift
+
+  case "$cmd" in
+        cd) fzf --preview "tree -C -d -L 5 {} | head -200" "$@" ;;
+    export|\
+     unset) fzf --preview "eval 'echo \$'{}" "$@" ;;
+         *) fzf --preview "bat -n --color=always {}" "$@" ;;
+  esac
+}
+
+# remove potential aliases conflicting with following functions
+unalias e f h lm lmt history_cleanup genpasswd uriencode vsc 2>/dev/null || true
+
+a() {
+  alias "$@" | m -p "bash aliases"
+}
+complete -A alias a
+
+abbr_pwd() {
+  sed -E -e "s:^${HOME}:~:;s:^.+((/[^/]+){3})$:…\1:;s:([^/]{4})[^/]{4,}([^/]{4})/:\1…\2/:g" <<< "$PWD"
+}
+
+cleanup_path() {
+  export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
+}
+
+e() {
+  # list current environment without $PS1 (shell prompt may embed escape sequences distorting output)
+  printenv -0 | grep -zvE "^PS1=" | sort -z | tr '\000' '\n' | m -p "environment variables"
+}
+
+f() {
+  local _re _defs
+  local -a _fns
+
+  if [[ $# -eq 1 ]] ; then
+
+    case "$1" in
+      all) _re=".*";;
+       ~*) _re="${1#*~}";;
+        *) _re="^$1$";;
+    esac
+
+    _fns=($(declare -F | sed -r -n 's/^declare -f ([[:print:]]+)$/\1/;/'"$_re"'/p'))
+
+    if [ ${#_fns[@]} -eq 1 ] ; then
+
+      declare -f ${_fns[0]}
+
+    elif [ ${#_fns[@]} -gt 1 ] ; then
+
+      _defs="$(mktemp --suffix=.fundef)"
+      declare -f ${_fns[@]} >"$_defs"
+
+      echo ${_fns[@]} | \
+      tr ' ' '\n' | \
+      fzf --bind "enter:become(echo declare -f {1})" \
+          --list-label " Bash function(s) " \
+          --list-border rounded \
+          --no-sort \
+          --preview "awk '/^{1} \(\)/,/^\}/' $_defs" \
+          --preview-label " Function definition " \
+          --preview-window 'up,50%,+{2}+2/2,~2:wrap' || true
+
+      rm -f "$_defs"
+
+    fi
+  fi
+
+  [ ${#_fns[@]} -gt 0 ] || myfunusage "<function>|all|~regexp"
+}
+complete -A function f
+
+ffprobes() {
+  local _f
+  for _f in "$@" ; do
+    ffprobe "$_f"
+  done 2>&1 | \
+  grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
+}
+
+find_last() {
+  find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
+  sed -r 's/(:[0-9]{2})\.[0-9]+~/\1~/' | \
+  column -t -s~ -o'  ' | \
+  sort -k2dr -k3dr
+}
+complete -A directory find_last
+
+fman() {
+  # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
+  # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
+  # fonts referenced in some manual pages.
+  man -k . | \
+  sort | \
+  sed -r 's/\) *- */\)~/' | \
+  column -t -s"~" -l2 | \
+  fzf --bind "?:toggle-preview" \
+      --border-label "Manual pages" \
+      --query "${1:+"'$1"}" \
+      --prompt='man> ' \
+      --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
+  tr -d '()' | \
+  awk '{printf "%s ", $2} {print $1}' | \
+  xargs -r man
+}
+
+fps() {
+  # TODO: Select via option from several ps columns sets.
+  # CAUTION: Some default column widths in ps output are unbalanced. Fixing this by configuring
+  # fixed column widths causes waste of horizontal space.
+  # High --hscroll-off value ensures that a match in a long command line is visible. With "h" the
+  # effect of --hscroll-off can be toggled. In addition a preview window containg the wraped line
+  # can be toggled on demand via "?".
+  local _ps
+  _ps="ps aux --sort=-%cpu | column -t -l 11"
+  eval "$_ps" | \
+  fzf --bind="ctrl-r:reload(eval \"$_ps\"),?:toggle-preview" \
+      --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
+      --header-lines 1 \
+      --history "$FZF_HISTORY_DIR/fps.history" \
+      --hscroll-off=800 \
+      --list-border none \
+      --no-sort \
+      --preview 'echo {}' \
+      --preview-window "down:3:hidden:wrap" \
+      --query "$1" \
+      --reverse
+}
+
+frg() {
+  # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
+
+  if [ $# -gt 0 ] ; then
+
+    local _editor_args
+    # It is assumed that $EDITOR is set to "vim" or "emacsclient".
+    [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
+
+    rg --color=always --hidden --line-number --no-heading --smart-case "$*" |
+    fzf --ansi \
+        --bind "enter:execute($EDITOR $_editor_args)" \
+        --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
+        --border-label-pos "3:bottom" \
+        --color "hl:-1:underline,hl+:-1:underline:reverse" \
+        --delimiter : \
+        --history "$FZF_HISTORY_DIR/frg.history" \
+        --list-border none \
+        --no-multi \
+        --preview 'bat --color=always {1} --highlight-line {2}' \
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3'
+
+  else
+
+    myfunusage "<ripgrep args>"
+
+  fi
+}
+
+fselect() {
+  if [ $# -gt 0 ] ; then
+
+    local -a _selected
+
+    while [ 1 ] ; do
+
+      eval "_selected=($(fzf --multi \
+                             --history "$FZF_HISTORY_DIR/fselect.history" \
+                             --print0 \
+                             --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
+                             --border-label-pos "2:bottom" \
+                             --preview 'file -i {1}; echo; ls -ld {1}' | \
+                         xargs -0 -i@ echo '"@"'))"
+
+      [ ${#_selected[@]} -gt 0 ] || return 0
+
+      "$@" "${_selected[@]}"
+
+    done
+
+  else
+
+    myfunusage "<cmd> [<args>]
+Samples:
+\$ $FUNCNAME rm -iv"
+
+  fi
+}
+
+funits() {
+  systemctl --plain | \
+  sed '/^$/,$d' | \
+  fzf --bind "enter:become(echo systemctl status,restart,stop {}),?:toggle-preview" \
+      --border-label " Systemd Units. \"?\" toggles preview window. " \
+      --header-lines 1 \
+      --history "$FZF_HISTORY_DIR/funits.history" \
+      --list-label " Systemd unit(s) " \
+      --multi \
+      --no-sort \
+      --preview "systemctl status {1} --lines 100; printf %*s \$FZF_PREVIEW_COLUMNS | tr ' ' =; echo; systemctl cat {1}" \
+      --preview-label " Unit status, recent journal entries and spec " \
+      --query "$1" \
+      --reverse
+}
+
+h() {
+  local _cnt _color
+  if [[ "$1" =~ ^-(a|-all)$ ]] ; then
+    shift
+    _cnt=$HISTSIZE
+  else
+    _cnt="42"
+  fi
+  [ $# -gt 0 ] && _color=auto || _color=never
+  history | grep --color=never -E "${1:-.*}" | tail -$_cnt | grep --colour=$_color -E "${1:-.*}"
+}
+
+history_cleanup() {
+  # remove sensible a/o undesired entries from bash history
+  # args: "$remove_regexp" .. [-- "$keep_regexp" ..]
+
+  if [ -n "$HISTFILE" ] ; then
+
+    local _pattern _histfile _keep _drop
+    _drop="(${FUNCNAME[0]}"
+
+    for _pattern in "$@" ; do
+
+      if [[ "$_pattern" == "--" ]] ; then
+        _keep="(~§~§~"
+      elif [ -n "$_keep" ] ; then
+        _keep+="|$_pattern"
+      else
+        _drop+="|$_pattern"
+      fi
+
+    done
+
+    _drop+=")"
+    [ -z "$_keep" ] && _keep="~§~§~" || _keep+=")"
+
+    _histfile="$HISTFILE"
+
+    eval "$(history |
+            sed -rn '/'"$_keep"'/d;s/^ *([0-9]+) .*'"$_drop"'.*/\1/ip' |
+            sort --numeric-sort --reverse |
+            xargs --no-run-if-empty --replace=@ echo history -d @)"
+
+    # Work-around for "history -w" failing to update history file mounted into a container.
+    HISTFILE="$(mktemp --suffix=.history --tmpdir bash_XXXXXX)"
+    history -w
+    cat "$HISTFILE" >"$_histfile"
+    HISTFILE="$_histfile"
+
+    history -s : history_cleanup
+    sleep 1
+
+  fi
+
+  true
+}
+
+lm() {
+  l --color=always "$@" |& m -p lm
+}
+
+lmt() {
+  l --color=always --sort=time "$@" |& m -p lmt
+}
+complete -o bashdefault -o default l lmt lm
+
+m() {
+  local _prompt
+
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+           -h|--help) myfunusage "[-p|--prompt \"text\"]"; return 0;;
+      -[pP]|--prompt) _prompt="$2"; shift 2;;
+                   *) break;;
+    esac
+  done
+
+  TERM=xterm less --hilite-search \
+                  --ignore-case \
+                  --mouse \
+                  --no-histdups \
+                  --no-init \
+                  --no-vbell \
+                  --prompt "$_prompt ?f%f.?lt line %lt?L/%L. .?e(END)" \
+                  --quit-if-one-screen \
+                  --squeeze-blank-lines \
+                  --status-line \
+                  --tilde \
+                  --use-color \
+                  "$@"
+}
+complete -o default m
+
+myjournalctl() {
+  journalctl --no-hostname --output=short-iso "$@"
+}
+
+myfunusage() {
+  echo -e "Usage: ${FUNCNAME[1]} $1"
+  return 2
+}
+
+mypassgen() {
+  #CAUTION: Vault (root) token must not contain dots!
+  keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
+                         --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
+}
+
+parse_git_branch() {
+  git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'
+}
+
+pdfgrep() {
+  /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
+}
+
+uriencode() {
+  gojq -nr --arg v "$1" '$v|@uri';
+}
+
+if [[ "$(id -u)" == "0" ]] ; then
+
+  juser() {
+    if [ $# -gt 0 ] ; then
+      local _uid="$(id -u "$1")"
+      shift
+      myjournalctl --pager-end _UID="$_uid" "$@"
+    else
+      myfunusage "user [journalct options]"
+    fi
+  }
+  complete -A user -o default juser
+
+  mysu() {
+      # Start command-line via su for user derived from path owner of last argument.
+      # Preserves white spaces in arguments.
+      if [ $# -ge 2 ] ; then
+        su $(stat -c %U "${*: -1}") -c "$(printf "'%s' " "${@}")"
+      else
+        myfunusage "command [options|args] file"
+      fi
+  }
+  complete -A command -o default mysu
+
+  oom_killed() {
+    myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
+  }
+
+fi
