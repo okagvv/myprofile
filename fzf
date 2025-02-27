@@ -30,6 +30,7 @@ _fzf_comprun () {
 }
 
 fzf-preview-hrule() {
+  [ -z "$1" ] || echo "$1"
   printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
   echo
 }
@@ -76,7 +77,7 @@ fzf-fn() {
 
   [ ${#_fns[@]} -gt 0 ] || fn-usage "<function>|all|~regexp"
 }
-complete -A function f
+complete -A function fzf-fn
 
 if in-path man ; then
 
