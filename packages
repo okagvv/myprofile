@@ -228,15 +228,15 @@ _fzf-dnf-packages() {
 
 _dnf-packages() {
   ( echo "Package Repository"
-    dnf-repoquery --queryformat '%{name}-%{evr}.%{arch} %{reponame}' "$@" | \
+    dnf-repoquery --queryformat '%{name}-%{evr}.%{arch} %{reponame}\n' "$@" | \
     sort --ignore-case
-  ) | column -t
+  ) | column -t -l2
 }
 
 dnf-install() {
   _dnf-packages | \
   _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$1" | \
-  xargs --no-run-if-empty --open-tty echo sudo dnf install
+  xargs --no-run-if-empty --open-tty sudo dnf install
 }
 
 dnf-remove() {
