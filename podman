@@ -1,0 +1,33 @@
+# -*- shell-script -*-
+
+in-path podman || return 0
+
+_fzf-podman-query() {
+# set -x
+  fzf-preview-header "$1"
+  shift
+  $* | gojq --yaml-output
+}
+export -f _fzf-podman-query
+
+trap 'set +x' EXIT
+
+fzf-images() {
+  local _default
+  _default='_fzf-podman-query "Inspect {}" podman image inspect {}'
+
+  podman images --format '{{ .Repository }}:{{ .Tag }}' | \
+  fzf --bind='alt-c:+change-preview(fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
+      --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
+      --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
+      --bind="alt-i:+change-preview($_default)" \
+      --bind='alt-t:+change-preview(fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
+      --border none \
+      --list-label "Podman images" \
+      --multi \
+      --preview "$_default" \
+      --preview-label " Use alt-{c,d,h,i,t} to change information scope. " \
+      --preview-window '60%:~2:wrap' \
+      --query "$1" | \
+  xargs -r
+}
