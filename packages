@@ -5,7 +5,7 @@ _rpm-inspect-scope() {
   fzf --border none \
       --list-label " ${1^} in package \"$2\" " \
       --multi \
-      --preview 'echo {}; fzf-preview-hrule; less {} | bat -n --color=always --file-name={}' \
+      --preview 'fzf-preview-hrule {}; less {} | bat -n --color=always --file-name={}' \
       --preview-window '60%:~2:wrap' | \
   xargs -r
 }
@@ -22,13 +22,12 @@ rpm-docs() {
   [ $# -eq 1 ] && _rpm-inspect-scope docfiles "$1" || fn-usage "<package>"
 }
 
-_rpm-history-preview-docs() {
-  echo "${1^} doc file for package \"$2\""
-  fzf-preview-hrule
+_rpm-preview-docs() {
+  fzf-preview-hrule "${1^} doc file for package \"$2\""
 
   local -a _patterns
   case "$1" in
-    changelog) _patterns=(changelog release news changes);;
+    changelog) _patterns=(changelog release news changes announce);;
             *) _patterns=(readme);;
   esac
 
@@ -46,7 +45,7 @@ _rpm-history-preview-docs() {
         cat "$_log"
         return 0
 
-      fi      
+      fi
     done
 
     echo "No ${1^} file identified in package doc files."
@@ -58,32 +57,27 @@ _rpm-history-preview-docs() {
   fi
 }
 
-_rpm-history-preview() {
-  echo "$1 package \"$3\""
-  fzf-preview-hrule
-  rpm -q $2 "$3"
+_rpm-preview() {
+  fzf-preview-hrule "$1 package \"$3\""
+  rpm --query $2 "$3"
 }
 
-export -f _rpm-history-preview _rpm-history-preview-docs
+export -f _rpm-preview _rpm-preview-docs
 
-rpm-history() {
+_fzf-rpm() {
   local _default
-  _default='_rpm-history-preview "Changelog of" --changelog {6}'
+  _default='_rpm-preview "Changelog of" --changelog {-1}'
 
-  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
-  sort --reverse | \
-  cut --characters=12- | \
-  column --table --separator "*" | \
-  fzf --bind='alt-c:+change-preview(_rpm-history-preview "Config files in" --configfiles {6})' \
-      --bind='alt-d:+change-preview(_rpm-history-preview "Doc files in" --docfiles {6})' \
-      --bind='alt-f:+change-preview(_rpm-history-preview "Files in" -l {6})' \
-      --bind='alt-i:+change-preview(_rpm-history-preview "Info for" -i {6})' \
+  fzf --bind='alt-c:+change-preview(_rpm-preview "Config files in" --configfiles {-1})' \
+      --bind='alt-d:+change-preview(_rpm-preview "Doc files in" --docfiles {-1})' \
+      --bind='alt-f:+change-preview(_rpm-preview "Files in" -l {-1})' \
+      --bind='alt-i:+change-preview(_rpm-preview "Info for" -i {-1})' \
       --bind="alt-l:+change-preview($_default)" \
-      --bind='alt-r:+change-preview(_rpm-history-preview-docs readme {6})' \
-      --bind='alt-s:+change-preview(_rpm-history-preview "Scripts in" --scripts --triggers {6})' \
-      --bind='alt-u:+change-preview(_rpm-history-preview-docs changelog {6})' \
-      --bind='alt-v:+change-preview(_rpm-history-preview "Verify files of" "--verify --verbose" {6})' \
-      --border-label " Package install history " \
+      --bind='alt-r:+change-preview(_rpm-preview-docs readme {-1})' \
+      --bind='alt-s:+change-preview(_rpm-preview "Scripts in" "--scripts --triggers" {-1})' \
+      --bind='alt-u:+change-preview(_rpm-preview-docs changelog {-1})' \
+      --bind='alt-v:+change-preview(_rpm-preview "Verify files of" "--verify --verbose" {-1})' \
+      --border-label " $1 " \
       --list-border rounded \
       --list-label " Matching packages " \
       --multi \
@@ -91,17 +85,21 @@ rpm-history() {
       --preview "$_default" \
       --preview-label " Use alt-{c,d,f,i,l,r,s,u,v} to change information scope. " \
       --preview-window '60%,~2:wrap' \
-      --query "$1" \
+      --query "$2" \
       --reverse | \
-  awk '{ printf "%s ", $6 } END { printf "\n" }'
+  awk '{ printf "%s ", $NF } END { printf "\n" }'
+}
+
+rpm-history() {
+  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
+  sort --reverse | \
+  cut --characters=12- | \
+  column --table --separator "*" | \
+  _fzf-rpm "Package install history" "$1"
 }
 
 rpm-info() {
-  rpm -qa "$@" | \
-  fzf --border-label " Package infos " \
-      --list-label " Matching packages " \
-      --preview "rpm -qilv --changelog {1}" \
-      --preview-label " Package info, changelog and files "
+  rpm -qa "$@" | sort | _fzf-rpm "Installed packages"
 }
 
 rpm-owner() {
@@ -116,7 +114,6 @@ rpm-owner() {
       echo "$__f: $(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
 
     done
-
   else
     fn-usage "file .."
   fi
@@ -124,7 +121,7 @@ rpm-owner() {
 
 rpm-status() {
   if [ $# -gt 0 ] ; then
-    rpm --query --list --state --verbose "$@" 2>&1 | less
+    rpm --query --list --state --verbose "$@" 2>&1 | m
   else
     fn-usage "package .."
   fi
@@ -132,7 +129,7 @@ rpm-status() {
 
 rpm-verify() {
   if [ $# -gt 0 ] ; then
-    rpm --verify --verbose "$@" 2>&1 | less
+    rpm --verify --verbose "$@" 2>&1 | m
   else
     fn-usage "package .."
   fi
@@ -150,7 +147,7 @@ rpm-ostree status --booted 2>/dev/null && return 0
 
 rpm-freshen() {
   if [ $# -gt 0 ] ; then
-    rpm --freshen --verbose --hash "$@" 2>&1 | less
+    rpm --freshen --verbose --hash "$@" 2>&1 | m
   else
     fn-usage "rpmfile"
   fi
@@ -159,6 +156,7 @@ rpm-freshen() {
 dnf-repoquery() {
   dnf repoquery --cacheonly --quiet "$@"
 }
+export -f dnf-repoquery
 
 dnf-list() {
   if [ $# -gt 0 ] ; then
@@ -178,46 +176,56 @@ dnf-files() {
 
 dnf-history() {
   dnf history | \
-    tail -n +3 | \
-    awk -v "FS=|" '{ print $1 "|" $3 "|" $2 } BEGIN { print "No | Timestamp | Scope\n" }' | \
-    tr -s ' ' | \
-    column -t -s "|" -o "|" -l 3 | \
-    fzf --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
-        --border-label " DNF history " \
-        --no-sort \
-        --reverse \
-        --header-lines 1 \
-        --list-label " DNF transaction(s) " \
-        --preview "dnf history info {1}" \
-        --preview-label " DNF transaction info " \
-        --preview-window "40%,~1:wrap"
+  tail -n +3 | \
+  awk -v FS="|" '{ printf "%s|%s|%s\n",$1,$3,$2 }' | \
+  sed -r 's/ \| /\|/g' | \
+  column -t -s"|" -C name=No,right -C name=Timestamp -C name=Scope | \
+  fzf --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
+      --border-label " DNF history " \
+      --no-sort \
+      --reverse \
+      --header-lines 1 \
+      --list-label " DNF transaction(s) " \
+      --preview "dnf history info {1}" \
+      --preview-label " DNF transaction info " \
+      --preview-window "40%,~1:wrap"
+}
+
+_fzf-dnf-packages() {
+  local _default
+  _default="dnf-repoquery --info {1}"
+
+  # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
+  fzf --bind "alt-i:+change-preview($default)" \
+      --bind "alt-f:+change-preview(fzf-preview-hrule \"Files in package {1}\"; dnf repoquery --quiet --list {1})" \
+      --border-label " $1 " \
+      --header-lines 1 \
+      --list-label " $2 " \
+      --multi \
+      --no-sort \
+      --preview-label " Package info (Use alt-i/alt-f for info/files) " \
+      --preview-window 'right,65%,wrap' \
+      --preview "$_default" \
+      --reverse \
+      --query "$3"
+}
+
+_dnf-packages() {
+  ( echo "Package Repository"
+    dnf-repoquery --queryformat '%{name}-%{evr}.%{arch} %{reponame}' "$@" | \
+    sort --ignore-case
+  ) | column -t
 }
 
 dnf-install() {
-  dnf-repoquery --queryformat '%{name}' | \
-  sort --ignore-case | \
-  fzf --border-label " Install packages via DNF " \
-      --list-label " Available DNF packages " \
-      --multi \
-      --no-sort \
-      --preview-label " Package description " \
-      --preview-window 'right,65%,wrap' \
-      --preview 'dnf --cacheonly --quiet info {1}' \
-      --query "$1" | \
+  _dnf-packages | \
+  _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$1" | \
   xargs -ro sudo dnf install
 }
 
 dnf-remove() {
-  rpm -qa --qf '%{NAME}\n' "$@" | \
-  sort --ignore-case | \
-  fzf --border-label " Remove packages via DNF " \
-      --list-label " Installed packages " \
-      --multi \
-      --no-sort \
-      --preview-label " Package description " \
-      --preview-window 'right,65%,wrap' \
-      --preview 'rpm -qa --info {1}' \
-      --query "$1" | \
+  _dnf-packages --installed | \
+  _fzf-dnf-packages "Remove packages via DNF" "Installed packages" "$1" | \
   xargs -ro sudo dnf remove
 }
 
@@ -228,18 +236,11 @@ dnf-search() {
     grep -v = | \
     sort | \
     uniq | \
-    fzf --multi \
-        --list-label " Matching packages " \
-        --border-label " Search package to install " \
-        --preview-label " Package info " \
-        --preview-window 'right,50%,wrap' \
-        --preview 'dnf --cacheonly --quiet info {1}' | \
+    _fzf-dnf-packages "Search package matching \"$@\"" "Matching packages" | \
     xargs -ro sudo dnf install
 
   else
-
-    fn-usage "pattern"
-
+    fn-usage "<pattern>"
   fi
 }
 
@@ -247,7 +248,7 @@ dnf-requires() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --requires --resolve "$*"
   else
-    fn-usage "package"
+    fn-usage "<package>"
   fi
 }
 
@@ -255,7 +256,7 @@ dnf-recommends() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --recommends --resolve "$*"
   else
-    fn-usage "package"
+    fn-usage "<package>"
   fi
 }
 
@@ -263,7 +264,7 @@ dnf-suggests() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --suggests --resolve "$*"
   else
-    fn-usage "package"
+    fn-usage "<package>"
   fi
 }
 
@@ -271,7 +272,7 @@ dnf-testing() {
   if [ $# -gt 0 ] ; then
     dnf --enablerepo updates-testing "$@"
   else
-    fn-usage "dnf-args"
+    fn-usage "<dnf-args>"
   fi
 }
 
