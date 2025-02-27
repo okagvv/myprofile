@@ -248,11 +248,13 @@ dnf-remove() {
 dnf-search() {
   if [ $# -gt 0 ] ; then
 
-    dnf search --cacheonly --quiet "$@" | \
-    grep -v = | \
-    sort | \
-    uniq | \
-    _fzf-dnf-packages "Search package matching \"$@\"" "Matching packages" | \
+    ( echo "Package : Summary"
+      sudo dnf search --cacheonly --quiet "$@" | \
+      grep -v = | \
+      sort | \
+      uniq
+    ) | column -t -s: -l2 | \
+    _fzf-dnf-packages "Search package matching $*" "Matching packages" | \
     xargs --no-run-if-empty --open-tty sudo dnf install
 
   else
@@ -261,12 +263,23 @@ dnf-search() {
 }
 
 dnf-upgrades() {
+  local _default _package
+  _package='name={1}; pkg=${name%.*}-{2}.${name##*.}'
+  _default="$_package; sudo dnf changelog --quiet \$pkg"
+  
   sudo dnf list updates --quiet | \
-  fzf --border none \
+  fzf --bind "ctrl-a:toggle-all" \
+      --bind "alt-c:+change-preview($_default)" \
+      --bind "alt-i:+change-preview($_package; sudo dnf repoquery --info \$pkg)" \
+      --bind 'enter:become(echo {+1})' \
+      --border none \
+      --exit-0 \
+      --list-label " Available upgrades (ctrl-a: toggle all)" \
       --header-lines 1 \
       $(fzf-query-history) \
       --multi \
-      --preview 'name={1}; sudo dnf changelog --quiet ${name%.*}-{2}.${name##*.}'
+      --preview "$_default" \
+      --preview-label " Package info (Use alt-c/alt-i for changelog/info) " \
       --query "$1" \
       --reverse | \
   xargs --no-run-if-empty --open-tty sudo dnf upgrade
