@@ -1,7 +1,9 @@
 # -*- mode: Shell-script -*-
 
 if [[ -d $HOME/.local/bin && ! $PATH == ?(*:)$HOME/.local/bin?(:*) ]] ; then
+
   export PATH+=":$HOME/.local/bin"
+
 fi
 
 cleanup-path
@@ -34,16 +36,19 @@ fi
 
 [ -s /usr/libexec/openssh/gnome-ssh-askpass ] && export SUDO_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass
 
-if in-path starship && [ -s ~/.config/starship.toml ] ; then
-  
-  eval "$(starship init "${SHELL##*/}")"
-  
-elif in-path git ; then
-  
-  export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\]\$(git branch --show-current)\[\033[00m\] \$ "
+if [ -n "$PS1" ] ; then
 
-else
+  if in-path starship && [ -s ~/.config/starship.toml ] ; then
 
-  export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
+    eval "$(starship init "${SHELL##*/}")"
 
+  elif [ -d ~/.git ] ; then
+
+    export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\] (\$(git branch --show-current)\[\033[00m\]) \$ "
+
+  else
+
+    export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
+
+  fi
 fi
