@@ -1,29 +1,4 @@
 # -*- mode: Shell-script -*-
-# Setup of user specific aliases, environment and prompt.
-
-if [[ -d $HOME/.local/bin && ! $PATH == ?(*:)$HOME/.local/bin?(:*) ]] ; then
-  export PATH+=":$HOME/.local/bin"
-fi
-
-cleanup_path
-
-export HISTTIMEFORMAT="%m-%d %T "
-export HISTSIZE=1000
-export HISTCONTROL=ignoreboth:erasedups
-export EDITOR=vim
-export LESS='-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t'
-export LESSBINFMT='*u\%X'
-export LESSCHARSET='utf-8'
-export LESSKEY_SYSTEM=/etc/lesskey
-export SYSTEMD_COLORS=0
-export LIBVIRT_DEFAULT_URI=qemu:///system
-export BAT_THEME="Coldark-Cold"
-export PROMPT_DIRTRIM=5
-export PS4='+ ${FUNCNAME[0]} $LINENO: '
-
-FZF_DEFAULT_OPTS='--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 2 --preview-label-pos 2 --no-mouse --info=inline --bind esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll --history-size 100'
-export FZF_HISTORY_DIR="$HOME/.config/fzf"
-[ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
 alias -- -='cd -'
 alias ..='cd ..'
@@ -31,7 +6,6 @@ alias alsamixer='alsamixer --no-color'
 alias cal='cal --three --monday --week --iso'
 alias clr='\rm -vf *~ .*~ *.o .saves-* \#*\#'
 alias df='\df --no-sync --print-type --human-readable --portability --exclude-type=devtmpfs --exclude-type=overlay --total'
-alias dfc='dfc -WfsdTw -q mount'
 alias dmesg='\dmesg --ctime --decode --color=always --level=emerg,alert,crit,err,warn,notice --nopager | m ++G'
 alias du='\du -xkhc --max-depth=1'
 alias failed='systemctl list-units --failed'
@@ -62,13 +36,12 @@ alias trans2de='\trans -t de'
 alias trans2en='\trans -t en'
 alias vi='env TERM=xterm vim'
 
+type -fP dfc >/dev/null      && alias dfc='dfc -WfsdTw -q mount'
 type -fP starship >/dev/null && alias st='eval "$(starship init bash)"'
 type -fP tmux >/dev/null     && alias tmux='tmux -2'
 type -fP tree >/dev/null     && alias tree='\tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
 
 if [[ "$(id -u)" == "0" ]] ; then
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33"
 
   alias avctoday='ausearch -ts today -m avc'
   alias avcyesterday='ausearch -ts yesterday -m avc'
@@ -81,11 +54,8 @@ if [[ "$(id -u)" == "0" ]] ; then
 
 else
 
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:230,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33"
-
   alias journalctl='journalctl --user'
   alias systemctl='\systemctl --user'
-  alias rpi_proxy='nohup ssh -i ~/.ssh/f38 -D 8080 -N root@rpi4 &'
 
 fi
 
@@ -96,14 +66,3 @@ if [ -s ~/.fetchmailrc ] ; then
   # complete imap p/1/"(`sed -r -n 's%^poll ([^ ]+) .*%\1%p' ~/.fetchmailrc | tr '\n' ' '`)"/
 
 fi
-
-if type -fP starship >/dev/null && [ -e ~/.config/starship.toml ] ; then
-  
-  eval "$(starship init "$(basename $SHELL)")"
-  
-else
-  
-  export PS1="\$? \u@\h:\$(abbr_pwd)\[\033[31m\]\$(parse_git_branch)\[\033[00m\] \$ "
-  
-fi
-
