@@ -94,16 +94,16 @@ m() {
     esac
   done
 
-  LESS= TERM=xterm less --hilite-search \
-                        --ignore-case \
-                        --no-{histdups,init,vbell} \
-                        --prompt="s$_prompt?f%f.?lt line %lt?L/%L. .?e(END)" \
-                        --quit-if-one-screen \
-                        --squeeze-blank-lines \
-                        --status-line \
-                        --tilde \
-                        --use-color \
-                        "$@"
+  TERM=xterm less --hilite-search \
+                  --ignore-case \
+                  --no-{histdups,init,vbell} \
+                  --prompt="s$_prompt?f%f.?lt line %lt?L/%L. .?e(END)" \
+                  --quit-if-one-screen \
+                  --squeeze-blank-lines \
+                  --status-line \
+                  --tilde \
+                  --use-color \
+                  "$@"
 }
 complete -o default m
 
