@@ -98,8 +98,7 @@ if in_path man ; then
     sort | \
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
-    fzf --bind "?:toggle-preview" \
-        --border-label "Manual pages" \
+    fzf --border-label "Manual pages" \
         --query "$1" \
         --prompt='man> ' \
         --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \

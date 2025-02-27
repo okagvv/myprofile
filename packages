@@ -24,20 +24,39 @@ rpm-docs() {
   fi
 }
 
+_rpm-history_preview() {
+  echo "$1 package \"$3\""
+  fzf_preview_hrule
+  rpm -q $2 "$3"
+}
+export -f _rpm-history_preview
+
 rpm-history() {
-  # "fzf .. --no-sort .." required to preserve sorting by date for filtered list
+  local _default
+  _default='_rpm-history_preview "Changelog of" --changelog {6}'
+  
   LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' 2>&1 | \
   sort --reverse | \
   cut --characters=12- | \
   column -t | \
-  fzf --border-label " Package install history " \
+  fzf --bind='alt-c:+change-preview(_rpm-history_preview "Config files in" --configfiles {6})' \
+      --bind='alt-d:+change-preview(_rpm-history_preview "Doc files in" --docfiles {6})' \
+      --bind='alt-f:+change-preview(_rpm-history_preview "Files in" -l {6})' \
+      --bind='alt-i:+change-preview(_rpm-history_preview "Info for" -i {6})' \
+      --bind="alt-l:+change-preview($_default)" \
+      --bind='alt-s:+change-preview(_rpm-history_preview "Scripts in" --scripts --triggers {6})' \
+      --bind='alt-v:+change-preview(_rpm-history_preview "Verify files of" "--verify --verbose" {6})' \
+      --border-label " Package install history " \
       --list-border rounded \
       --list-label " Matching packages " \
+      --multi \
       --no-sort \
-      --preview 'rpm -qi --changelog {6}' \
-      --preview-label " Package info and changelog " \
+      --preview "$_default" \
+      --preview-label " Select package information kind via alt-{c,d,f,i,l,s,v}. " \
+      --preview-window '60%,~2:wrap' \
       --query "$1" \
-      --reverse
+      --reverse | \
+  awk '{ printf "%s ", $6 } END { printf "\n" }'
 }
 
 rpm-info() {
