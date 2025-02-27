@@ -9,6 +9,10 @@
 # myprofile() might be called during bash session on demand to reload a (maybe updated) myprofile
 # script.
 
+in_path() {
+  type -fp "$1" >/dev/null
+}
+
 myfunusage() {
   echo -e "Usage: ${FUNCNAME[1]} $1"
   return 2
@@ -25,9 +29,15 @@ myalias() {
     local _cmd
     _cmd="${2%% *}"
   
-    in_path "$_cmd" || return 0
+    if in_path "$_cmd" || declare -F "$_cmd" >/dev/null ; then
     
-    [[ "$1" == "$_cmd" ]] && eval "alias $1='\\$2'" || eval "alias $1='$2'"
+      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='\\$2'" || eval "alias -- $1='$2'"
+
+    else
+
+      return 0
+
+    fi
 
   else
 

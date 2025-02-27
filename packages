@@ -219,5 +219,5 @@ dnf-testing() {
   fi
 }
 
-alias updateinfo='dnf updateinfo --info'
+myalias updateinfo 'dnf updateinfo --info'
 
