@@ -2,22 +2,32 @@
 
 in-path ffmpeg || return 0
 
-new-alias ffmpeg "ffmpeg -hide_banner"
-new-alias ffprobe "ffprobe -hide_banner"
-
-_ffprobes-filter() {
-  find "$1" -type f -printf '%P\0' | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
-}
-
-_ffprobes-all() {
-  find "$1" -type f -printf '%P\n'
+{
+  local _ff
+  for _ff in ff{mpeg,play,probe} ; do
+    new-alias "$_ff" "$_ff -hide_banner"
+  done
 }
 
 ffprobes() {
+  local _f
+  for _f in "$@" ; do
+
+    # files not applicable as ffprobe input are ignored silently
+    if file -i "$_f" 2>/dev/null | grep --silent -E '(audio|video)/' ; then
+
+      ffprobe "$_f"
+
+    fi
+
+  done 2>&1 | grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
+}
+
+fzf-ffprobes() (
+  # This is a sub-shell function, i.e. 
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
   # list input. Use of --all avoids this but may cause error messages in preview window for
   # unsupported file formats.
-  local _all _cmd
 
   while [[ "$1" =~ ^-+[[:alnum:]]+$ ]] ; do
     case "$1" in
@@ -30,7 +40,13 @@ ffprobes() {
 
   if [[ $# -gt 0 && -d "$1" ]] ; then
 
-    local -a _selected
+    _ffprobes-all() {
+      find "$1" -type f -printf '%P\n'
+    }
+
+    _ffprobes-filter() {
+      find "$1" -type f -printf '%P\0' | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
+    }
 
     eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                        sort | \
@@ -51,24 +67,9 @@ ffprobes() {
 
     ${_cmd:-echo} "${_selected[@]}"
 
-  elif [ $# -gt 0 ] ; then
-
-    local _f
-    for _f in "$@" ; do
-
-      # files not applicable as ffprobe input are ignored silently
-      if file -i "$_f" 2>/dev/null | grep --silent -E '(audio|video)/' ; then
-
-        ffprobe "$_f"
-
-      fi
-
-    done 2>&1 | \
-    grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
-
   else
 
     fn-error "Missing path argument(s)!"
 
   fi
-}
+)
