@@ -1,3 +1,4 @@
+# -*- mode: Shell-script -*-
 # Setup of user specific aliases, environment and prompt.
 
 if [[ -d $HOME/.local/bin && ! $PATH == ?(*:)$HOME/.local/bin?(:*) ]] ; then
