@@ -88,6 +88,7 @@ _fzf-rpm() {
       --bind="alt-S:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr)" \
       --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
       --bind="alt-V:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr)" \
+      --bind 'enter:become(echo {+-3})' \
       --border-label " $1 " \
       $(fzf-query-history) \
       --list-border rounded \
@@ -99,7 +100,7 @@ _fzf-rpm() {
       --preview-window '60%,~2:wrap' \
       --query "$2" \
       --reverse | \
-  awk '{ printf "%s ", $NF } END { printf "\n" }'
+  xargs -r 
 }
 
 rpm-history() {
