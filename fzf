@@ -2,7 +2,7 @@
 
 in-path fzf || return 0
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll,alt-p:toggle-preview,alt-w:change-preview-window(50%|60%|40%)' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
+FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,>:preview-half-page-up,<:preview-half-page-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,ctrl-h:toggle-hscroll,alt-p:toggle-preview,alt-w:change-preview-window(50%|60%|40%),alt-W:toggle-preview-wrap' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
@@ -50,6 +50,7 @@ EOF
 
   case "$_mime" in
     *audio*|*video*) fzf-preview-header; ffprobe "$1";;
+    *rpm*) fzf-preview-header; rpm -qip "$1";;
   esac
 }
 
@@ -146,7 +147,7 @@ if in-path locate ; then
           --preview-window '50%,~2:wrap' \
           --print0 | \
       xargs -0 -r -i@ echo -n '"@" '
-      
+
     else
       fn-usage "<locate args>"
     fi
@@ -236,16 +237,23 @@ if in-path rg ; then
 fi
 
 fzf-units() {
+  local _default
+  _default="fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}"
+
   systemctl --plain | \
   sed '/^$/,$d' | \
   fzf --bind "enter:become(echo systemctl status,restart,stop {+1})" \
+      --bind 'alt-F:change-preview(fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+      --bind 'alt-j:change-preview(fzf-preview-header "Recent journal entries for {1}"; myjournalctl -e -b --since today --line 100 -u {1})' \
+      --bind "alt-S:change-preview($_default)" \
       --border-label " Systemd Units. \"alt-p\" toggles preview window. " \
       --header-lines 1 \
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status --lines 100 -- {1}; fzf-preview-header; systemctl cat -- {1}" \
-      --preview-label " Unit status, recent journal entries and spec " \
+      --preview "$_default" \
+      --preview-label " Unit information (use alt-{F,j,S} to change scope) " \
+      --preview-window '60%,~2:wrap' \
       --query "$1" \
       $(fzf-query-history) \
       --reverse

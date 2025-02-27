@@ -73,6 +73,7 @@ fn-xtrace() {
 myjournalctl() {
   journalctl --no-hostname --output=short-iso "$@"
 }
+export -f myjournalctl
 
 if in-path keepassxc-cli ; then
 
