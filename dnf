@@ -103,20 +103,32 @@ dnf-search() {
 }
 
 dnf-upgrades() {
-  local _default _package
+  local _default _package _common
+  _common="--quiet"
+  
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [--testing] [pattern]"; return 0;;
+      -t|--testing) _common+=" --enablerepo *updates-testing";;                                                
+      *) break;;
+    esac
+    shift
+  done
+  
   _package='name={1}; pkg=${name%.*}-{2}.${name##*.}'
-  _default="$_package; sudo dnf changelog --quiet \$pkg"
+  _default="$_package; sudo dnf changelog $_common \$pkg"
+  
   {
     if in-path dnf5 ; then
       echo "Package Version Repository"
-      sudo dnf check-upgrade --quiet
+      sudo dnf check-upgrade $_common
     else
-      sudo dnf list updates --quiet
+      sudo dnf list updates $_common
     fi
   } | column -t | \
   fzf --bind "ctrl-a:toggle-all" \
       --bind "alt-c:change-preview($_default)" \
-      --bind "alt-i:change-preview($_package; sudo dnf repoquery --quiet --info \$pkg)" \
+      --bind "alt-i:change-preview($_package; sudo dnf repoquery $_common --info \$pkg; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
       --bind 'enter:become(echo {+1})' \
       --border none \
       --exit-0 \
@@ -126,9 +138,10 @@ dnf-upgrades() {
       --multi \
       --preview "$_default" \
       --preview-label " Package info (Use alt-c/alt-i for changelog/info) " \
+      --preview-window "60%,~1:wrap" \
       --query "$1" \
       --reverse | \
-  xargs --no-run-if-empty --open-tty sudo dnf upgrade
+  xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
 }
 
 dnf-requires() {
@@ -152,13 +165,5 @@ dnf-suggests() {
     dnf-repoquery --suggests --resolve "$*"
   else
     fn-usage "<package>"
-  fi
-}
-
-dnf-testing() {
-  if [ $# -gt 0 ] ; then
-    sudo dnf --enablerepo updates-testing "$@"
-  else
-    fn-usage "<dnf-args>"
   fi
 }
