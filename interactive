@@ -81,7 +81,6 @@ lm() {
 lmt() {
   l --color=always --sort=time "$@" |& m -p lmt
 }
-complete -o bashdefault -o default l lmt lm
 
 m() {
   local _prompt
@@ -105,7 +104,8 @@ m() {
                   --use-color \
                   "$@"
 }
-complete -o default m
+
+complete -o bashdefault -o default l lmt lm m
 
 new-alias() {
   if [ $# -eq 2 ] ; then
