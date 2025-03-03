@@ -103,32 +103,31 @@ dnf-search() {
 }
 
 dnf-upgrades() {
-  local _default _package _common
-  _common="--quiet"
+  local _default _package _testing
   
   while [ $# -gt 0 ] ; do
     case "$1" in
-      -h|--help) fn-usage "[--help] [--testing] [pattern]"; return 0;;
-      -t|--testing) _common+=" --enablerepo *updates-testing";;                                                
-      *) break;;
+         -h|--help) fn-usage "[--help] [--testing] [pattern]"; return 0;;
+      -t|--testing) _testing="--enablerepo *updates-testing";;                                                  
+                 *) break;;
     esac
     shift
   done
   
   _package='name={1}; pkg=${name%.*}-{2}.${name##*.}'
-  _default="$_package; sudo dnf changelog $_common \$pkg"
+  _default="$_package; sudo dnf changelog $_testing --quiet \$pkg"
   
   {
     if in-path dnf5 ; then
       echo "Package Version Repository"
-      sudo dnf check-upgrade $_common
+      sudo dnf check-upgrade $_testing --quiet
     else
-      sudo dnf list updates $_common
+      sudo dnf list updates $_testing --quiet
     fi
   } | column -t | \
   fzf --bind "ctrl-a:toggle-all" \
       --bind "alt-c:change-preview($_default)" \
-      --bind "alt-i:change-preview($_package; sudo dnf repoquery $_common --info \$pkg; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
+      --bind "alt-i:change-preview($_package; sudo dnf repoquery $_testing --quiet --info \$pkg; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
       --bind 'enter:become(echo {+1})' \
       --border none \
       --exit-0 \
