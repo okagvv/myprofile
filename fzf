@@ -114,7 +114,8 @@ fzf-fn() {
 
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
-      fzf --bind "enter:become(echo declare -f {1})" \
+      fzf --bind 'f1:change-preview(_fzf-help)' \
+          --bind "enter:become(echo declare -f {1})" \
           $(_fzf-query-history) \
           --list-label " Bash function(s) " \
           --list-border rounded \
@@ -133,35 +134,42 @@ fzf-fn() {
 complete -A function fzf-fn
 
 fzf-apply() {
+  local _default _find _query _root
+
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -q|--query) _query="$2"; shift;;
+       -r|--root) _root="$2"; shift;;
+               *) break;;
+    esac
+    shift
+  done
+
   if [ $# -gt 0 ] ; then
 
-    local -a _selected
-    local _default
     _default="_fzf-preview-path {}"
+    _find="find "${_root:-.}" -name .git -prune -o -print0"
 
-    while [ 1 ] ; do
-
-      eval "_selected=($(fzf --bind 'f1:change-preview(_fzf-help "Alt-f:Path info")' \
-                             --bind "alt-f:change-preview($_default)" \
-                             --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
-                             --border-label-pos "2:bottom" \
-                             $(_fzf-query-history) \
-                             --multi \
-                             --preview "$_default" \
-                             --preview-window '50%,~2:wrap' \
-                             --print0 | \
-                         xargs -0 -r -i@ echo '"@"'))"
-
-      [ ${#_selected[@]} -gt 0 ] || return 0
-
-      "$@" "${_selected[@]}"
-
-    done
+    $_find | \
+    fzf --bind 'f1:change-preview(_fzf-help "Alt-p:Path info;Enter:Apply command to selected paths")' \
+        --bind "alt-p:change-preview($_default)" \
+        --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
+        --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
+        --border-label-pos "2:bottom" \
+        $(_fzf-query-history) \
+        --multi \
+        --no-sort \
+        --preview "$_default" \
+        --preview-window '60%,~2:wrap' \
+        --read0 \
+        --query "$_query"
 
   else
-    fn-usage "<cmd> [<args>]
+
+    fn-usage "<cmd> [--query \"text\"] [--root dir] [<args>]
 Sample:
 \$ $FUNCNAME rm -iv"
+
   fi
 }
 
