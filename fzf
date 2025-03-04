@@ -2,7 +2,7 @@
 
 in-path fzf || return 0
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,>:preview-half-page-up,<:preview-half-page-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-preview-wrap,f4:change-preview-window(50%|60%|40%),f5:toggle-preview' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
+FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,>:preview-half-page-up,<:preview-half-page-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-preview-wrap,f4:change-preview-window(70%|60%|50%|40%)+refresh-preview,f5:toggle-preview' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
@@ -67,8 +67,7 @@ _fzf-preview-header() {
 
 _fzf-help() {
   _fzf-preview-header "fzf key bindings"
-  cat <<EOF | sort | column -t -s: -o": "
-F1:This help.
+  ( echo "F1:This help.
 F2:Toggle horizontal scroll to match.
 F3:Toggle line wrap for preview.
 F4:Step through preconfigured preview widths.
@@ -83,11 +82,25 @@ Alt-Down:Preview line down.
 Home:First match.
 End:Last match.
 Tab:Toggle selection for current match.
-$([ -z "$1" ] || sed -r 's/;/.\n/g' <<<"$1;")
-EOF
+$([ -z "$1" ] || sed -r 's/;/.\n/g' <<<"$1;")"
+  ) | sort | column -t -s: -o": "
 }
 
-export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history
+_fzf-help-bind() {
+  echo "f1:show-preview+change-preview(_fzf-help \"$1\")"
+}
+
+export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-help-bind _fzf-query-history
+
+_fzf-wrapper() {
+  # args: help text for function specific bindings, key for initial preview, initial preview, preview window
+  fzf --bind "f1:show-preview+change-preview(_fzf-help \"$1\")" \
+      --bind "$2:show-preview+change-preview($3)" \
+      --preview "$3" \
+      --preview-window "$4" \
+      --history "$FZF_HISTORY_DIR/${FUNCNAME[-1]}.history" \
+      "${@: 5}"
+}
 
 fzf-fn() {
   local _re _defs
@@ -101,7 +114,7 @@ fzf-fn() {
         *) _re="^$1$";;
     esac
 
-    _fns=($(declare -F | sed -r -n 's/^declare -f ([[:print:]]+)$/\1/;/'"$_re"'/p'))
+    _fns=($(declare -F | sed -rn 's/^declare -fx? ([[:print:]]+)$/\1/;/'"$_re"'/p'))
 
     if [ ${#_fns[@]} -eq 1 ] ; then
 
@@ -114,15 +127,11 @@ fzf-fn() {
 
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
-      fzf --bind 'f1:change-preview(_fzf-help)' \
-          --bind "enter:become(echo declare -f {1})" \
-          $(_fzf-query-history) \
-          --list-label " Bash function(s) " \
-          --list-border rounded \
-          --no-sort \
-          --preview "awk '/^{1} \(\)/,/^\}/' $_defs" \
-          --preview-label " Function definition " \
-          --preview-window 'up,50%,+{2}+2/2,~2:wrap' || true
+      _fzf-wrapper "Alt-f:Show definition of selected function" "alt-f" "awk '/^{1} \(\)/,/^\}/' $_defs" "70%,+{2}+2/2,~2:wrap" \
+                   --bind "enter:become(echo declare -f {1})" \
+                   --list-label " Bash function(s) " \
+                   --no-sort \
+                   --preview-label " Function definition " || true
 
       rm -f "$_defs"
 
@@ -134,7 +143,7 @@ fzf-fn() {
 complete -A function fzf-fn
 
 fzf-apply() {
-  local _default _find _query _root
+  local _find _query _root
 
   while [ $# -gt 0 ] ; do
     case "$1" in
@@ -147,22 +156,17 @@ fzf-apply() {
 
   if [ $# -gt 0 ] ; then
 
-    _default="_fzf-preview-path {}"
     _find="find "${_root:-.}" -name .git -prune -o -print0"
 
-    $_find | \
-    fzf --bind 'f1:change-preview(_fzf-help "Alt-p:Path info;Enter:Apply command to selected paths")' \
-        --bind "alt-p:change-preview($_default)" \
-        --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
-        --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
-        --border-label-pos "2:bottom" \
-        $(_fzf-query-history) \
-        --multi \
-        --no-sort \
-        --preview "$_default" \
-        --preview-window '60%,~2:wrap' \
-        --read0 \
-        --query "$_query"
+    $_find |& \
+    _fzf-wrapper "Alt-p:Path info;Enter:Apply command to selected paths" "alt-p" "_fzf-preview-path {}" "60%,~2:wrap" \
+                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
+                 --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
+                 --border-label-pos "2:bottom" \
+                 --multi \
+                 --no-sort \
+                 --read0 \
+                 --query "$_query"
 
   else
 
@@ -178,20 +182,13 @@ if in-path locate ; then
   fzf-locate() {
     if [ $# -gt 0 ] ; then
 
-      local _default
-      _default="_fzf-preview-path {}"
-
       plocate "$@" | \
-      fzf --bind 'f1:change-preview(_fzf-help "Alt-f:Path info")' \
-          --bind "alt-f:change-preview($_default)" \
-          --border none \
-          $(_fzf-query-history) \
-          --list-label " plocate $* " \
-          --multi \
-          --preview "$_default" \
-          --preview-label " File info " \
-          --preview-window '50%,~2:wrap' \
-          --print0 | \
+      _fzf-wrapper "Alt-f:Path info" "alt-f" "_fzf-preview-path {}" "50%,~2:wrap" \
+                   --border none \
+                   --list-label " plocate $* " \
+                   --multi \
+                   --preview-label " File info " \
+                   --print0 | \
       xargs -0 -r -i@ echo -n '"@" '
       echo
 
@@ -212,12 +209,13 @@ if in-path man ; then
     sort | \
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
-    fzf --border-label "Manual pages" \
+    fzf --bind 'f1:change-preview(_fzf-help)' \
+        --border-label "Manual pages" \
         $(_fzf-query-history) \
         --multi \
         --query "$1" \
         --prompt='man> ' \
-        --preview-window '50%,~2:wrap' \
+        --preview-window '60%,~2:wrap' \
         --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
     tr -d '()' | \
     awk '{printf "%s ", $2} {print $1}' | \
@@ -261,20 +259,19 @@ if in-path rg ; then
       # It is assumed that $EDITOR is set to "vim" or "emacsclient".
       [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
 
-      rg --color=always --hidden --line-number --no-heading --smart-case "$*" |
-      fzf --ansi \
-          --bind "enter:execute($EDITOR $_editor_args)" \
-          --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
-          --border-label-pos "3:bottom" \
-          --color "hl:-1:underline,hl+:-1:underline:reverse" \
-          --delimiter : \
-          --extended \
-          $(_fzf-query-history) \
-          --list-border none \
-          --no-multi \
-          --preview '_fzf-preview-bat --highlight-line {2} {1}' \
-          --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
-          --smart-case
+      rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
+      _fzf-wrapper "Alt-f:Show match in preview window;Enter:Load file into editor" "alt-f" \
+                   "_fzf-preview-bat --highlight-line {2} {1}" "up,60%,border-bottom,+{2}+3/3,~3" \
+                   --ansi \
+                   --bind "enter:execute($EDITOR $_editor_args)" \
+                   --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
+                   --border-label-pos "3:bottom" \
+                   --color "hl:-1:underline,hl+:-1:underline:reverse" \
+                   --delimiter : \
+                   --extended \
+                   --list-border none \
+                   --no-multi \
+                   --smart-case
 
     else
       fn-usage "<ripgrep args>"
@@ -284,24 +281,19 @@ if in-path rg ; then
 fi
 
 fzf-units() {
-  local _default
-  _default="_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}"
-
   systemctl --plain | \
   sed '/^$/,$d' | \
-  fzf --bind "enter:become(echo systemctl status,restart,stop {+1})" \
-      --bind 'alt-F:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-      --bind 'alt-j:change-preview(_fzf-preview-header "Recent journal entries for {1}"; myjournalctl -e -b --since today --line 100 -u {1})' \
-      --bind "alt-S:change-preview($_default)" \
-      --border-label " Systemd Units. \"alt-p\" toggles preview window. " \
-      --header-lines 1 \
-      --list-label " Systemd unit(s) " \
-      --multi \
-      --no-sort \
-      --preview "$_default" \
-      --preview-label " Unit information (use alt-{F,j,S} to change scope) " \
-      --preview-window '60%,~2:wrap' \
-      --query "$1" \
-      $(_fzf-query-history) \
-      --reverse
+  _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-s:Unit status" \
+               "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "60%,~2:wrap" \
+               --bind "enter:become(echo systemctl status,restart,stop {+1})" \
+               --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+               --bind 'alt-j:change-preview(_fzf-preview-header "Recent journal entries for {1}"; myjournalctl -e -b --since today --line 100 -u {1})' \
+               --border-label " Systemd Units " \
+               --header-lines 1 \
+               --list-label " Systemd unit(s) " \
+               --multi \
+               --no-sort \
+               --preview-label " Unit information " \
+               --query "$1" \
+               --reverse
 }
