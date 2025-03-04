@@ -29,20 +29,20 @@ _fzf_comprun () {
   esac
 }
 
-fzf-query-history () {
+_fzf-query-history () {
   echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
 }
 
-fzf-preview-bat() {
+_fzf-preview-bat() {
   bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
 }
 
-fzf-preview-file() {
+_fzf-preview-file() {
   local _mime _size
   _mime="$(file --brief --mime "$1")"
   _size="$(du -sh "$1" | cut -f1)"
   
-  fzf-preview-header "File \"$1\""
+  _fzf-preview-header "File \"$1\""
   cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
 Type: $_mime
 $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
@@ -51,20 +51,20 @@ EOF
 
   if [[ -r "$1" && -s "$1" ]] ; then
     case "$_mime" in
-      *audio*|*video*) fzf-preview-header; ffprobes --yaml "$1";;
-      *rpm*) fzf-preview-header; rpm -qip "$1";;
-      *text*) fzf-preview-bat "$1";;
-      *zip*|*java-archive*) fzf-preview-header; unzip -l "$1";;
+      *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
+      *rpm*) _fzf-preview-header; rpm -qip "$1";;
+      *text*) _fzf-preview-bat "$1";;
+      *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
     esac
   fi
 }
 
-fzf-preview-header() {
+_fzf-preview-header() {
   [ -z "$1" ] || echo "$1"
   printf "%*s" ${FZF_PREVIEW_COLUMNS:-${#1}} | sed 's/ /┈/g'
   echo
 }
-export -f fzf-preview-header fzf-preview-bat fzf-preview-file fzf-query-history
+export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-file _fzf-query-history
 
 fzf-fn() {
   local _re _defs
@@ -92,7 +92,7 @@ fzf-fn() {
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
       fzf --bind "enter:become(echo declare -f {1})" \
-          $(fzf-query-history) \
+          $(_fzf-query-history) \
           --list-label " Bash function(s) " \
           --list-border rounded \
           --no-sort \
@@ -117,10 +117,10 @@ fzf-apply() {
     while [ 1 ] ; do
 
       eval "_selected=($(fzf --multi \
-                             $(fzf-query-history) \
+                             $(_fzf-query-history) \
                              --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                              --border-label-pos "2:bottom" \
-                             --preview 'fzf-preview-file {}' \
+                             --preview '_fzf-preview-file {}' \
                              --print0 | \
                          xargs -0 -r -i@ echo '"@"'))"
 
@@ -144,10 +144,10 @@ if in-path locate ; then
 
       plocate "$@" | \
       fzf --border none \
-          $(fzf-query-history) \
+          $(_fzf-query-history) \
           --list-label " plocate $* " \
           --multi \
-          --preview 'fzf-preview-file {}' \
+          --preview '_fzf-preview-file {}' \
           --preview-label " File info " \
           --preview-window '50%,~2:wrap' \
           --print0 | \
@@ -172,7 +172,7 @@ if in-path man ; then
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
     fzf --border-label "Manual pages" \
-        $(fzf-query-history) \
+        $(_fzf-query-history) \
         --multi \
         --query "$1" \
         --prompt='man> ' \
@@ -197,7 +197,7 @@ fzf-ps() {
   eval "$_ps" | \
   fzf --bind="ctrl-r:reload(eval \"$_ps\")" \
       --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
-      $(fzf-query-history) \
+      $(_fzf-query-history) \
       --header-lines 1 \
       --hscroll-off=800 \
       --list-border none \
@@ -228,10 +228,10 @@ if in-path rg ; then
           --color "hl:-1:underline,hl+:-1:underline:reverse" \
           --delimiter : \
           --extended \
-          $(fzf-query-history) \
+          $(_fzf-query-history) \
           --list-border none \
           --no-multi \
-          --preview 'fzf-preview-bat --highlight-line {2} {1}' \
+          --preview '_fzf-preview-bat --highlight-line {2} {1}' \
           --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
           --smart-case
 
@@ -244,13 +244,13 @@ fi
 
 fzf-units() {
   local _default
-  _default="fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}"
+  _default="_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}"
 
   systemctl --plain | \
   sed '/^$/,$d' | \
   fzf --bind "enter:become(echo systemctl status,restart,stop {+1})" \
-      --bind 'alt-F:change-preview(fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-      --bind 'alt-j:change-preview(fzf-preview-header "Recent journal entries for {1}"; myjournalctl -e -b --since today --line 100 -u {1})' \
+      --bind 'alt-F:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+      --bind 'alt-j:change-preview(_fzf-preview-header "Recent journal entries for {1}"; myjournalctl -e -b --since today --line 100 -u {1})' \
       --bind "alt-S:change-preview($_default)" \
       --border-label " Systemd Units. \"alt-p\" toggles preview window. " \
       --header-lines 1 \
@@ -261,6 +261,6 @@ fzf-units() {
       --preview-label " Unit information (use alt-{F,j,S} to change scope) " \
       --preview-window '60%,~2:wrap' \
       --query "$1" \
-      $(fzf-query-history) \
+      $(_fzf-query-history) \
       --reverse
 }
