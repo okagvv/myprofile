@@ -78,11 +78,11 @@ fzf-ffprobes() (
                        sort | \
                        fzf --bind 'alt-v:execute-silent(vlc {})' \
                            --border none \
-                           $(fzf-query-history) \
+                           $(_fzf-query-history) \
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview 'fzf-preview-file {}' \
+                           --preview '_fzf-preview-file {}' \
                            --preview-label " ffprobe output (alt-v: play via VLC) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
