@@ -16,11 +16,13 @@ For `rpm-ostree` based distributions these tools must be layered.
 
 ## Installation
 
-First clone the project repository
+First clone the project repository into path readable for all afected users
 
 ``` shell
 $ git clone https://github.com/okagvv/myprofile.git
 ```
+
+The selected worktree path is referenced below as `$myprofile`.
 
 ### For all users
 
@@ -28,7 +30,7 @@ Register `myprofile` script for application during setup of `bash` login shells:
 
 ``` shell
 $ sudo source myprofile/myprofile --install
-'/etc/profile.d/zz-myprofile.sh' -> '/usr/local/share/myprofile/myprofile'
+'/etc/profile.d/zz-myprofile.sh' -> '$myprofile/myprofile'
 ```
 
 ### For single user
@@ -37,7 +39,7 @@ Insert `source` of `myprofile` script in current users `bash` profile script:
 
 ``` shell
 $ source myprofile/myprofile --install
-$HOME/.bash_profile:source /usr/local/share/myprofile/myprofile
+$HOME/.bash_profile:source $myprofile/myprofile
 ```
 
 ### Defaults
