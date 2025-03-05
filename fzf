@@ -83,6 +83,8 @@ Alt-Left:Preview page up.
 Alt-Right:Preview page down.
 Alt-Up:Preview line up.
 Alt-Down:Preview line down.
+CTRL-p: Search history up.
+CTRL-n: Search history down.
 Home:First match.
 End:Last match.
 $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
