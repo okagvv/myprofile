@@ -4,12 +4,12 @@ if in-path rsync ; then
   
   rsyncp() {
     local -a _opts
-    _opts=(--archive --backup --hard-links --human-readable --itemize-changes --progress --whole-file)
+    _opts=(--archive --backup --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
 
     while [ $# -gt 1 ] ; do
       case "$1" in
-          -h|--help) fn-usage "[--dry] [--remove] <source-dir>/? <target-dir>"; return 0;;
-           -d|--dry) _opts+=(--dry-run --verbose);;
+          -h|--help) fn-usage "[--dry-run] [--remove] <source-dir>/? <target-dir>"; return 0;;
+       -d|--dry-run) _opts+=(--dry-run --verbose);;
         -r|--remove) _opts+=(--delete-delay);;
                   *) break;;
       esac
@@ -36,6 +36,33 @@ if in-path rsync ; then
   }
 
 fi
+
+sync_timestamps() {
+  # (re)sync timestamps for two dir trees normally synched via rsyn(p).
+  local _dry _filter _help
+   while [ $# -gt 0 ] ; do
+      case "$1" in
+          -h|--help) _help=0;;
+       -d|--dry-run) _dry=echo;;
+        -f|--filter) _filter="$2"; shift;;
+                  *) break;;
+      esac
+      shift
+    done
+  
+  if [[ -z "$_help" && $# -eq 2 && -d "$1" && -d "$2" ]] ; then
+    
+    find "$1" -type f -printf '%P\0' | \
+    grep --null-data --extended-regexp "${_filter:-.*}" | \
+    xargs --null --no-run-if-empty --replace=@@ ${_dry:---verbose} touch --no-create --reference="$1/@@" "$2/@@"
+
+  else
+
+    fn-usage "[--dry-run] [--filter regexp] [--help] <src-dir> <target-dir>"
+    return ${_help:-1}
+    
+  fi
+}
 
 if [[ ! "$(id -u)" == "0" ]] ; then
 
