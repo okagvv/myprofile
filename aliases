@@ -9,17 +9,10 @@ new-alias df 'df --no-sync --print-type --human-readable --portability --exclude
 new-alias dfc 'dfc -WfsdTw -q mount'
 new-alias dmesg 'dmesg --ctime --decode --color=always --level=emerg,alert,crit,err,warn,notice --nopager | m ++G'
 new-alias du 'du -xkhc --max-depth=1'
-new-alias failed 'systemctl list-units --failed'
 new-alias file 'file -Pelf_phnum=1000'
 new-alias inet 'ss -f inet -napro'
 new-alias inetevents 'inet -E'
 new-alias ipstat 'ip -s -h -c -d address show scope global dynamic'
-new-alias jboot 'myjournalctl --boot --lines=all --pager-end'
-new-alias jerr 'myjournalctl -b -e -p 0..4'
-new-alias jtoday 'myjournalctl --since today --pager-end --lines=all'
-new-alias jtodaylong 'myjournalctl --since today --catalog --pager-end --lines=all'
-new-alias jtodaywarn 'myjournalctl --priority=emerg..notice --since today --pager-end --lines=all'
-new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
 new-alias lsblk 'lsblk --tree --output NAME,MAJ:MIN,HOTPLUG,DISC-GRAN,DISC-MAX,RM,RO,SIZE,TYPE,FSTYPE,LABEL,PATH,MOUNTPOINT'
 new-alias mounted 'findmnt -A -o TARGET,SOURCE,FSTYPE,SIZE,USE%'
 new-alias origin 'cd "$(git remote get-url --push origin)"'
@@ -28,26 +21,12 @@ new-alias remotes 'git remote -v | cut -f1 -d"(" | uniq | column -t'
 new-alias rmemptydir 'find . -empty -type d -print0 | xargs -r -0 rmdir --verbose'
 new-alias sane 'stty sane'
 new-alias st 'eval "$(starship init bash)"'
-new-alias sysmounted 'systemctl --type mount'
 new-alias tig 'env TERM=xterm tig'
 new-alias tmux 'tmux -2'
 new-alias trans2de 'trans -t de'
 new-alias trans2en 'trans -t en'
 new-alias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
 new-alias vi 'env TERM=xterm vim'
-
-if [[ "$(id -u)" == "0" ]] ; then
-
-  new-alias avcrecent 'ausearch -ts recent -m avc'
-  new-alias avctoday 'ausearch -ts today -m avc'
-  new-alias avcyesterday 'ausearch -ts yesterday -m avc'
-  new-alias boot_blame 'systemd-analyze blame'
-  new-alias boot_times 'systemd-analyze plot | display -'
-  new-alias dstat 'dstat --time --load --vmstat --net --swap --io'
-  new-alias iotop 'iotop -a -c -o -P'
-  new-alias myiostat 'iostat -xmt 1'
-  
-fi
 
 if [ -s ~/.fetchmailrc ] ; then
 
