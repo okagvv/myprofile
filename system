@@ -1,0 +1,81 @@
+# -*- shell-script -*-
+
+new-alias failed 'systemctl list-units --failed'
+new-alias jboot 'myjournalctl --boot --lines=all --pager-end'
+new-alias jerr 'myjournalctl -b -e -p 0..4'
+new-alias jtoday 'myjournalctl --since today --pager-end --lines=all'
+new-alias jtodaylong 'myjournalctl --since today --catalog --pager-end --lines=all'
+new-alias jtodaywarn 'myjournalctl --priority=emerg..notice --since today --pager-end --lines=all'
+new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
+new-alias sysmounted 'systemctl --type mount'
+
+fzf-units() {
+  # journalctl --output-fields=_SYSTEMD_UNIT --output=export --priority=0..4 -b | sed -rn 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | sort --unique 
+  systemctl --plain | \
+  sed '/^$/,$d' | \
+  _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
+               "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "60%,~2:wrap" \
+               --bind "enter:become(echo systemctl status,restart,stop {+1})" \
+               --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+               --bind 'alt-j:change-preview(_fzf-preview-header "Recent journal entries for {1}"; myjournalctl --pager-end --boot --since today  --catalog --line 100 --unit={1})' \
+               --border-label " Systemd Units " \
+               --header-lines 1 \
+               --list-label " Systemd unit(s) " \
+               --multi \
+               --no-sort \
+               --preview-label " Unit information " \
+               --query "$1" \
+               --reverse
+}
+
+myjournalctl() {
+  journalctl --no-hostname --output=with-unit "$@"
+}
+export -f myjournalctl
+
+if [[ ! "$(id -u)" == "0" ]] ; then
+
+  journalctl() { /usr/bin/journalctl --user "$@"; }
+  systemctl() { /usr/bin/systemctl --user "$@"; }
+  export -f journalctl systemctl
+  
+  return 0
+
+fi
+
+# ------------ requiring root permission ------------
+
+new-alias avcrecent 'ausearch -ts recent -m avc'
+new-alias avctoday 'ausearch -ts today -m avc'
+new-alias avcyesterday 'ausearch -ts yesterday -m avc'
+new-alias boot_blame 'systemd-analyze blame'
+new-alias boot_times 'systemd-analyze plot | display -'
+new-alias dstat 'dstat --time --load --vmstat --net --swap --io'
+new-alias iotop 'iotop -a -c -o -P'
+new-alias myiostat 'iostat -xmt 1'
+
+juser() {
+  if [ $# -gt 0 ] ; then
+    local _uid="$(id -u "$1")"
+    shift
+    myjournalctl --pager-end _UID="$_uid" "$@"
+  else
+    fn-usage "user [journalct options]"
+  fi
+}
+complete -A user -o default juser
+
+mysu() {
+    # Start command-line via su for user derived from path owner of last argument.
+    # Preserves white spaces in arguments.
+    if [ $# -ge 2 ] ; then
+      su $(stat -c %U "${*: -1}") -c "$(printf "'%s' " "${@}")"
+    else
+      fn-usage "command [options|args] file"
+    fi
+}
+complete -A command -o default mysu
+
+oom-killed() {
+  myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
+}

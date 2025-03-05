@@ -1,12 +1,13 @@
 common
 env
 diag
-functions
 interactive
 aliases
 fzf
 rpm
 dnf
 podman
+system
+rsync
 #k8s
 ffmpeg
