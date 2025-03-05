@@ -1,5 +1,5 @@
 # -*- shell-script -*-
-# bash functions preferably in interactive shells
+# bash functions preferably used in interactive shells
 
 a() {
   alias "$@" | m -p "bash aliases"

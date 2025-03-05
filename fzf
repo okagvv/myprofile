@@ -83,8 +83,8 @@ Alt-Left:Preview page up.
 Alt-Right:Preview page down.
 Alt-Up:Preview line up.
 Alt-Down:Preview line down.
-CTRL-p: Search history up.
-CTRL-n: Search history down.
+Ctrl-p:Search history up.
+Ctrl-n:Search history down.
 Home:First match.
 End:Last match.
 $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
@@ -214,14 +214,13 @@ if in-path man ; then
     sort | \
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
-    fzf --bind 'f1:change-preview(_fzf-help)' \
-        --border-label "Manual pages" \
-        $(_fzf-query-history) \
-        --multi \
-        --query "$1" \
-        --prompt='man> ' \
-        --preview-window '60%,~2:wrap' \
-        --preview $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' | \
+    _fzf-wrapper "Alt-m:Manual page" \
+                 "alt-m" $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' \
+                 "60%,~2:wrap" \
+                 --border-label "Manual pages" \
+                 --multi \
+                 --query "$1" \
+                 --prompt='man> ' | \
     tr -d '()' | \
     awk '{printf "%s ", $2} {print $1}' | \
     xargs -r man # '
