@@ -10,20 +10,34 @@ new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
 new-alias sysmounted 'systemctl --type mount'
 
 fzf-units() {
-  # journalctl --output-fields=_SYSTEMD_UNIT --output=export --priority=0..4 -b | sed -rn 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | sort --unique 
-  systemctl --plain | \
-  sed '/^$/,$d' | \
+  # Iterate over systemd units. With --priority only units with journal entries below/equal this prio logged today are considered.
+  local _prio
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -p|--priority) _prio="$2"; shift;;
+                  *) fn-usage "[--help] [--priority {0..7}|{emerg,alert,crit,err,warning,notice,info,debug}"; return 0;;
+    esac
+    shift
+  done
+
+  if [ -n "$_prio" ] ; then
+    echo Unit
+    journalctl --output-fields=_SYSTEMD_UNIT --output=export --priority=0..$_prio --boot | \
+    sed --silent --regexp-extended 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | \
+    sort --unique 
+  else
+    systemctl --plain | \
+    sed '/^$/,$d'
+  fi | \
   _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
-               "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "60%,~2:wrap" \
+               "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "70%,~2:wrap" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
-               --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind 'alt-j:change-preview(_fzf-preview-header "Recent journal entries for {1}"; myjournalctl --pager-end --boot --since today  --catalog --line 100 --unit={1})' \
-               --border-label " Systemd Units " \
+               --bind 'alt-f:show-preview+change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+               --bind 'alt-j:show-preview+change-preview(_fzf-preview-header "Recent journal entries for {1} in reverse order."; journalctl --no-hostname --boot --since today --catalog --line 100 --reverse --pager-end --unit={1})' \
+               --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
-               --list-label " Systemd unit(s) " \
                --multi \
                --no-sort \
-               --preview-label " Unit information " \
                --query "$1" \
                --reverse
 }
