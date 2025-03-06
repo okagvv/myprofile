@@ -99,7 +99,9 @@ export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-
 
 _fzf-wrapper() {
   # args: help text for function specific bindings, key for initial preview, initial preview, preview window
-  fzf --bind "f1:show-preview+change-preview(_fzf-help \"$1\")" \
+  # CAUTION: F1 binds ".."+preview-bottom" to fix help screen by repeated F1 press. Otherwise not
+  # help content might be incomplete if --preview-window uses [:+SCROLL[OFFSETS][/DENOM]] values.
+  fzf --bind "f1:show-preview+change-preview(_fzf-help \"$1\")+preview-bottom" \
       --bind "$2:show-preview+change-preview($3)" \
       --preview "$3" \
       --preview-window "$4" \
@@ -265,7 +267,7 @@ if in-path rg ; then
 
       rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
       _fzf-wrapper "Alt-f:Show match in preview window;Enter:Load file into editor" "alt-f" \
-                   "_fzf-preview-bat --highlight-line {2} {1}" "up,60%,border-bottom,+{2}+3/3,~3" \
+                   "_fzf-preview-bat --highlight-line {2} {1}" "up,60%,border-bottom,+{2}+3/3,~3:wrap" \
                    --ansi \
                    --bind "enter:execute($EDITOR $_editor_args)" \
                    --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
