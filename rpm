@@ -80,32 +80,29 @@ _rpm-preview-files() {
 export -f _rpm-preview _rpm-preview-docs _rpm-preview-files _rpm-preview-what
 
 _fzf-rpm() {
-  local _default _nvr
+  local _nvr
   _nvr="{-3}-{-2}.{-1}"
-  _default="_rpm-preview \"Changelog of\" --changelog $_nvr"
 
-  fzf --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
-      --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
-      --bind="alt-F:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
-      --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
-      --bind="alt-l:change-preview($_default)" \
-      --bind='alt-P:change-preview(_rpm-preview-what {-3})' \
-      --bind="alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
-      --bind="alt-S:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr)" \
-      --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
-      --bind="alt-V:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr)" \
-      --bind 'enter:become(echo {+-3})' \
-      --border-label " $1 " \
-      $(_fzf-query-history) \
-      --list-border rounded \
-      --list-label " Matching packages " \
-      --multi \
-      --no-sort \
-      --preview "$_default" \
-      --preview-label " Use alt-{c,d,F,i,l,P,r,S,u,V} to change information scope. " \
-      --preview-window '60%,~2:wrap' \
-      --query "$2" \
-      --reverse | \
+  _fzf-wrapper "Alt-c:Config files;Alt-d:Doc files;Alt-f:Package files;Alt-i:Package info;Alt-l:Changelog;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What requires ." \
+               "alt-l" "_rpm-preview \"Changelog of\" --changelog $_nvr" \
+               "60%,~2:wrap" \
+               --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
+               --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
+               --bind="alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
+               --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
+               --bind="alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
+               --bind="alt-s:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr)" \
+               --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
+               --bind="alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr)" \
+               --bind='alt-w:change-preview(_rpm-preview-what {-3})' \
+               --bind 'enter:become(echo {+-3})' \
+               --border-label " $1 " \
+               --list-label " Matching packages " \
+               --multi \
+               --no-sort \
+               --preview-label " Press F1 for help " \
+               --query "$2" \
+               --reverse | \
   xargs -r
 }
 
