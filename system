@@ -11,7 +11,7 @@ new-alias sysmounted 'systemctl --type mount'
 
 fzf-units() {
   # Iterate over systemd units. With --priority only units with journal entries below/equal this prio logged today are considered.
-  local _prio
+  local _prio _listprio _journal
   while [ $# -gt 0 ] ; do
     case "$1" in
       -p|--priority) _prio="$2"; shift;;
@@ -20,20 +20,24 @@ fzf-units() {
     shift
   done
 
+  _journal="journalctl --no-hostname --boot --since \"24 hours ago\" --catalog --line 100 --reverse --pager-end --unit={1}"
+  _listprio="0..${_prio:-debug}"
+  
   if [ -n "$_prio" ] ; then
     echo Unit
-    journalctl --output-fields=_SYSTEMD_UNIT --output=export --priority=0..$_prio --boot | \
+    journalctl --output=export --output-fields=_SYSTEMD_UNIT --boot --since "24 hours ago" --priority=0..$_prio | \
     sed --silent --regexp-extended 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | \
     sort --unique 
   else
     systemctl --plain | \
     sed '/^$/,$d'
   fi | \
-  _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
+  _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
                "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "70%,~2:wrap" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --bind 'alt-f:show-preview+change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind 'alt-j:show-preview+change-preview(_fzf-preview-header "Recent journal entries for {1} in reverse order."; journalctl --no-hostname --boot --since today --catalog --line 100 --reverse --pager-end --unit={1})' \
+               --bind "alt-j:show-preview+change-preview(_fzf-preview-header \"Recent journal entries for {1} in reverse order.\"; $_journal)" \
+               --bind "alt-p:show-preview+change-preview(_fzf-preview-header \"Recent journal entries for {1} with priority $_listprio in reverse order.\"; $_journal --priority=$_listprio)" \
                --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
                --multi \
