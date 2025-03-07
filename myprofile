@@ -4,7 +4,7 @@
 # Without arguments all script listed in "myprofile.default" will be sourced too.
 
 myprofile() {
-  local _src _script _verbose
+  local _src _script _verbose _conf
   local -a _scripts
 
   _src="$(realpath "${BASH_SOURCE[0]}")"
@@ -30,7 +30,12 @@ myprofile() {
     shift
   done
 
-  [[ ${#_scripts[@]} -eq 0 && -n "$PS1" ]] && _scripts=($(cat "${_src%/*}/$FUNCNAME.default"))
+  if [[ ${#_scripts[@]} -eq 0 && -n "$PS1" ]] ; then
+
+    _conf="$HOME/.config/$FUNCNAME/default"
+    _scripts=($(cat "$([ -s "$_conf" ] && echo "$_conf" || echo "${_src%/*}/$FUNCNAME.default")"))
+
+  fi
 
   for _script in ${_scripts[@]} ; do
 

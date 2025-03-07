@@ -47,7 +47,8 @@ $HOME/.bash_profile:source $myprofile/myprofile
 The text file `myprofile.default` contains a list of profile scripts applied by `mvprofile` calls
 without arguments (i.e. during start of a login shell).  Scripts will be searched in `myprofile`
 installation directory. They will be applied (via `source` ) in listed order. `myprofile` stops
-application squence after first error.
+application squence after first error. If the file `~/.config/myprofile/default` exists then it will
+be used instead of `myprofile.default`.
 
 List entries starting with a hashmark will be skipped silently.
 
