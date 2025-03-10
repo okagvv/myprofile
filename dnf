@@ -2,7 +2,7 @@
 
 in-path dnf || return 0
 
-rpm-ostree status --booted 2>/dev/null && return 0
+rpm-ostree status --booted 2>/dev/null 1>&2 && return 0
 
 dnf-repoquery() {
   sudo dnf repoquery --cacheonly --quiet "$@"
