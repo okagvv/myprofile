@@ -48,3 +48,5 @@ fn-xtrace() {
   echo "-===- Start xtrace for $fn_xtrace() -===-"
   set -x
 }
+
+export -f fn-usage fn-error fn-trace fn-abort fn-xtrace
