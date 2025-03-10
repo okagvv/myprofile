@@ -3,11 +3,11 @@
 _rpm-inspect-scope() {
   rpm --query --$1 "$2" | \
   fzf --border none \
-      $(_fzf-query-history 2) \
       --list-label " ${1^} in package \"$2\" " \
       --multi \
       --preview '_fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
-      --preview-window '60%:~2:wrap' | \
+      --preview-window '60%:~2:wrap' \
+      $(_fzf-query-history 2) | \
   xargs -r
 }
 
@@ -41,7 +41,7 @@ _rpm-preview-docs() {
 
       _log="$(grep -i -E "/[^/]*$_pattern[^/]*$" <<<"$_docs" | head -1)"
 
-      if [ -n "$_log" ] ; then
+      if [[ -n "$_log" && -s "$_log" ]] ; then
 
         _fzf-preview-bat "$_log"
         return 0
@@ -49,7 +49,7 @@ _rpm-preview-docs() {
       fi
     done
 
-    echo "No ${1^} file identified in package doc files."
+    echo "No non-empty ${1^} file identified in package doc files."
 
   else
 
@@ -83,10 +83,7 @@ _fzf-rpm() {
   local _nvr
   _nvr="{-3}-{-2}.{-1}"
 
-  _fzf-wrapper "Alt-c:Config files;Alt-d:Doc files;Alt-f:Package files;Alt-i:Package info;Alt-l:Changelog;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What requires ." \
-               "alt-l" "_rpm-preview \"Changelog of\" --changelog $_nvr" \
-               "60%,~2:wrap" \
-               --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
+  _fzf-wrapper --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
                --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
                --bind="alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
                --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
@@ -97,10 +94,13 @@ _fzf-rpm() {
                --bind='alt-w:change-preview(_rpm-preview-what {-3})' \
                --bind 'enter:become(echo {+-3})' \
                --border-label " $1 " \
+               --help "Alt-c:Config files;Alt-d:Doc files;Alt-f:Package files;Alt-i:Package info;Alt-l:Changelog;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What requires ." \
                --list-label " Matching packages " \
                --multi \
                --no-sort \
+               --preview-init "alt-l:_rpm-preview \"Changelog of\" --changelog $_nvr" \
                --preview-label " Press F1 for help " \
+               --preview-window "60%,~2:wrap" \
                --query "$2" \
                --reverse | \
   xargs -r
