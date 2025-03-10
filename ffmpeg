@@ -37,7 +37,7 @@ ffprobes() {
         
       else
 
-        ffprobe -i "$_input" |& grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
+        ffprobe -hide_banner -i "$_input" |& grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
 
       fi
 
@@ -53,7 +53,7 @@ export -f ffprobes
 fzf-ffprobes() (
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
   # list input. Use of --all avoids this but may add files not supported by ffprobe a/o vlc.
-
+  local _all _cmd
   while [ $# -gt 0 ] ; do
     case "$1" in
        -a|--all) _all=y;;
@@ -74,25 +74,30 @@ fzf-ffprobes() (
       find "$1" -type f -printf '%p\0' | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
     }
 
-    eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
-                       sort | \
-                       _fzf-wrapper --bind 'alt-v:execute-silent(vlc {})' \
-                                    --border none \
-                                    --help "Alt-i:File info;Alt-v:Play file via VLC" \
-                                    --list-label " Audio and video files in \"$(realpath "$1")/\" " \
-                                    --multi \
-                                    --no-sort \
-                                    --preview-init "alt-i:_fzf-preview-path {}" \
-                                    --preview-label " ffprobe output (alt-v: play via VLC) " \
-                                    --preview-window '60%,~2:wrap' \
-                                    --print0 \
-                                    --query "$2" \
-                                    --reverse | \
-                       xargs -0 -i@ echo '\"@\"'))"
+    local -a _selected
+    IFS=$'\n' _selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
+                           sort | \
+                           IFS=" " _fzf-wrapper --bind "alt-v:execute-silent(vlc {})" \
+                                                --bind "enter:accept" \
+                                                --border none \
+                                                --help "Alt-i:File info;Alt-v:Play file via VLC" \
+                                                --list-label " Audio and video files in \"$(realpath "$1")/\" " \
+                                                --multi \
+                                                --no-sort \
+                                                --preview-init "alt-i:_fzf-preview-path {}" \
+                                                --preview-label " ffprobe output " \
+                                                --preview-window "60%,~2:wrap" \
+                                                --query "$2" \
+                                                --reverse))
 
     [ ${#_selected[@]} -gt 0 ] || return 0
 
-    eval ${_cmd:-echo} "${_selected[@]}"
+    if [ -n "$_cmd" ] ; then
+      $_cmd "${_selected[@]}"
+    else
+      printf "\"%s\" " "${_selected[@]}"
+      echo
+    fi
 
   else
 
