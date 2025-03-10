@@ -8,7 +8,7 @@ fi
 
 cleanup-path
 
-export BAT_THEME="Coldark-Cold"
+export BAT_CONFIG_PATH="/etc/bat.conf"
 export DELTA_FEATURES=default
 export HISTCONTROL=ignoreboth:erasedups
 export HISTSIZE=1000
