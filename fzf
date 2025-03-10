@@ -97,12 +97,20 @@ _fzf-wrapper() {
   # args: help text for function specific bindings, key for initial preview, initial preview, preview window
   # CAUTION: F1 binds ".."+preview-bottom" to fix help screen by repeated F1 press. Otherwise not
   # help content might be incomplete if --preview-window uses [:+SCROLL[OFFSETS][/DENOM]] values.
-  fzf --bind "f1:show-preview+change-preview(_fzf-help \"$1\")+preview-bottom" \
-      --bind "$2:show-preview+change-preview($3)" \
-      --preview "$3" \
-      --preview-window "$4" \
-      --history "$FZF_HISTORY_DIR/${FUNCNAME[-1]}.history" \
-      "${@: 5}"
+  local -a _args
+  while [ $# -gt 0 ]; do
+    case "$1" in
+         --preview-init) _args+=(--bind "${2%%:*}:show-preview+change-preview(${2#*:})" --preview "${2#*:}"); shift;;
+                 --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+preview-bottom"); shift;;
+      *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
+                      *) _args+=("$1");;
+    esac
+    shift
+  done
+
+# fn-vars _args
+  fzf $(_fzf-query-history 2) \
+      "${_args[@]}"
 }
 
 fzf-fn() {
@@ -130,11 +138,13 @@ fzf-fn() {
 
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
-      _fzf-wrapper "Alt-f:Show definition of selected function" "alt-f" "awk '/^{1} \(\)/,/^\}/' $_defs" "70%,+{2}+2/2,~2:wrap" \
-                   --bind "enter:become(echo declare -f {1})" \
+      _fzf-wrapper --bind "enter:become(echo declare -f {1})" \
+                   --help "Alt-f:Show definition of selected function" \
                    --list-label " Bash function(s) " \
                    --no-sort \
-                   --preview-label " Function definition " || true
+                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs" \
+                   --preview-label " Function definition " \
+                   --preview-window "70%,+{2}+2/2,~2:wrap" || true
 
       rm -f "$_defs"
 
@@ -162,14 +172,16 @@ fzf-apply() {
     _find="find "${_root:-.}" -name .git -prune -o -print0"
 
     $_find |& \
-    _fzf-wrapper "Alt-p:Path info;Enter:Apply command to selected paths" "alt-p" "_fzf-preview-path {}" "60%,~2:wrap" \
-                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
+    _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
                  --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                  --border-label-pos "2:bottom" \
+                 --help "Alt-p:Path info;Enter:Apply command to selected paths" \
                  --multi \
                  --no-sort \
-                 --read0 \
-                 --query "$_query"
+                 --preview-init "alt-p:_fzf-preview-path {}" \
+                 --preview-window "60%,~2:wrap" \
+                 --query "$_query" \
+                 --read0
 
   else
 
@@ -186,11 +198,13 @@ if in-path locate ; then
     if [ $# -gt 0 ] ; then
 
       plocate "$@" | \
-      _fzf-wrapper "Alt-f:Path info" "alt-f" "_fzf-preview-path {}" "50%,~2:wrap" \
-                   --border none \
+      _fzf-wrapper --border none \
+                   --help "Alt-f:Path info" \
                    --list-label " plocate $* " \
                    --multi \
+                   --preview-init "alt-f:_fzf-preview-path {}" \
                    --preview-label " File info " \
+                   --preview-window "60%,~2:wrap" \
                    --print0 | \
       xargs -0 -r -i@ echo -n '"@" '
       echo
@@ -206,18 +220,24 @@ if in-path man ; then
 
   fzf-man() {
     # s.a. https://github.com/junegunn/fzf/wiki/examples#man-pages
-    # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
-    # fonts referenced in some manual pages.
+
+    _fzf-man() {
+      # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
+      # fonts referenced in some manual pages.
+      man --warnings="!font" $(tr -d '()' <<<"$2") "$1"
+    }
+    export -f _fzf-man
+
     man -k . | \
     sort | \
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
-    _fzf-wrapper "Alt-m:Manual page" \
-                 "alt-m" $'echo {} | tr -d \'()\' | awk \'{printf "%s ", $2} {print $1}\' | xargs -r man --warnings="!font"' \
-                 "60%,~2:wrap" \
-                 --border-label "Manual pages" \
+    _fzf-wrapper --border-label "Manual pages" \
+                 --help "Alt-m:Manual page;Enter:Show selected manual page(s)" \
                  --multi \
                  --query "$1" \
+                 --preview-init "alt-m:_fzf-man {1} {2}" \
+                 --preview-window "60%,~2:wrap" \
                  --prompt='man> ' | \
     tr -d '()' | \
     awk '{printf "%s ", $2} {print $1}' | \
@@ -262,17 +282,18 @@ if in-path rg ; then
       [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
 
       rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
-      _fzf-wrapper "Alt-f:Show match in preview window;Enter:Load file into editor" "alt-f" \
-                   "_fzf-preview-bat --highlight-line {2} {1}" "up,60%,border-bottom,+{2}+3/3,~3:wrap" \
-                   --ansi \
+      _fzf-wrapper --ansi \
                    --bind "enter:execute($EDITOR $_editor_args)" \
                    --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
                    --border-label-pos "3:bottom" \
                    --color "hl:-1:underline,hl+:-1:underline:reverse" \
                    --delimiter : \
                    --extended \
+                   --help "Alt-f:Show match in preview window;Enter:Load file into editor" \
                    --list-border none \
                    --no-multi \
+                   --preview-init "alt-f:_fzf-preview-bat --highlight-line {2} {1}" \
+                   --preview-window "up,60%,border-bottom,+{2}+3/3,~3:wrap" \
                    --smart-case
 
     else

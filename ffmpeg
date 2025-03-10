@@ -76,18 +76,18 @@ fzf-ffprobes() (
 
     eval "_selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                        sort | \
-                       fzf --bind 'alt-v:execute-silent(vlc {})' \
-                           --border none \
-                           $(_fzf-query-history) \
-                           --list-label " Audio and video files in \"$(realpath "$1")/\" " \
-                           --multi \
-                           --no-sort \
-                           --preview '_fzf-preview-path {}' \
-                           --preview-label " ffprobe output (alt-v: play via VLC) " \
-                           --preview-window '60%,~2:wrap' \
-                           --print0 \
-                           --query "$2" \
-                           --reverse | \
+                       _fzf-wrapper --bind 'alt-v:execute-silent(vlc {})' \
+                                    --border none \
+                                    --help "Alt-i:File info;Alt-v:Play file via VLC" \
+                                    --list-label " Audio and video files in \"$(realpath "$1")/\" " \
+                                    --multi \
+                                    --no-sort \
+                                    --preview-init "alt-i:_fzf-preview-path {}" \
+                                    --preview-label " ffprobe output (alt-v: play via VLC) " \
+                                    --preview-window '60%,~2:wrap' \
+                                    --print0 \
+                                    --query "$2" \
+                                    --reverse | \
                        xargs -0 -i@ echo '\"@\"'))"
 
     [ ${#_selected[@]} -gt 0 ] || return 0

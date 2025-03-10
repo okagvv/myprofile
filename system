@@ -32,16 +32,17 @@ fzf-units() {
     systemctl --plain | \
     sed '/^$/,$d'
   fi | \
-  _fzf-wrapper "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
-               "alt-s" "_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" "70%,~2:wrap" \
+  _fzf-wrapper --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
+               --bind "alt-j:change-preview(_fzf-preview-header \"Recent journal entries for {1} in reverse order.\"; $_journal)" \
+               --bind "alt-p:change-preview(_fzf-preview-header \"Recent journal entries for {1} with priority $_listprio in reverse order.\"; $_journal --priority=$_listprio)" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
-               --bind 'alt-f:show-preview+change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind "alt-j:show-preview+change-preview(_fzf-preview-header \"Recent journal entries for {1} in reverse order.\"; $_journal)" \
-               --bind "alt-p:show-preview+change-preview(_fzf-preview-header \"Recent journal entries for {1} with priority $_listprio in reverse order.\"; $_journal --priority=$_listprio)" \
                --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
+               --help "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
                --multi \
                --no-sort \
+               --preview-init "alt-s:_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" \
+               --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
 }
@@ -51,26 +52,24 @@ myjournalctl() {
 }
 export -f myjournalctl
 
+new-alias avcrecent 'sudo ausearch -ts recent -m avc'
+new-alias avctoday 'sudo ausearch -ts today -m avc'
+new-alias avcyesterday 'sudo ausearch -ts yesterday -m avc'
+new-alias boot_blame 'sudo systemd-analyze blame'
+new-alias boot_times 'sudo systemd-analyze plot | display -'
+new-alias dstat 'sudo dstat --time --load --vmstat --net --swap --io'
+new-alias iotop 'sudo iotop -a -c -o -P'
+new-alias myiostat 'sudo iostat -xmt 1'
+
 if [[ ! "$(id -u)" == "0" ]] ; then
 
   journalctl() { /usr/bin/journalctl --user "$@"; }
   systemctl() { /usr/bin/systemctl --user "$@"; }
   export -f journalctl systemctl
-  
+
   return 0
-
+  
 fi
-
-# ------------ requiring root permission ------------
-
-new-alias avcrecent 'ausearch -ts recent -m avc'
-new-alias avctoday 'ausearch -ts today -m avc'
-new-alias avcyesterday 'ausearch -ts yesterday -m avc'
-new-alias boot_blame 'systemd-analyze blame'
-new-alias boot_times 'systemd-analyze plot | display -'
-new-alias dstat 'dstat --time --load --vmstat --net --swap --io'
-new-alias iotop 'iotop -a -c -o -P'
-new-alias myiostat 'iostat -xmt 1'
 
 juser() {
   if [ $# -gt 0 ] ; then

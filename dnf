@@ -37,35 +37,36 @@ dnf-history() {
     awk -v FS="|" '{ printf "%s|%s|%s\n",$1,$3,$2 }' | \
     sed -r 's/ \| /\|/g' | \
     column -t -s"|" -C name=No,right -C name=Timestamp -C name=Scope | \
-    _fzf-wrapper "alt-i:history info;enter: Print command-line template for processing selected transaction" \
-                 "alt-i" "dnf history info {1}" "40%,~1:wrap" \
-                 --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
+    _fzf-wrapper --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
                  --border-label " DNF history " \
+                 --header-lines 1 \
+                 --help "alt-i:history info;enter:Print command-line template for processing selected transaction" \
+                 --list-label " DNF transaction(s) " \
                  --no-sort \
                  --reverse \
-                 --header-lines 1 \
-                 --list-label " DNF transaction(s) " \
-                 --preview-label " DNF transaction info "
+                 --preview-init "alt-i:dnf history info {1}" \
+                 --preview-label " DNF transaction info " \
+                 --preview-window "40%,~1:wrap"
 
   fi
 }
 
 _fzf-dnf-packages() {
   # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
-  _fzf-wrapper "Alt-i:Package info;Alt-f:Files in package;Enter:$1" "alt-i" \
-               "_fzf-preview-header \"Info  for package {1}\"; sudo dnf repoquery --cacheonly --quiet --info {1}; i=\$(rpm -q --queryformat '%{INSTALLTIME:date}' {1}) && echo \"Package installed at \$i.\"" \
-               "70%,~2:wrap" \
-               $(_fzf-query-history 2) \
-               --bind "alt-f:change-preview(_fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
+  _fzf-wrapper --bind "alt-f:change-preview(_fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
                --bind 'enter:become(echo {+1})' \
                --border-label " $1 " \
                --header-lines 1 \
+               --help "Alt-i:Package info;Alt-f:Files in package;Enter:$1" \
                --list-label " $2 " \
                --multi \
                --no-sort \
+               --preview-init "alt-i:_fzf-preview-header \"Info for package {1}\"; sudo dnf repoquery --cacheonly --quiet --info {1}; i=\$(rpm -q --queryformat '%{INSTALLTIME:date}' {1}) && echo \"Package installed at \$i.\"" \
                --preview-label " Press F1 for help. " \
+               --preview-window "70%,~2:wrap" \
                --reverse \
-               --query "$3"
+               --query "$3" \
+               $(_fzf-query-history 2)               
 }
 
 _dnf-packages() {
@@ -128,17 +129,18 @@ dnf-upgrades() {
       sudo dnf list updates $_testing --quiet
     fi
   } | column -t | \
-  _fzf-wrapper "Alt-c:Package change log;Alt-i:Package info;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
-               "alt-c" "$_package; sudo dnf changelog $_testing --quiet \$pkg" "60%,~1:wrap"\
-               --bind "ctrl-a:toggle-all" \
+  _fzf-wrapper --bind "ctrl-a:toggle-all" \
                --bind "alt-i:change-preview($_package; sudo dnf repoquery $_testing --quiet --info \$pkg; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
                --bind 'enter:become(echo {+1})' \
                --border none \
                --exit-0 \
-               --list-label " Available upgrades (ctrl-a: toggle all)" \
                --header-lines 1 \
+               --help "Alt-c:Package change log;Alt-i:Package info;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
+               --list-label " Available upgrades (ctrl-a: toggle all)" \
                --multi \
+               --preview-init "alt-c:$_package; sudo dnf changelog $_testing --quiet \$pkg" \
                --preview-label " Press F1 for help " \
+               --preview-window "60%,~1:wrap" \
                --query "$1" \
                --reverse | \
   xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
