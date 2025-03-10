@@ -111,7 +111,7 @@ rpm-history() {
   sort --reverse | \
   cut --characters=12- | \
   column --table --separator "*" | \
-  _fzf-rpm "Package install history" "$1"
+  _fzf-rpm "Package install history" "$(sed -r 's/[[:space:]]+/ \| /g' <<<"$*")"
 }
 
 rpm-info() {
