@@ -21,6 +21,8 @@ export LIBVIRT_DEFAULT_URI=qemu:///system
 export PROMPT_DIRTRIM=5
 export PS4='+ ${FUNCNAME[0]} $LINENO: '
 export SYSTEMD_COLORS=0
+# /etc/tigrc is ubject of package updates. Use $TIGRC_USER to enable site sepecific adaption.
+export TIGRC_USER=/etc/tigrc.site
 
 if [ -d ~/.emacs.d ] ; then
 
