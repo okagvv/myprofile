@@ -8,18 +8,22 @@ fi
 
 cleanup-path
 
-export BAT_CONFIG_PATH="/etc/bat.conf"
-export HISTCONTROL=ignoreboth:erasedups
+export HISTCONTROL="ignoreboth:erasedups"
 export HISTSIZE=1000
 export HISTTIMEFORMAT="%m-%d %T "
-export LESS='-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t'
-export LESSBINFMT='*u\%X'
-export LESSCHARSET='utf-8'
-export LESSKEY_SYSTEM=/etc/lesskey
-export LIBVIRT_DEFAULT_URI=qemu:///system
+export LESS="-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t"
+export LESSBINFMT="'*u\%X"
+export LESSCHARSET="utf-8"
+export LESSKEY_SYSTEM="/etc/lesskey"
 export PROMPT_DIRTRIM=5
-export PS4='+ ${FUNCNAME[0]} $LINENO: '
+export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
+
+in-path bat   && export BAT_CONFIG_PATH="/etc/bat.conf"
+in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
+in-path rg    && export RIPGREP_CONFIG_PATH="/etc/ripgrep/config"
+
+[[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
 
 if in-path emacs && [ -d ~/.emacs.d ] ; then
 
@@ -29,15 +33,13 @@ if in-path emacs && [ -d ~/.emacs.d ] ; then
 
 elif in-path vim ; then
 
-  export EDITOR=vim
+  export EDITOR="vim"
 
 else
 
-  export EDITOR=vi
+  export EDITOR="vi"
 
 fi
-
-[[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS=/usr/libexec/openssh/gnome-ssh-askpass
 
 if [ -n "$PS1" ] ; then
 
@@ -51,3 +53,4 @@ if [ -n "$PS1" ] ; then
 
   fi
 fi
+
