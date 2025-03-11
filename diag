@@ -3,17 +3,22 @@
 script=
 
 fn-usage() {
-  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
+  echo -e "\e[1;\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
   return 2
 }
 
 fn-error() {
-  echo -e "\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  echo -e "\e[1;\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
   return 1
 }
 
+fn-info() {
+  echo -e "\e[1;\e[32m${script:-${FUNCNAME[1]}}: $1\e[0m"
+}
+
+fn_trace=
 fn-trace() {
-  echo -e "\e[33m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  [ -z "$fn_trace" ] || echo -e "\e[1;\e[36m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
 }
 
 fn-vars() {
@@ -43,8 +48,10 @@ fn-xtrace() {
   fn_xtrace="${FUNCNAME[1]}"
   [ -n "$fn_xtrace" ] || return 0
 
-  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN; echo "-===- Stopped trace for $fn_xtrace() -===-"; fn_xtrace=; fi' RETURN
-
+  fn_trace=y
+  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped trace for $fn_xtrace() -===-"; fn_xtrace=; fn_trace=; fi' RETURN
+  trap 'set +x; fn_xtrace=; fn_trace=; trap - RETURN ERR' ERR
+  
   echo "-===- Start xtrace for $fn_xtrace() -===-"
   set -x
 }
