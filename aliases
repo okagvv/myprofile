@@ -21,14 +21,14 @@ new-alias remotes 'git remote -v | cut -f1 -d"(" | uniq | column -t'
 new-alias rmemptydir 'find . -empty -type d -print0 | xargs -r -0 rmdir --verbose'
 new-alias sane 'stty sane'
 new-alias st 'eval "$(starship init bash)"'
-new-alias tig 'env TERM=xterm tig'
+new-alias tig TERM=xterm tig
 new-alias tmux 'tmux -2'
 new-alias trans2de 'trans -t de'
 new-alias trans2en 'trans -t en'
 new-alias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
-new-alias vi 'env TERM=xterm vim'
+new-alias vi TERM=xterm vim
 
-if [ -s ~/.fetchmailrc ] ; then
+if in-path fetchmail && [ -s ~/.fetchmailrc ] ; then
 
   new-alias imap fetchmail
   new-alias imapstats 'rg --color always -a " (error|querying|messages for) " ~/.fetchmail.log | grep -a -v GSSAPI | tail'
