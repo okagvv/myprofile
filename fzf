@@ -41,7 +41,7 @@ _fzf-preview-path() {
   _fzf-preview-header "Path \"$1\""
 
   if [ -e "$1" ] ; then
-    
+
     local _mime _size
     _mime="$(file --brief --mime "$1")"
     _size="$(du -sh "$1" | cut -f1)"
@@ -64,7 +64,7 @@ EOF
   else
 
     fn-error "Path \"$1\" does not exist!"
-    
+
   fi
 }
 
@@ -257,15 +257,18 @@ fi
 
 fzf-ps() {
   # TODO: Select via option from several ps columns sets.
-  # CAUTION: Some default column widths in ps output are unbalanced. Fixing this by configuring
-  # fixed column widths causes waste of horizontal space.
-  # High --hscroll-off value ensures that a match in a long command line is visible. With "h" the
-  # effect of --hscroll-off can be toggled. In addition a preview window containg the wraped line
-  # can be toggled on demand via "?".
   local _ps
   _ps="ps aux --sort=-%cpu | column -t -l 11"
   eval "$_ps" | \
-  fzf --bind="ctrl-r:reload(eval \"$_ps\")" \
+  fzf --bind "ctrl-r:reload(eval \"$_ps\")" \
+      --bind "alt-i:show-preview+change-preview(echo {11..-1} | sed -r 's/ +-/\n-/g')" \
+      --bind "alt-p:toggle-preview" \
+      --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)" \
+      --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)" \
+      --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)" \
+      --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)" \
+      --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)" \
+      --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)" \
       --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
       $(_fzf-query-history) \
       --header-lines 1 \
@@ -273,8 +276,8 @@ fzf-ps() {
       --list-border none \
       --multi \
       --no-sort \
-      --preview 'echo {}' \
-      --preview-window "down:3:hidden:wrap" \
+      --preview "echo {11..-1} | sed -r 's/ +-/\n-/g'" \
+      --preview-window "50%,~3:hidden:wrap:follow" \
       --query "$1" \
       --reverse
 }
