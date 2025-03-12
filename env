@@ -11,6 +11,7 @@ cleanup-path
 export HISTCONTROL="ignoreboth:erasedups"
 export HISTSIZE=1000
 export HISTTIMEFORMAT="%m-%d %T "
+export IGNOREEOF=2
 export LESS="-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t"
 export LESSBINFMT="'*u\%X"
 export LESSCHARSET="utf-8"
