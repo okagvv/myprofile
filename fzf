@@ -6,7 +6,7 @@ FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
-if [[ "$(id -u)" == "0" ]] ; then
+if is-root ; then
 
   export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
 
