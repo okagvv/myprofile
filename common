@@ -9,6 +9,12 @@ is-fn() {
   declare -F "$1" >/dev/null
 }
 
+is-root() {
+  [[ "$(id -u)" == "0" ]]
+}
+
+export -f in-path is-fn is-root
+
 abbr-pwd() {
   sed -E -e "s:^${HOME}:~:;s:^.+((/[^/]+){3})$:…\1:;s:([^/]{4})[^/]{4,}([^/]{4})/:\1…\2/:g" <<< "$PWD"
 }
