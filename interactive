@@ -108,7 +108,7 @@ m() {
 complete -o bashdefault -o default l lmt lm m
 
 new-alias() {
-  # args: alias-name [{var=value|nohup}] "command-line"
+  # args: alias-name [{var=value|nohup|sudo}] "command-line"
   if [ $# -ge 2 ] ; then
     
     local _cmd _cmdln
