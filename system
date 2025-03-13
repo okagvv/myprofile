@@ -90,13 +90,13 @@ juser() {
 complete -A user -o default juser
 
 mysu() {
-    # Start command-line via su for user derived from path owner of last argument.
-    # Preserves white spaces in arguments.
-    if [ $# -ge 2 ] ; then
-      su $(stat -c %U "${*: -1}") -c "$(printf "'%s' " "${@}")"
-    else
-      fn-usage "command [options|args] file"
-    fi
+  # Start command-line via su for user derived from path owner of last argument.
+  # Preserves white spaces in arguments.
+  if [ $# -ge 2 ] ; then
+    su $(stat -c %U "${*: -1}") -c "$(printf "'%s' " "${@}")"
+  else
+    fn-usage "command [options|args] file"
+  fi
 }
 complete -A command -o default mysu
 

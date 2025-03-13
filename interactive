@@ -150,25 +150,28 @@ if in-path pdfgrep ; then
 fi
 
 ssh-loadkey() {
-  if [[ $# -eq 1 && -s "$1" ]] ; then
+  local _key
+  [[ "$1" =~ / ]] && _key="$1" || _key="$HOME/.ssh/$1"
+    
+  if [[ $# -eq 1 && -s "$_key" ]] ; then
     
     [[ "$(cat /proc/$SSH_AGENT_PID/comm 2>/dev/null)" == ssh-agent ]] || eval "$(ssh-agent)"
 
-    if [[ "$(file "$1")" =~ private\ key ]] ; then
+    if [[ "$(file "$_key")" =~ private\ key ]] ; then
 
-      if grep -q "$(cat "$1.pub")" <<<"$(ssh-add -L)" ; then
+      if grep -q "$(cat "$_key.pub")" <<<"$(ssh-add -L)" ; then
 
-        fn-info "Private key \"${1##*/}\" is already lodead."
+        fn-info "Private key \"${_key##*/}\" is already lodead."
         
       else
         
-        ssh-add "$1"
+        ssh-add "$_key"
         
       fi
 
     else
 
-      fn-error "Private key \"${1##*/}\" is not a valid private key."
+      fn-error "Private key \"${_key##*/}\" is not a valid private key."
       
     fi
     
@@ -178,3 +181,8 @@ ssh-loadkey() {
     
   fi
 }
+
+_complete_ssh_keys() {
+  COMPREPLY=($(compgen -W "$(find ~/.ssh/ -type f -prune | xargs -r file | sed -rn 's~^.*/([^/]+): .* private key$~\1~p')" -- "${COMP_WORDS[1]}"))
+}
+complete -o bashdefault -o default -F _complete_ssh_keys ssh-loadkey
