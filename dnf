@@ -85,10 +85,21 @@ _dnf-packages() {
 }
 
 dnf-install() {
-  
-  _dnf-packages | \
-  _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$1" | \
-  xargs --no-run-if-empty --open-tty sudo dnf install
+  if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
+    
+    fn-usage "[--help | path | query]
+In case argument contains a slash then it is assumed packages deploying this path pattern are to
+search. Otherwise argument is treated as fzf query."
+
+  else
+    
+    local _search _query
+    [[ "$1" =~ / ]] && _search="$1" || _query="$1"
+    _dnf-packages $_search | \
+    _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$_query" | \
+    xargs --no-run-if-empty --open-tty sudo dnf install
+
+  fi
 }
 
 dnf-remove() {
