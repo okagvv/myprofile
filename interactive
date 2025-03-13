@@ -148,3 +148,33 @@ if in-path pdfgrep ; then
   }
 
 fi
+
+ssh-loadkey() {
+  if [[ $# -eq 1 && -s "$1" ]] ; then
+    
+    [[ "$(cat /proc/$SSH_AGENT_PID/comm 2>/dev/null)" == ssh-agent ]] || eval "$(ssh-agent)"
+
+    if [[ "$(file "$1")" =~ private\ key ]] ; then
+
+      if grep -q "$(cat "$1.pub")" <<<"$(ssh-add -L)" ; then
+
+        fn-info "Private key \"${1##*/}\" is already lodead."
+        
+      else
+        
+        ssh-add "$1"
+        
+      fi
+
+    else
+
+      fn-error "Private key \"${1##*/}\" is not a valid private key."
+      
+    fi
+    
+  else
+
+    fn-usage "<private-ssh-key>"
+    
+  fi
+}
