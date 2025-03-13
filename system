@@ -1,13 +1,16 @@
 # -*- shell-script -*-
 
 new-alias failed 'systemctl list-units --failed'
-new-alias jboot 'myjournalctl --boot --lines=all --pager-end'
-new-alias jerr 'myjournalctl -b -e -p 0..4'
-new-alias jtoday 'myjournalctl --since today --pager-end --lines=all'
-new-alias jtodaylong 'myjournalctl --since today --catalog --pager-end --lines=all'
-new-alias jtodaywarn 'myjournalctl --priority=emerg..notice --since today --pager-end --lines=all'
 new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
 new-alias sysmounted 'systemctl --type mount'
+new-alias avcrecent sudo 'ausearch -ts recent -m avc'
+new-alias avctoday sudo 'ausearch -ts today -m avc'
+new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc'
+new-alias boot_blame sudo 'systemd-analyze blame'
+new-alias boot_times sudo 'systemd-analyze plot | display -'
+new-alias dstat sudo 'dstat --time --load --vmstat --net --swap --io'
+new-alias iotop sudo 'iotop -a -c -o -P'
+new-alias iostat sudo 'iostat -xmt 1'
 
 if ! is-root ; then
 
@@ -74,15 +77,6 @@ myjournalctl() {
 export -f myjournalctl
 
 is-root || return 0
-
-new-alias avcrecent 'sudo ausearch -ts recent -m avc'
-new-alias avctoday 'sudo ausearch -ts today -m avc'
-new-alias avcyesterday 'sudo ausearch -ts yesterday -m avc'
-new-alias boot_blame 'sudo systemd-analyze blame'
-new-alias boot_times 'sudo systemd-analyze plot | display -'
-new-alias dstat 'sudo dstat --time --load --vmstat --net --swap --io'
-new-alias iotop 'sudo iotop -a -c -o -P'
-new-alias myiostat 'sudo iostat -xmt 1'
 
 juser() {
   if [ $# -gt 0 ] ; then
