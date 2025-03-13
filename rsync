@@ -4,7 +4,7 @@ if in-path rsync ; then
   
   rsyncp() {
     local -a _opts
-    _opts=(--archive --backup --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
+    _opts=(--archive --backup --safe-links --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
 
     while [ $# -gt 1 ] ; do
       case "$1" in
