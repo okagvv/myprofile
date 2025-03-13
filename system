@@ -11,30 +11,35 @@ new-alias sysmounted 'systemctl --type mount'
 
 fzf-units() {
   # Iterate over systemd units. With --priority only units with journal entries below/equal this prio logged today are considered.
-  local _prio _listprio _journal
+  local _all _hours _journal _listprio _prio _since
+  _hours=24
   while [ $# -gt 0 ] ; do
     case "$1" in
+           -a|--all) _all=--all;;
       -p|--priority) _prio="$2"; shift;;
-                  *) fn-usage "[--help] [--priority {0..7}|{emerg,alert,crit,err,warning,notice,info,debug}"; return 0;;
+          -h|--help) fn-usage "[--help] [--all | [--since hours] --priority {0..7}|{emerg,alert,crit,err,warning,notice,info,debug}] pattern"; return 0;;
+         -s|--since) _hours="$2"; shift;;
+                  *) break;;
     esac
     shift
   done
 
-  _journal="journalctl --no-hostname --boot --since \"24 hours ago\" --catalog --line 100 --reverse --pager-end --unit={1}"
+  _since="--boot --since \"$_hours hours ago\""
+  _journal="journalctl --no-hostname $_since --catalog --line 1000 --reverse --pager-end --unit={1}"
   _listprio="0..${_prio:-debug}"
   
-  if [ -n "$_prio" ] ; then
+  if [[ -z "$_all" && -n "$_prio" ]] ; then
     echo Unit
-    journalctl --output=export --output-fields=_SYSTEMD_UNIT --boot --since "24 hours ago" --priority=0..$_prio | \
+    journalctl --output=export --output-fields=_SYSTEMD_UNIT $_since --priority=0..$_prio | \
     sed --silent --regexp-extended 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | \
     sort --unique 
   else
-    systemctl --plain | \
+    systemctl --plain $_all | \
     sed '/^$/,$d'
   fi | \
   _fzf-wrapper --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind "alt-j:change-preview(_fzf-preview-header \"Recent journal entries for {1} in reverse order.\"; $_journal)" \
-               --bind "alt-p:change-preview(_fzf-preview-header \"Recent journal entries for {1} with priority $_listprio in reverse order.\"; $_journal --priority=$_listprio)" \
+               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} since $_hours hours in reverse order.\"; $_journal)" \
+               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio since $_hours hours in reverse order.\"; $_journal --priority=$_listprio)" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
