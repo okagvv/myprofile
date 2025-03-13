@@ -11,7 +11,7 @@ cleanup-path
 export HISTCONTROL="ignoreboth:erasedups"
 export HISTSIZE=1000
 export HISTTIMEFORMAT="%m-%d %T "
-export IGNOREEOF=2
+export IGNOREEOF=1
 export LESS="-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t"
 export LESSBINFMT="'*u\%X"
 export LESSCHARSET="utf-8"
@@ -21,21 +21,34 @@ export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
 
 in-path bat   && export BAT_CONFIG_PATH="/etc/bat.conf"
-in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 in-path rg    && export RIPGREP_CONFIG_PATH="/etc/ripgrep/config"
+in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
 
 if in-path emacs && [ -d ~/.emacs.d ] ; then
 
-  [ -z "$DISPLAY" ] || export ALTERNATE_EDITOR="emacs-gtk+x11"
+  if [ -n "$DISPLAY" ] ; then
+
+    in-path emacs-gtk+x11 && export ALTERNATE_EDITOR="emacs-gtk+x11"
+    
+  fi
+  
   export EDITOR="emacsclient -n"
   export GIT_EDITOR="emacsclient"
 
+elif in-path gvim && [ -n "$DISPLAY" ] ; then
+
+  export EDITOR=gvim
+  
 elif in-path vim ; then
 
   export EDITOR="vim"
 
+elif in-path nano && [ -s ~/.nanorc ] ; then
+
+  export EDITOR="nano"
+  
 else
 
   export EDITOR="vi"
@@ -43,15 +56,18 @@ else
 fi
 
 if [ -n "$PS1" ] ; then
-
   if in-path starship && [ -s ~/.config/starship.toml ] ; then
 
     eval "$(starship init "${SHELL##*/}")"
 
-  else
+  elif in-path git ; then
 
     export PS1="\$? \u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
 
+  else
+
+    export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
+    
   fi
 fi
 
