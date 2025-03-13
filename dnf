@@ -5,7 +5,7 @@ in-path dnf || return 0
 rpm-ostree status --booted 2>/dev/null 1>&2 && return 0
 
 dnf-repoquery() {
-  sudo dnf repoquery --cacheonly --quiet "$@"
+  sudo dnf repoquery --quiet "$@"
 }
 export -f dnf-repoquery
 
@@ -59,11 +59,10 @@ _bodhi_updates() {
 export -f _bodhi_updates
 
 _fzf-dnf-packages() {
-  # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
   _fzf-wrapper --bind "alt-f:change-preview(_fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
                --bind "alt-h:execute(sudo dnf repoquery --quiet --queryformat '%{url}' {1} | xargs -r $BROWSER 2>/dev/null)" \
-               $([[ "$1" =~ ^Search ]] || echo "--bind \"alt-b:execute(_bodhi_updates {1})\")") \
-               --bind 'enter:become(echo {+1})' \
+               --bind "alt-b:execute(_bodhi_updates {1})" \
+               --bind "enter:become(echo {+1})" \
                --border-label " $1 " \
                --header-lines 1 \
                --help "Alt-b:Search package on Bodhi;Alt-i:Package info;Alt-f:Files in package;Alt-h:Open package URL in \\\$BROWSER;Enter:$1" \
@@ -80,12 +79,13 @@ _fzf-dnf-packages() {
 
 _dnf-packages() {
   ( echo "Package Repository"
-    sudo -A dnf repoquery --cacheonly --quiet --queryformat '%{name}-%{evr}.%{arch} %{reponame}\n' "$@" | \
+    sudo -A dnf repoquery --quiet --queryformat '%{name}-%{evr}.%{arch} %{reponame}\n' "$@" | \
     sort --ignore-case
   ) | column -t -l2
 }
 
 dnf-install() {
+  
   _dnf-packages | \
   _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$1" | \
   xargs --no-run-if-empty --open-tty sudo dnf install
@@ -101,7 +101,7 @@ dnf-search() {
   if [ $# -gt 0 ] ; then
 
     ( echo "Package : Summary"
-      sudo -A dnf search --cacheonly --quiet "$@" | \
+      sudo -A dnf search --quiet "$@" | \
       grep -v = | \
       sort | \
       uniq
@@ -115,7 +115,6 @@ dnf-search() {
 
   fi
 }
-
 
 dnf-upgrades() (
   local _testing
