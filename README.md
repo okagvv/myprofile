@@ -10,7 +10,9 @@ might be required
 - `fzf` (command-line fuzzy finder)
 - `git` (content tracker)
 - `gojq` (drop-in replacement for`jq` supporting YAML in- and output)
+- `plocate` (find files by name)
 - `ripgrep` (search directory for files matching pattern)
+- `sysstat` (performance monitoring tools)
 
 For `rpm-ostree` based distributions these tools must be layered.
 
@@ -19,7 +21,7 @@ For `rpm-ostree` based distributions these tools must be layered.
 First clone the project repository into path readable for all afected users
 
 ``` shell
-$ git clone git@codeberg.org:okagvv/myprofile.git
+$ git clone https://codeberg.org/okagvv/myprofile.git
 ```
 
 The selected worktree path is referenced below as `$myprofile`.
@@ -68,5 +70,7 @@ functions. Otherwise the alias creation is silently skipped.
 ## Scripting
 
 ## Customization
+
+- `$BROWSER`
 
 ## Naming conventions
