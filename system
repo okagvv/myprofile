@@ -59,10 +59,11 @@ fzf-units() (
   _fzf-wrapper --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
                --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} since $_hours hours in reverse order.\"; _journal {1})" \
                --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio since $_hours hours in reverse order.\"; _journal {1} --priority=$_listprio)" \
+               --bind 'alt-r:change-preview(_fzf-preview-header "Restart unit {1}"; systemctl restart --show-transaction {1})' \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
-               --help "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
+               --help "Alt-f:List unit files;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
                --multi \
                --no-sort \
                --preview-init "alt-s:_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" \
