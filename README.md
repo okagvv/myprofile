@@ -6,7 +6,6 @@ Beside the tools usually installed per default for todays Linux distributions fo
 might be required
 
 - `bat` (pager with syntax highlighting)
-- `file` (determine file type)
 - `fzf` (command-line fuzzy finder)
 - `git` (content tracker)
 - `gojq` (drop-in replacement for`jq` supporting YAML in- and output)
