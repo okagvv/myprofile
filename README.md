@@ -53,6 +53,9 @@ be used instead of `myprofile.default`.
 
 List entries starting with a hashmark will be skipped silently.
 
+## Coding conventions
+
+
 ## fzf
 
 For all `fzf` calls following conventions apply
@@ -72,4 +75,3 @@ functions. Otherwise the alias creation is silently skipped.
 
 - `$BROWSER`
 
-## Naming conventions
