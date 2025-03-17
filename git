@@ -2,7 +2,18 @@
 
 in-path git || return 0
 
-new-alias remotes 'git remote -v | cut -f1 -d"(" | uniq | column -t'
+remotes() {
+  git remote --verbose "$@" | \
+  cut -f1 -d"(" | \
+  sort -u | \
+  column -t
+}
+
+branches() {
+  git branch --format="%(HEAD)~%(committerdate:human)~%(authorname)~%(objectname:short)~%(refname:short)~%(upstream:short) %(upstream:track)~%(contents:lines=1)" --sort='-committerdate' "$@" | \
+  column -t -s"~" -o" " -l 7
+}
+complete -W "--all --remote" branches 
 
 [ -d ~git ] && new-alias origin 'cd "$(git remote get-url --push origin)"'
 
