@@ -26,35 +26,6 @@ in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
 
-if in-path emacs && [ -d ~/.emacs.d ] ; then
-
-  if [ -n "$DISPLAY" ] ; then
-
-    in-path emacs-gtk+x11 && export ALTERNATE_EDITOR="emacs-gtk+x11"
-    
-  fi
-  
-  export EDITOR="emacsclient -n"
-  export GIT_EDITOR="emacsclient"
-
-elif in-path gvim && [ -n "$DISPLAY" ] ; then
-
-  export EDITOR=gvim
-  
-elif in-path vim ; then
-
-  export EDITOR="vim"
-
-elif in-path nano && [ -s ~/.nanorc ] ; then
-
-  export EDITOR="nano"
-  
-else
-
-  export EDITOR="vi"
-
-fi
-
 if [ -n "$PS1" ] ; then
   if in-path starship && [ -s ~/.config/starship.toml ] ; then
 

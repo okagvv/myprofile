@@ -60,9 +60,12 @@ List entries starting with a hashmark will be skipped silently.
 
 For all `fzf` calls following conventions apply
 
-- `F1` lists effective `fzf` key bindings in a preview page.
+- `F1` lists effective `fzf` key bindings in a preview page
+  - **Caution:** `fzf` calling functions may rely on key bindings (defined in `$FZF_DEFAULT_OPTS` or
+    function body) which are in conflict with used window managers a/o terminal emulators.
 - Separate search history for each `fzf` calling function is stored in
   `$HOME/.config/fzf/$FUNCNAME.history`.
+  
 
 ## Aliases
 

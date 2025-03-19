@@ -1,5 +1,6 @@
 common
 env
+editor
 diag
 interactive
 aliases
