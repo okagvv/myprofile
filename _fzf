@@ -42,6 +42,10 @@ EOF
     if [[ -r "$1" && -s "$1" ]] ; then
       case "$_mime" in
         *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
+        *pdf*) if in-path pdfinfo ; then
+                 _fzf-preview-header
+                 pdfinfo -isodates "$1"
+               fi;;
         *rpm*) _fzf-preview-header; rpm -qip "$1";;
         *text*) _fzf-preview-bat "$1";;
         *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
