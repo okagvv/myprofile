@@ -1,5 +1,7 @@
 # -*- shell-script -*-
 
+myprofile _fzf
+
 _rpm-inspect-scope() {
   rpm --query --$1 "$2" | \
   fzf --border none \
@@ -51,12 +53,12 @@ _rpm-preview-what() {
   _fzf-preview-header "What packages relate to \"$1\""
   for _what in enhances recommends requires suggests supplements ; do
     echo -e "What $_what:\n$(rpm --query --what$_what "$1" | sed '/^no package /q;s/^/- /')\n"
-  done
+  done | bat --color always --style plain --language yaml
 }
 
 _rpm-preview() {
   _fzf-preview-header "$1 package \"$3\""
-  rpm --query $2 "$3"
+  rpm --query $2 "$3" | bat --color always --style plain --language $4
 }
 
 _rpm-preview-files() {
@@ -74,11 +76,11 @@ _fzf-rpm() {
   _fzf-wrapper --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
                --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
                --bind="alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
-               --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
+               --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr log)" \
                --bind="alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
-               --bind="alt-s:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr)" \
+               --bind="alt-s:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr bash)" \
                --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
-               --bind="alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr)" \
+               --bind="alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
                --bind='alt-w:change-preview(_rpm-preview-what {-3})' \
                --bind 'enter:become(echo {+-3})' \
                --border-label " $1 " \
@@ -86,7 +88,7 @@ _fzf-rpm() {
                --list-label " Matching packages " \
                --multi \
                --no-sort \
-               --preview-init "alt-l:_rpm-preview \"Changelog of\" --changelog $_nvr" \
+               --preview-init "alt-l:_rpm-preview \"Changelog of\" --changelog $_nvr log" \
                --preview-label " Press F1 for help " \
                --preview-window "60%,~2:wrap" \
                --query "$2" \
