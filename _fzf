@@ -118,3 +118,9 @@ _fzf-wrapper() {
   fzf $(_fzf-query-history 2) \
       "${_args[@]}"
 }
+
+_fzf_journal() {
+  journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
+  bat --color always --language syslog --number
+}
+export -f _fzf_journal
