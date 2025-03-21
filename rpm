@@ -29,9 +29,9 @@ rpm-docs() (
 
 rpm-history() (
   myprofile _rpm
-  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}\n' 2>&1 | \
+  LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}\n' 2>&1 | \
   sort --reverse | \
-  cut --characters=12- | \
+  sed -r 's/^[[:digit:]]+ ([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\1 \2/' | \
   column --table --separator "*" | \
   _fzf-rpm "Package install history" "$(sed -r 's/[[:space:]]+/ \| /g' <<<"$*")"
 )
