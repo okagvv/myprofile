@@ -93,8 +93,6 @@ $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
   ) | column -t -s: -o": " | sed 's/^- *://'
 }
 
-export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history
-
 _fzf-wrapper() {
   # args: --help "help text for function specific bindings"
   #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
@@ -123,4 +121,5 @@ _fzf_journal() {
   journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
   bat --color always --language syslog --number
 }
-export -f _fzf_journal
+
+export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history _fzf-wrapper _fzf_journal

@@ -34,7 +34,7 @@ ffprobes() {
         sed -r '/end_time:/ { N; s/\n// };s/(end_time: "[^"]+") +(.+)$/\2 \1/' | \
         bat --language yaml --color always --paging never --style header-filename --file-name "$_input"
         echo
-        
+
       else
 
         ffprobe -hide_banner -i "$_input" |& grep --color=never --extended-regexp '^ *(Input|Duration:|Stream) '
@@ -53,7 +53,7 @@ export -f ffprobes
 fzf-ffprobes() (
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
   # list input. Use of --all avoids this but may list files not supported by ffprobe a/o vlc.
-  local _all _cmd _sort  
+  local _all _cmd _sort
   while [ $# -gt 0 ] ; do
     case "$1" in
        -a|--all) _all=y;;
@@ -66,7 +66,7 @@ fzf-ffprobes() (
   done
 
   [[ "$_sort" == date ]] && _sort="-k1nr" || _sort="-k2"
-  
+
   if [[ $# -gt 0 && -d "$1" ]] ; then
 
     _ffprobes-all() {
@@ -84,10 +84,12 @@ fzf-ffprobes() (
       nohup vlc --verbose 0 --playlist-enqueue "$@" &
     }
     export -f _vlc_enqueue
-    
+
     cd "$1"
     local -a _selected
-    IFS=$'\n' _selected=($($([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
+
+    IFS=$'\n' _selected=($(myprofile _fzf
+                           $([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                            sort | \
                            IFS=" " _fzf-wrapper --bind "alt-a:clear-selection" \
                                                 --bind "alt-v:execute-silent(_vlc_enqueue {+})+clear-selection" \
