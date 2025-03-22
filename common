@@ -13,14 +13,20 @@ is-root() {
   [[ "$(id -u)" == "0" ]]
 }
 
-export -f in-path is-fn is-root
-
 abbr-pwd() {
   sed -E -e "s:^${HOME}:~:;s:^.+((/[^/]+){3})$:…\1:;s:([^/]{4})[^/]{4,}([^/]{4})/:\1…\2/:g" <<< "$PWD"
 }
 
 cleanup-path() {
   export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
+}
+
+find-beyond-git() {
+  if [ $# -gt 1 ] ; then
+    find "$1" -name .git -prune -o "${@: 2}"
+  else
+    fn-usage "<path> {<find expression>}"
+  fi
 }
 
 find-last() {
