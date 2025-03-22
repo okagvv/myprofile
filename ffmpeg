@@ -48,7 +48,6 @@ ffprobes() {
     fi
   done
 }
-export -f ffprobes
 
 fzf-ffprobes() (
   # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
@@ -70,7 +69,7 @@ fzf-ffprobes() (
   if [[ $# -gt 0 && -d "$1" ]] ; then
 
     _ffprobes-all() {
-      find . -type f -printf "%T@ %P\0" | sort -z "$_sort" | cut -z -d' ' -f2-
+      find-beyond-git . -type f -printf "%T@ %P\0" | sort -z "$_sort" | cut -z -d' ' -f2-
     }
 
     _ffprobes-filter() {
@@ -84,7 +83,7 @@ fzf-ffprobes() (
       nohup vlc --verbose 0 --playlist-enqueue "$@" &
     }
     export -f _vlc_enqueue
-
+    
     cd "$1"
     local -a _selected
 
@@ -95,6 +94,7 @@ fzf-ffprobes() (
                                                 --bind "alt-v:execute-silent(_vlc_enqueue {+})+clear-selection" \
                                                 --bind "enter:accept" \
                                                 --border none \
+                                                --exit-0 \
                                                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-v:Play current/selected file(s) via VLC" \
                                                 --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                                                 --multi \
