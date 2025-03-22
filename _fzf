@@ -3,7 +3,7 @@
 # CAUTION: This profile script is intended only for sourcing by profile functions utilizing _fzf-wrapper().
 
 myprofile common diag rpm ffmpeg
-export -f in-path is-fn is-root fn-error fn-trace fn-xtrace rpm-owner ffprobes
+export -f in-path is-fn is-root fn-abort fn-error fn-trace fn-xtrace rpm-owner ffprobes
 
 FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-preview-wrap,f4:change-preview-window(70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f7:preview-half-page-up,f8:preview-half-page-down,f9:preview-top,f10:preview-bottom' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
@@ -39,17 +39,14 @@ _fzf-preview-path() {
     cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
 Type: $_mime
 $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
-RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
+$(is-fn rpm-owner && echo "RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')")
 EOF
 
     if [[ -r "$1" && -s "$1" ]] ; then
       case "$_mime" in
-             *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
-                       *pdf*) if in-path pdfinfo ; then
-                                _fzf-preview-header
-                                pdfinfo -isodates "$1"
-                              fi;;
-                       *rpm*) _fzf-preview-header; rpm -qip "$1";;
+             *audio*|*video*) if is-fn ffprobes ; then _fzf-preview-header; ffprobes --yaml "$1"; fi;;
+                       *pdf*) if in-path pdfinfo ; then _fzf-preview-header; pdfinfo -isodates "$1"; fi;;
+                       *rpm*) if in-path rpm ; then _fzf-preview-header; rpm -qip "$1"; fi;;
                       *text*) _fzf-preview-header; _fzf-preview-bat --number "$1";;
         *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
       esac
