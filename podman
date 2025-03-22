@@ -2,47 +2,38 @@
 
 in-path podman || return 0
 
-_fzf-podman-query() {
-  _fzf-preview-header "$1"
-  shift
-  $* | gojq --yaml-output
-}
-export -f _fzf-podman-query
-
-fzf-images() {
-  local _default
-  _default='_fzf-podman-query "Inspect {}" podman image inspect {}'
+fzf-images() (
+  myprofile _fzf
 
   podman images --format '{{ .Repository }}:{{ .Tag }}' | \
-  fzf --bind='alt-c:+change-preview(_fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
-      --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
-      --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
-      --bind="alt-i:+change-preview($_default)" \
-      --bind='alt-T:+change-preview(_fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
-      --border none \
-      --list-label " Podman images " \
-      --multi \
-      --preview "$_default" \
-      --preview-label " Use alt-{c,d,h,i,T} to change information scope. " \
-      --preview-window '60%:~2:wrap' \
-      --query "$1" | \
+  _fzf-wrapper --bind='alt-c:+change-preview(_fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
+               --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
+               --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
+               --bind='alt-t:+change-preview(_fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
+               --border none \
+               --help "Alt-c:Child images and layer hierarchy;Alt-d:Image diffs;Alt-h:Image history;Alt-t:Image tree" \
+               --list-label " Podman images " \
+               --multi \
+               --preview-init "alt-i:_fzf-podman-query \"Inspect {}\" podman image inspect {}" \
+               --preview-label " Press F1 for help. " \
+               --preview-window "60%:~2:wrap" \
+               --query "$1" | \
   xargs -r
-}
+)
 
-fzf-container() {
-  local _default
-  _default='_fzf-podman-query "Inspect container {}" podman container inspect --size {}'
+fzf-container() (
+  myprofile _fzf
 
   podman container  ls --all --format '{{ .Names }}' | \
-  fzf --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman container diff --format json {})' \
-      --bind="alt-i:+change-preview($_default)" \
-      --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
-      --border none \
-      --list-label " Podman container " \
-      --multi \
-      --preview "$_default" \
-      --preview-label " Use alt-{d,i,l} to change information scope. " \
-      --preview-window '80%:~2:follow:wrap' \
-      --query "$1" | \
+  _fzf-wrapper --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman container diff --format json {})' \
+               --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
+               --border none \
+               --help "Alt-d:Container diffs;Alt-i:Inspect container;Alt-l:Container logs" \
+               --list-label " Podman container " \
+               --multi \
+               --preview-init "_fzf-podman-query \"Inspect container {}\" podman container inspect --size {}" \
+               --preview-label " Press F1 for help. " \
+               --preview-window '80%:~2:follow:wrap' \
+               --query "$1" | \
   xargs -r
-}
+)
