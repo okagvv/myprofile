@@ -121,3 +121,14 @@ _fzf_journal() {
 }
 
 export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history _fzf-wrapper _fzf_journal
+
+if in-path podman ; then
+
+  _fzf-podman-query() {
+    _fzf-preview-header "$1"
+    shift
+    $* | gojq --yaml-output
+  }
+  export -f _fzf-podman-query
+
+fi
