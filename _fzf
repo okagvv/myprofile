@@ -114,7 +114,7 @@ _fzf-wrapper() {
       "${_args[@]}"
 }
 
-_fzf_journal() {
+_fzf-journal() {
   journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
   bat --color always --language syslog --number
 }
