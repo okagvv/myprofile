@@ -52,8 +52,8 @@ fzf-units() (
   _fzf-wrapper --bind 'alt-d:change-preview(_fzf-preview-header "Dependencies for unit {1}"; systemctl list-dependencies {1})' \
                --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
                --bind 'alt-h:change-preview(_fzf-preview-header "Help for unit {1}"; systemctl help {1})' \
-               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} in reverse order.\"; _fzf_journal --unit {1})" \
-               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf_journal --unit {1} --priority=$_listprio)" \
+               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} in reverse order.\"; _fzf-journal --unit {1})" \
+               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf-journal --unit {1} --priority=$_listprio)" \
                --bind 'alt-P:change-preview(_fzf-preview-header "Show properties for unit {1}"; systemctl show {1} | sort)' \
                --bind 'alt-r:change-preview(_fzf-preview-header "Restart unit {1}"; systemctl restart --show-transaction {1})' \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
@@ -92,12 +92,12 @@ fzf-journal() (
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
     sort -u
   } | \
-  _fzf-wrapper --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf_journal --identifier {1} --priority=$_listprio)" \
+  _fzf-wrapper --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf-journal --identifier {1} --priority=$_listprio)" \
                --border-label " Journal entries per syslog identifier $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
-               --help "Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;" \
+               --help "Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio" \
                --no-sort \
-               --preview-init 'alt-j:_fzf-preview-header "Journal entries for {1}"; _fzf_journal --identifier={1}' \
+               --preview-init 'alt-j:_fzf-preview-header "Journal entries for {1}"; _fzf-journal --identifier={1}' \
                --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
