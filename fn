@@ -3,26 +3,26 @@
 script=
 
 fn-usage() {
-  echo -e "\e[1;\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
+  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
   return 2
 }
 
 fn-error() {
-  echo -e "\e[1;\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  echo -e "\e[1m\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
   return 1
 }
 
 fn-info() {
-  echo -e "\e[1;\e[32m${script:-${FUNCNAME[1]}}: $1\e[0m"
+  echo -e "\e[1m\e[32m${script:-${FUNCNAME[1]}}: $1\e[0m"
 }
 
 fn_trace=
 fn-trace() {
-  [ -z "$fn_trace" ] || echo -e "\e[1;\e[36m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  [ -z "$fn_trace" ] || echo -e "\e[1m\e[36m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
 }
 
 fn-vars() {
-  echo -e "\e[34m${script:-${FUNCNAME[1]}}: $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')\e[0m" >&2
+  echo -e "\e[1m\e[34m${script:-${FUNCNAME[1]}}: $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')\e[0m" >&2
 }
 
 fn-abort() {
