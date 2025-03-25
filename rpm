@@ -34,8 +34,8 @@ rpm-list() (
               *) break;;
     esac
   done
-  
-  myprofile _rpm  
+
+  myprofile _rpm
   _fzf-rpm "$@"
 )
 
@@ -85,5 +85,31 @@ rpm-freshen() {
     sudo rpm --freshen --verbose --hash "$@" 2>&1 | m
   else
     fn-usage "rpmfile"
+  fi
+}
+
+rpm-requires() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --requires "$1" | \
+    cut -f1 -d' ' | \
+    sort -u | \
+    xargs -r rpm --query --queryformat '%{NAME} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' --whatprovides | \
+    sed -r "/^no package provides /d;/^$1 /d;s/^[^ ]+ //" | \
+    sort -u
+  else
+    fn-usage "package"
+  fi
+}
+
+rpm-required() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --provides "$1" | \
+    cut -f1 -d' ' | \
+    sort -u | \
+    xargs -r rpm --query --queryformat '%{NAME} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' --whatrequires | \
+    sed -r "/^no package requires /d;/^$1 /d;s/^[^ ]+ //" | \
+    sort -u
+  else
+    fn-usage "package"
   fi
 }
