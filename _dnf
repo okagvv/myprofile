@@ -14,6 +14,7 @@ _fzf-dnf-packages() {
                --bind "alt-h:execute(sudo dnf repoquery --quiet --queryformat '%{url}' {1} | xargs -r $BROWSER 2>/dev/null)" \
                --bind "alt-b:execute(_bodhi_updates {1})" \
                --bind "enter:become(echo {+1})" \
+               --bind 'zero:execute(echo "No matching packages found!")+abort' \
                --border-label " $1 " \
                --header-lines 1 \
                --help "Alt-b:Search package on Bodhi;Alt-i:Package info;Alt-f:Files in package;Alt-h:Open package URL in \\\$BROWSER;Enter:$1" \

@@ -32,6 +32,7 @@ dnf-history() (
   else
 
     myprofile _fzf
+
     sudo -A dnf history "$@" | \
     tail -n +3 | \
     awk -v FS="|" '{ printf "%s|%s|%s\n",$1,$3,$2 }' | \
@@ -77,16 +78,18 @@ dnf-remove() (
   xargs --no-run-if-empty --open-tty sudo dnf remove
 )
 
-dnf-search() {
+dnf-search() (
   if [ $# -gt 0 ] ; then
 
-    ( echo "Package : Summary"
+    myprofile _dnf
+
+    { echo "Package : Summary"
       myprofile _dnf
       sudo -A dnf search --quiet "$@" | \
       grep -v = | \
       sort | \
       uniq
-    ) | column -t -s: -l2 | \
+    } | column -t -s: -l2 | \
     _fzf-dnf-packages "Search package matching $*" "Matching packages" | \
     xargs --no-run-if-empty --open-tty sudo dnf install
 
@@ -95,7 +98,7 @@ dnf-search() {
     fn-usage "<pattern>"
 
   fi
-}
+)
 
 dnf-upgrades() (
   local _testing
@@ -142,6 +145,7 @@ dnf-upgrades() (
                --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select upgrades to install " \
                --multi \
+               --no-sort \
                --preview-init "alt-c:__dnf changelog {1} {2}" \
                --preview-label " Press F1 for help " \
                --preview-window "60%,~1:wrap" \
