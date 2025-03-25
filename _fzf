@@ -74,7 +74,7 @@ F2:Toggle horizontal scroll to match.
 F3:Toggle line wrap for preview.
 F4:Step through preconfigured preview widths.
 F5:Toggle preview.
-F6:Jump mode.
+F6:Toggle jump mode.
 F7:Preview half page up.
 F8:Preview half page down.
 F9:Preview top.
@@ -113,7 +113,7 @@ _fzf-wrapper() {
 
 # fn-vars _args
   fzf --bind "load:change-prompt:${_prompt:-> }" \
-      --prompt '> .. loading ..' \
+      --prompt '< .. loading .. > ' \
       $(_fzf-query-history 2) \
       "${_args[@]}"
 }
