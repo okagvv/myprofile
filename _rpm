@@ -39,11 +39,11 @@ _rpm-preview-docs() {
       fi
     done
 
-    echo "No non-empty ${1^} file identified in package doc files."
+    fn-info "No non-empty ${1^} file identified in package doc files."
 
   else
 
-    echo "Package contains no doc files!"
+    fn-info "Package contains no doc files!"
 
   fi
 }
@@ -71,28 +71,37 @@ export -f _rpm-preview _rpm-preview-docs _rpm-preview-files _rpm-preview-what
 
 _fzf-rpm() {
   local _nvr
-  _nvr="{-3}-{-2}.{-1}"
+  _nvr="{1}-{2}.{3}"
+  export script="${FUNCNAME[1]}"
 
-  _fzf-wrapper --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
-               --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
-               --bind="alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
-               --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr log)" \
-               --bind="alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
-               --bind="alt-s:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr bash)" \
-               --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
-               --bind="alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
-               --bind='alt-w:change-preview(_rpm-preview-what {-3})' \
-               --bind 'enter:become(echo {+-3})' \
-               --border-label " $1 " \
+  { echo "Name*Version*Architecture*Installed at"
+    # CAUTION: "rpm --query --all --last --queryformat .." creates redundant output in --last *and*
+    # --querformat notations. Furthermore there are packages with only version or release property
+    # defined.
+    LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}*%{INSTALLTIME:date}\n' | \
+    sort --reverse --field-separator="*" --key=4 | \
+    sed -r 's/\*([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\*\1 \2/'
+  } | column --table --separator "*" | \
+  _fzf-wrapper --ansi --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
+               --bind "alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
+               --bind "alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
+               --bind "alt-l:change-preview(_rpm-preview \"Changelog of\" --changelog $_nvr log)" \
+               --bind "alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
+               --bind "alt-s:change-preview(_rpm-preview \"Scripts in\" \"--filetriggers --scripts --triggers\" $_nvr bash)" \
+               --bind "alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
+               --bind "alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
+               --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
+               --border-label " Installed packages " \
+               --header-lines 1 \
                --help "Alt-c:Config files;Alt-d:Doc files;Alt-f:Package files;Alt-i:Package info;Alt-l:Changelog;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What requires ." \
                --list-label " Matching packages " \
                --multi \
                --no-sort \
-               --preview-init "alt-l:_rpm-preview \"Changelog of\" --changelog $_nvr log" \
+               --preview-init "alt-i:_rpm-preview \"Info for\" -i $_nvr log" \
                --preview-label " Press F1 for help " \
                --preview-window "60%,~2:wrap" \
-               --query "$2" \
+               --query "$1" \
                --reverse | \
+  awk '{ printf "%s-%s.%s\n",$1,$2,$3 }' | \
   xargs -r
 }
-
