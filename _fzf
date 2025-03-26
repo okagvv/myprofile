@@ -112,7 +112,7 @@ _fzf-wrapper() {
   done
 
 # fn-vars _args
-  fzf --bind "load:change-prompt:${_prompt:-> }" \
+  fzf --bind "load:change-prompt(${_prompt:->} )" \
       --prompt '< .. loading .. > ' \
       $(_fzf-query-history 2) \
       "${_args[@]}"
