@@ -53,12 +53,8 @@ _rpm-deplist() {
 }
 
 _rpm-preview-what() {
-  local _what _found
   _fzf-preview-header "What packages relate to \"$1\""
-  { _rpm-deplist "requires" rpm-requires "$1"
-    _rpm-deplist "required by" rpm-required "$1"
-  } | cat --squeeze-blank | \
-  bat --color always --style plain --language yaml
+  rpm-what "$1" | bat --color always --style plain --language yaml
 }
 
 _rpm-preview() {
@@ -116,4 +112,4 @@ _fzf-rpm() {
   xargs -r
 }
 
-fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(requires|required)"
+fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(required|requires|what)"

@@ -89,7 +89,7 @@ rpm-freshen() {
 }
 
 rpm-requires() {
-  if [ $# -gt 0 ] ; then
+  if [ $# -eq 1 ] ; then
     rpm --query --requires "$1" | \
     cut -f1 -d' ' | \
     sort -u | \
@@ -102,13 +102,29 @@ rpm-requires() {
 }
 
 rpm-required() {
-  if [ $# -gt 0 ] ; then
+  if [ $# -eq 1 ] ; then
     rpm --query --provides "$1" | \
     cut -f1 -d' ' | \
     sort -u | \
     xargs -r rpm --query --queryformat '%{NAME} %{NAME}-%{VERSION}-%{RELEASE}.%{ARCH}\n' --whatrequires | \
     sed -r "/^no package requires /d;/^$1 /d;s/^[^ ]+ //" | \
     sort -u
+  else
+    fn-usage "package"
+  fi
+}
+
+rpm-what() {
+  if [ $# -eq 1 ] ; then
+    local _scope _rpm
+    _rpm="$(rpm -q --queryformat="%{NAME}" "$1")"
+
+    { echo -e "=Requires:\n$(rpm-requires "$1")\n\n=What requires:\n$(rpm-required "$1")\n\n"
+      for _scope in enhances recommends suggests supplements ; do
+        echo -e "=${_scope^}:\n$(rpm -q --${_scope} "$1")\n\n=What ${_scope}:\n$(rpm -q --what${_scope} "$1")\n\n"
+      done
+      echo -e "=Conflicts:\n$(rpm -q --conflicts "$1")\n\n=Obsoletes:\n$(rpm -q --obsoletes "$1")\n\n"
+    } | sed -r 's/^no package .+$//;s/^([^=][^ ]+)/  - \1/;s/^=//' | cat --squeeze-blank
   else
     fn-usage "package"
   fi
