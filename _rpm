@@ -10,7 +10,7 @@ _rpm-inspect-scope() {
       --preview '_fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
       --preview-window '60%:~2:wrap' \
       $(_fzf-query-history 2) | \
-  xargs -r
+  xargs --no-run-if-empty
 }
 
 _rpm-preview-docs() {
@@ -48,10 +48,6 @@ _rpm-preview-docs() {
   fi
 }
 
-_rpm-deplist() {
-  echo -e "${1^}:\n$($2 $3 | sed -r 's/^([^ ])/  - \1/')\n"
-}
-
 _rpm-preview-what() {
   _fzf-preview-header "What packages relate to \"$1\""
   rpm-what "$1" | bat --color always --style plain --language yaml
@@ -70,11 +66,11 @@ _rpm-preview-files() {
 
 _rpm-list() {
   { echo "Name*Version*Architecture*Installed at"
-    # CAUTION: "rpm --query --all --last --queryformat .." creates redundant output in --last *and*
-    # --querformat notations. Furthermore there are packages with only version or release property
-    # defined.
+    # CAUTION: "rpm --query --all --last --queryformat .." is not applicable here: creates redundant
+    # output in --last *and* --querformat notations. Separate columns for version and release are
+    # pointless too because there are packages defining only one of them.
     LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}*%{INSTALLTIME:date}\n' | \
-    sort --reverse --field-separator="*" "$@" | \
+    sort --field-separator="*" $([ "$1" == bydate ] && echo "--reverse --key=4" || echo "--key=1 --key=2 --key=3") | \
     sed -r 's/\*([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\*\1 \2/'
   } | column --table --separator "*"
 }
@@ -84,15 +80,15 @@ _fzf-rpm() {
   _nvr="{1}-{2}.{3}"
   export script="${FUNCNAME[1]}"
 
-  _rpm-list --key=4 | \
+  _rpm-list bydate | \
   _fzf-wrapper --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
-               --bind "alt-D:reload(_rpm-list --key=4)" \
+               --bind "alt-D:change-prompt(.. sort by date ..> )+reload(_rpm-list bydate)" \
                --bind "alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
                --bind "alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
                --bind "alt-l:change-preview(_rpm-preview \"Changelog of\" --changelog $_nvr log)" \
                --bind "alt-L:change-preview(_rpm-preview-files \"License for\" --licensefiles $_nvr)" \
                --bind "alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
-               --bind "alt-n:reload(_rpm-list --key=1 --key=2 --key=3)" \
+               --bind "alt-n:change-prompt(.. sort by name ..> )+reload(_rpm-list byname)" \
                --bind "alt-s:change-preview(_rpm-preview \"Scripts in\" \"--filetriggers --scripts --triggers\" $_nvr bash)" \
                --bind "alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
                --bind "alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
@@ -109,7 +105,7 @@ _fzf-rpm() {
                --query "$1" \
                --reverse | \
   awk '{ printf "%s-%s.%s\n",$1,$2,$3 }' | \
-  xargs -r
+  xargs --no-run-if-empty
 }
 
 fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(required|requires|what)"
