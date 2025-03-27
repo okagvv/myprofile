@@ -154,26 +154,25 @@ dnf-upgrades() (
   xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
 )
 
-dnf-requires() {
-  if [ $# -gt 0 ] ; then
-    dnf-repoquery --requires --resolve "$*"
-  else
-    fn-usage "<package>"
-  fi
-}
+for _query in conflicts depends enhances obsoletes provides recommends requires requires-pre suggests supplements ; do
 
-dnf-recommends() {
-  if [ $# -gt 0 ] ; then
-    dnf-repoquery --recommends --resolve "$*"
-  else
-    fn-usage "<package>"
-  fi
-}
+  eval "dnf-$_query() {
+          if [ \$# -gt 0 ] ; then
+            dnf-repoquery --$_query --resolve \"\$*\"
+          else
+            fn-usage \"<package>\"
+          fi
+        }"
 
-dnf-suggests() {
-  if [ $# -gt 0 ] ; then
-    dnf-repoquery --suggests --resolve "$*"
-  else
-    fn-usage "<package>"
-  fi
-}
+  [[ "$_query" == "requires-pre" ]] && continue
+
+  eval "dnf-what$_query() {
+          if [ \$# -gt 0 ] ; then
+            dnf-repoquery --what$_query --qf \"%{NAME}\" \"\$*\"
+          else
+            fn-usage \"<package>\"
+          fi
+        }"
+
+done
+unset -v _query
