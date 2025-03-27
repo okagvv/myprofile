@@ -46,7 +46,7 @@ fzf-fn() (
                    --help "Alt-f:Show definition of selected function" \
                    --list-label " Bash function(s) " \
                    --no-sort \
-                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs" \
+                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs | bat --color always --number --language bash" \
                    --preview-label " Function definition " \
                    --preview-window "70%,+{2}+2/2,~2:wrap" || true
 
