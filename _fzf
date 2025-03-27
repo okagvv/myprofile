@@ -118,6 +118,14 @@ _fzf-wrapper() {
       "${_args[@]}"
 }
 
+_fzf-editor() {
+  case "$EDITOR" in
+    *vi*|*nano*) $EDITOR "$1" ${2:++$2};;
+        *emacs*) $EDITOR ${2:++$2} "$1";;
+              *) $EDITOR "$1";;
+  esac
+}
+
 _fzf-journal() {
   journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
   bat --color always --language syslog --number

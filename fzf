@@ -35,18 +35,19 @@ fzf-fn() (
 
     elif [ ${#_fns[@]} -gt 1 ] ; then
 
-      _defs="$(mktemp --suffix=.fundef)"
+      _defs="$(mktemp --suffix=.fndef)"
       declare -f ${_fns[@]} >"$_defs"
 
       myprofile _fzf
 
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
-      _fzf-wrapper --bind "enter:become(echo declare -f {1})" \
-                   --help "Alt-f:Show definition of selected function" \
+      _fzf-wrapper --bind "alt-e:execute(_fzf-editor $_defs.curr)" \
+                   --bind "enter:become(echo declare -f {1})" \
+                   --help 'Alt-e:Send current function definition to \$EDITOR;Alt-f:Show definition of selected function' \
                    --list-label " Bash function(s) " \
                    --no-sort \
-                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs | bat --color always --number --language bash" \
+                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs | tee $_defs.curr | bat --color always --number --language bash" \
                    --preview-label " Function definition " \
                    --preview-window "70%,+{2}+2/2,~2:wrap" || true
 
@@ -187,15 +188,11 @@ fzf-rg() (
 
   if [ $# -gt 0 ] ; then
 
-    local _editor_args
-    # It is assumed that $EDITOR is set to "vim" or "emacsclient".
-    [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
-
     myprofile _fzf
 
     rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
     _fzf-wrapper --ansi \
-                 --bind "enter:execute($EDITOR $_editor_args)" \
+                 --bind "enter:execute(_fzf-editor {1} {2})" \
                  --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
                  --border-label-pos "3:bottom" \
                  --color "hl:-1:underline,hl+:-1:underline:reverse" \
