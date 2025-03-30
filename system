@@ -21,16 +21,16 @@ if ! is-root ; then
 fi
 
 fzf-units() (
-  # Iterate over systemd units. Default are all active all system (if called by root user) or user units.
-  # args: --priority: only units with journal entries below/equal during last 48 hours this prio are
-  #         considered
+  # Iterate over systemd units. Default are all active system (if called by root user) or user units.
+  # args: --priority: only units with journal entries below/equal this prio logged during last 48
+  #         hours are considered
   #       --all: consider all installed units
   local _all _listprio _prio
   while [ $# -gt 0 ] ; do
     case "$1" in
            -a|--all) _all=--all;;
       -p|--priority) _prio="$2"; shift;;
-          -h|--help) fn-usage "[--help] [--all | --priority {0..7}|{emerg,alert,crit,err,warning,notice,info,debug}] pattern"; return 0;;
+          -h|--help) fn-usage "[--help] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [fzf query]"; return 0;;
                   *) break;;
     esac
     shift
@@ -70,14 +70,14 @@ fzf-units() (
 
 fzf-journal() (
   # Iterate over syslog identifiers of recent journal entries.
-  # args: --priority: only units with journal entries below/equal during last 48 hours this prio are
-  #         considered.
+  # args: --priority: only units with journal entries below/equal this prio logged during last 48
+  #       hours are considered.
   local _listprio _prio _altp _altj
   _prio=debug
   while [ $# -gt 0 ] ; do
     case "$1" in
       -p|--priority) _prio="$2"; shift;;
-          -h|--help) fn-usage "[--help] [--priority {0..7}|{emerg,alert,crit,err,warning,notice,info,debug}] pattern"; return 0;;
+          -h|--help) fn-usage "[--help] [--priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [fzf query]"; return 0;;
                   *) break;;
     esac
     shift
