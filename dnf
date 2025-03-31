@@ -16,14 +16,6 @@ dnf-files() {
   fi
 }
 
-dnf-list() {
-  if [ $# -gt 0 ] ; then
-    dnf-repoquery --qf='%10{repoid} %{buildtime} %{installtime} %-10{downloadsize}->%10{installsize} %{name}-%{evr}.%{arch}\n\t\t\t\t\t\t    %{summary}' "$*"
-  else
-    fn-usage "package .."
-  fi
-}
-
 dnf-history() (
   if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
 
@@ -51,6 +43,12 @@ dnf-history() (
 
   fi
 )
+
+dnf-list() {
+  myprofile _dnf
+  _dnf-packages --installed | \
+  _fzf-dnf-packages "Inspect packages via DNF" "Installed packages" "$@"
+}
 
 dnf-install() (
   if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
@@ -114,7 +112,7 @@ dnf-upgrades() (
   export _testing
 
   __bodhi() {
-    _bodhi_updates "${2%.*}-$3.${2##*.}"
+    _bodhi-updates "${2%.*}-$3.${2##*.}"
   }
   __dnf() {
     sudo dnf $1 $_testing --quiet "${@: 4}" "${2%.*}-$3.${2##*.}"

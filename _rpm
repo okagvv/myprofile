@@ -13,6 +13,12 @@ _rpm-inspect-scope() {
   xargs --no-run-if-empty
 }
 
+_rpm-package_url() {
+  if [ -n "$BROWSER" ] ; then
+    rpm -q --queryformat "%{URL}" "$1" | xargs -r "$BROWSER"
+  fi
+}
+
 _rpm-preview-docs() {
   _fzf-preview-header "${1^} doc file for package \"$2\""
 
@@ -85,6 +91,7 @@ _fzf-rpm() {
                --bind "alt-D:change-prompt(.. sort by date ..> )+reload(_rpm-list bydate)" \
                --bind "alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
                --bind "alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
+               --bind "alt-h:execute-silent(_rpm-package-url {1})" \
                --bind "alt-l:change-preview(_rpm-preview \"Changelog of\" --changelog $_nvr log)" \
                --bind "alt-L:change-preview(_rpm-preview-files \"License for\" --licensefiles $_nvr)" \
                --bind "alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
@@ -95,7 +102,7 @@ _fzf-rpm() {
                --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
                --border-label " Installed packages " \
                --header-lines 1 \
-               --help "Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog;Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What requires ." \
+               --help "Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog;Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What packages relate to selected one." \
                --list-label " Matching packages " \
                --multi \
                --no-sort \
