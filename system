@@ -21,28 +21,34 @@ if ! is-root ; then
 fi
 
 fzf-units() (
-  # Iterate over systemd units. Default are all active system (if called by root user) or user units.
-  # args: --priority: only units with journal entries below/equal this prio logged during last 48
-  #         hours are considered
-  #       --all: consider all installed units
-  local _all _listprio _prio
+  local _all _priorange _prio _since _header _journal
+  _prio=debug
+  _since=48
   while [ $# -gt 0 ] ; do
     case "$1" in
            -a|--all) _all=--all;;
-          -h|--help) fn-usage "[--help] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [fzf query]"; return 0;;
+          -h|--help) fn-usage "[--help] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [fzf query]"; return 0;;
       -p|--priority) _prio="$2"; shift;;
+         -s|--since) _since="$2"; shift;;
                   *) break;;
     esac
     shift
   done
 
-  _listprio="0..${_prio:-debug}"
+  [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
+  [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
+  # validate journalctl parameters
+  journalctl --boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
+  
+  _header="Journal entries for unit {1}"
+  _journal="_fzf-journal --unit {1} --since \"$_since ago\""
+  
   myprofile _fzf
 
   if [[ -z "$_all" && -n "$_prio" ]] ; then
     echo Unit
     journalctl --output=export --output-fields=$(is-root && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
-               --boot --since "48 hours ago" --priority=0..$_prio | \
+               --boot --since "$_since ago" --priority="$_priorange" | \
     sed --silent --regexp-extended 's/^.*UNIT=(.+)$/\1/p' | \
     sort --unique
   else
@@ -51,15 +57,15 @@ fzf-units() (
   fi | \
   _fzf-wrapper --bind 'alt-d:change-preview(_fzf-preview-header "Dependencies for unit {1}"; systemctl list-dependencies {1})' \
                --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind 'alt-h:change-preview(_fzf-preview-header "Help for unit {1}"; systemctl help {1})' \
-               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} in reverse order.\"; _fzf-journal --unit {1})" \
-               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf-journal --unit {1} --priority=$_listprio)" \
+               --bind 'alt-h:change-preview(_fzf-preview-header "Help for unit {1}"; systemctl help {1} | bat --color=always --style plain --language man)' \
+               --bind "alt-j:change-preview(_fzf-preview-header \"$_header\"; $_journal)" \
+               --bind "alt-p:change-preview(_fzf-preview-header \"$_header with priority $_priorange\"; $_journal --priority=$_priorange)" \
                --bind 'alt-P:change-preview(_fzf-preview-header "Show properties for unit {1}"; systemctl show {1} | sort)' \
                --bind 'alt-r:change-preview(_fzf-preview-header "Restart unit {1}"; systemctl restart --show-transaction {1})' \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
-               --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
+               --border-label " Systemd Units with journal entries logged during last $_since in reverse order " \
                --header-lines 1 \
-               --help "Alt-d:Unit dependencies;Alt-f:List unit files;Alt-h:Help for unit;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio;Alt-P:Show properties;Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
+               --help "Alt-d:Unit dependencies;Alt-f:List unit files;Alt-h:Help for unit;Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_priorange;Alt-P:Show properties;Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
                --multi \
                --no-sort \
                --preview-init "alt-s:_fzf-preview-header \"Status of unit {1}\"; systemctl status -- {1}" \
@@ -70,7 +76,7 @@ fzf-units() (
 
 fzf-journal() (
   # Iterate over syslog identifiers of recent journal entries.
-  local _listprio _prio _since _altp _altj _journal _header
+  local _priorange _prio _since _altp _altj _journal _header
   _prio=debug
   _since=48
   while [ $# -gt 0 ] ; do
@@ -83,27 +89,27 @@ fzf-journal() (
     shift
   done
 
-  _listprio="0..$_prio"
+  [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
   [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
   # validate journalctl parameters
-  journalctl --boot --lines 1 --since "$_since ago" --priority="$_listprio" >/dev/null || exit 1
-  
+  journalctl --boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
+
   _header="Journal entries for {1}"
   _journal="_fzf-journal --identifier={1} --since \"$_since ago\""
   _altj="_fzf-preview-header \"$_header\"; $_journal"
-  _altp="_fzf-preview-header \"$_header with priority $_listprio\"; $_journal --priority=$_listprio"
+  _altp="_fzf-preview-header \"$_header with priority $_priorange\"; $_journal --priority=$_priorange"
 
-  
+
   myprofile _fzf
   { echo "Identifier"
-    journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot --since "$_since ago" --priority="$_listprio" | \
+    journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot --since "$_since ago" --priority="$_priorange" | \
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
     sort -u
   } | \
   _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
                --border-label " Journal entries per syslog identifier logged during last $_since in reverse order " \
                --header-lines 1 \
-               --help "Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio" \
+               --help "Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_priorange" \
                --no-sort \
                --preview-init "$([[ "$_prio" == debug ]] && echo "alt-j:$_altj" || echo "alt-p:$_altp")" \
                --preview-window "70%,~2:wrap" \
