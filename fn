@@ -1,5 +1,9 @@
 # -*- shell-script -*-
 
+is-fn() {
+  declare -F "$1" >/dev/null
+}
+
 script=
 
 fn-usage() {
