@@ -5,7 +5,7 @@ in-path dnf || return 0
 rpm-ostree status --booted 2>/dev/null 1>&2 && return 0
 
 dnf-repoquery() {
-  sudo dnf repoquery --quiet "$@"
+  sudo -A dnf repoquery --quiet "$@"
 }
 
 dnf-files() {
@@ -44,11 +44,21 @@ dnf-history() (
   fi
 )
 
-dnf-list() {
-  myprofile _dnf
-  _dnf-packages --installed | \
-  _fzf-dnf-packages "Inspect packages via DNF" "Installed packages" "$@"
-}
+dnf-list() (
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [fzf query]"; exit 0;;
+              *) break;;
+    esac
+  done
+
+  # CAUTION: Utilizes _fzf-rpm (avoids latency caused by dnf wrapping rpm API for installed
+  # packages). Only difference is use of dnf-what() instead of rpm-what(): "dnf repoquery --what*
+  # --resolve" results are less prone to inconstent package capability notations.
+  myprofile _rpm 
+  fn-export dnf-what dnf-repoquery
+  _fzf-rpm "$@"
+)
 
 dnf-install() (
   if [[ "$1" =~ ^-+h(elp)?$ ]] ; then

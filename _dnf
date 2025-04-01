@@ -30,15 +30,15 @@ _dnf-preview-files() {
 }
 
 _dnf-preview-what() {
-  _fzf-preview-header "What $([[ "$2" == dnf-list ]] && echo "installed ")packages relate to \"$1\""
-  dnf-what $([[ "$2" == dnf-list ]] && _dnf-is-installed "$1" && echo "--installed") "$1" | bat --color always --style plain --language yaml
+  _fzf-preview-header "What packages relate to \"$1\""
+  dnf-what "$1" | bat --color always --style plain --language yaml
 }
 
 _fzf-dnf-packages() {
   _fzf-wrapper --bind "alt-b:execute(_bodhi-updates {1})" \
                --bind "alt-f:change-preview(_dnf-preview-files {1})" \
                --bind "alt-h:execute-silent(_dnf-package-url {1})" \
-               --bind "alt-w:change-preview(_dnf-preview-what {1} ${FUNCNAME[1]})" \
+               --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind "enter:become(echo {+1})" \
                --bind "zero:execute(echo \"No matching packages found!\")+abort" \
                --border-label " $1 " \
