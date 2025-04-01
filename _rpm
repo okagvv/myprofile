@@ -55,8 +55,9 @@ _rpm-preview-docs() {
 }
 
 _rpm-preview-what() {
-  _fzf-preview-header "What packages relate to \"$1\""
-  rpm-what "$1" | bat --color always --style plain --language yaml
+  _fzf-preview-header "What installed packages relate to \"$1\""
+  { is-fn dnf-what && dnf-what --installed "$1" || rpm-what "$1"
+  } | bat --color always --style plain --language yaml
 }
 
 _rpm-preview() {
@@ -115,4 +116,5 @@ _fzf-rpm() {
   xargs --no-run-if-empty
 }
 
-fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(required|requires|what)"
+fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(required|requires|what)" is-fn
+

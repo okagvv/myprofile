@@ -30,7 +30,7 @@ rpm-docs() (
 rpm-list() (
   while [ $# -gt 0 ] ; do
     case "$1" in
-      -h|--help) fn-usage "[--help] [pattern]"; exit 0;;
+      -h|--help) fn-usage "[--help] [fzf query]"; exit 0;;
               *) break;;
     esac
   done
