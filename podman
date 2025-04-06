@@ -5,18 +5,24 @@ in-path podman || return 0
 fzf-images() (
   myprofile _fzf
 
-  podman images --format '{{ .Repository }}:{{ .Tag }}' | \
+  { echo "Image tag or ID~Created at~Size"
+    podman images --all --format '{{ .Repository }}:{{ .Tag }}%{{ .ID }}~{{ .CreatedAt }}~{{ .Size }}' | \
+    sort | \
+    sed -r 's/<none>//g;s/:%//;s/%[[:xdigit:]]+//;s/ \+[[:digit:]]{4}.*~/~/'
+   } | column -t -s~ | \
   _fzf-wrapper --bind='alt-c:+change-preview(_fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
-               --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
-               --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
+               --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {1})' \
+               --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {1})' \
                --bind='alt-t:+change-preview(_fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
                --border none \
-               --help "Alt-c:Child images and layer hierarchy;Alt-d:Image diffs;Alt-h:Image history;Alt-t:Image tree" \
+               --header-lines 1 \
+               --help "Alt-c:Child images and layer hierarchy;Alt-d:Image diffs;Alt-h:Image history;Alt-i:Inspect image;Alt-t:Image tree" \
                --list-label " Podman images " \
                --multi \
-               --preview-init "alt-i:_fzf-podman-query \"Inspect {}\" podman image inspect {}" \
+               --preview-init "alt-i:_fzf-podman-query \"Inspect {1}\" podman image inspect {1}" \
                --preview-label " Press F1 for help. " \
-               --preview-window "60%:~2:wrap" \
+               --preview-window "70%:~2:wrap" \
+               --reverse \
                --query "$1" | \
   xargs -r
 )
@@ -25,6 +31,7 @@ fzf-container() (
   myprofile _fzf
 
   podman container  ls --all --format '{{ .Names }}' | \
+  sort | \
   _fzf-wrapper --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman container diff --format json {})' \
                --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
                --border none \
@@ -33,7 +40,7 @@ fzf-container() (
                --multi \
                --preview-init "_fzf-podman-query \"Inspect container {}\" podman container inspect --size {}" \
                --preview-label " Press F1 for help. " \
-               --preview-window '80%:~2:follow:wrap' \
+               --preview-window '70%:~2:follow:wrap' \
                --query "$1" | \
   xargs -r
 )
