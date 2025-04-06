@@ -146,11 +146,12 @@ dnf-upgrades() (
                --bind "alt-b:execute(__bodhi {1} {2})" \
                --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
                --bind "alt-h:execute(__dnf repoquery {1} {2} --queryformat '%{url}' | xargs -r $BROWSER 2>/dev/null)" \
+               --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind 'enter:become(echo {+1})' \
                --bind 'zero:execute(echo "No pending updates found!")+abort' \
                --border none \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
+               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select upgrades to install " \
                --multi \
                --no-sort \
