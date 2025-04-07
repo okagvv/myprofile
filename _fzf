@@ -142,7 +142,7 @@ if in-path podman ; then
   _fzf-podman-query() {
     _fzf-preview-header "$1"
     shift
-    $* | gojq --yaml-output
+    $* | gojq --yaml-output | _fzf-preview-bat --style plain --language yaml
   }
   export -f _fzf-podman-query
 
