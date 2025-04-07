@@ -30,17 +30,23 @@ fzf-images() (
 fzf-container() (
   myprofile _fzf
 
-  podman container  ls --all --format '{{ .Names }}' | \
-  sort | \
-  _fzf-wrapper --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman container diff --format json {})' \
-               --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
+  { echo "Container~Image~Created at"
+    podman container  ls --all --format '{{ .Names }}~{{ .Image }}~{{ .CreatedAt }}' | \
+    sort | \
+    sed -r 's/ \+[[:digit:]]{4}.*//'
+  } | column -t -s~ | \
+  _fzf-wrapper --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {1}" podman container diff --format json {1})+change-preview-window(nofollow)' \
+               --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {1}"; podman container logs --names --follow {1} | _fzf-preview-bat --style plain --language log)+change-preview-window(follow)' \
+               --bind="alt-s:+change-preview(_fzf-preview-header \"Stats for {1}\"; podman stats --format 'table {{ .UpTime }} {{ .CPUPerc }} {{ .AVGCPU }} {{ .PIDS }} {{ .MemUsage }} {{ .NetIO }} {{ .BlockIO }}' {1})+change-preview-window(follow)" \
                --border none \
-               --help "Alt-d:Container diffs;Alt-i:Inspect container;Alt-l:Container logs" \
+               --header-lines 1 \
+               --help "Alt-d:Container diffs;Alt-i:Inspect container;Alt-l:Container logs;Alt-s:Container stats" \
                --list-label " Podman container " \
                --multi \
-               --preview-init "_fzf-podman-query \"Inspect container {}\" podman container inspect --size {}" \
+               --preview-init "alt-i:_fzf-podman-query \"Inspect container {1}\" podman container inspect --size {1}" "+change-preview-window(nofollow)" \
                --preview-label " Press F1 for help. " \
-               --preview-window '70%:~2:follow:wrap' \
-               --query "$1" | \
+               --preview-window '70%:~2:wrap' \
+               --query "$1" \
+               --reverse | \
   xargs -r
 )
