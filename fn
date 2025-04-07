@@ -46,6 +46,10 @@ fn-abort() {
   fi
 }
 
+fn-logger() {
+  logger --tag "${script:-${FUNCNAME[1]}}" --priority "user.$1" "$2"
+}
+
 fn-export() {
   if [ $# -gt 0 ] ; then
     local _fn _re

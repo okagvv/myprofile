@@ -17,7 +17,7 @@ _rpm-package-url() {
   if [ -n "$BROWSER" ] ; then
     rpm -q --queryformat "%{URL}" "$1" | xargs -r "$BROWSER"
   else
-    fn-error "\$BROWSER is undefined!"
+    fn-logger err "\$BROWSER is undefined!"
   fi
 }
 
@@ -87,7 +87,6 @@ _rpm-list() {
 _fzf-rpm() {
   local _nvr
   _nvr="{1}-{2}.{3}"
-  export script="${FUNCNAME[1]}"
 
   _rpm-list bydate | \
   _fzf-wrapper --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
@@ -113,7 +112,8 @@ _fzf-rpm() {
                --preview-label " Press F1 for help " \
                --preview-window "60%,~2:wrap" \
                --query "$1" \
-               --reverse | \
+               --reverse \
+               --script "${FUNCNAME[1]}" | \
   awk '{ printf "%s-%s.%s\n",$1,$2,$3 }' | \
   xargs --no-run-if-empty
 }
