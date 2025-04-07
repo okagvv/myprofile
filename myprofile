@@ -25,7 +25,7 @@ myprofile() {
     esac
     shift
   done
-#set -x 
+
   _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME" "${MYPROFILE%/*}")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1" ]] ; then
@@ -40,7 +40,7 @@ myprofile() {
 
   for _script in ${_scripts[@]} ; do
 
-    if [ -s "$_script" ] ; then
+    if [[ "$_script" =~ ^/ && -s "$_script" ]] ; then
       _src="$_script"
     else
       for _dir in ${_search[@]} ; do
