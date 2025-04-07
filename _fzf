@@ -53,7 +53,7 @@ EOF
 
   else
 
-    fn-error "Path \"$1\" does not exist!"
+    fn-logger err "Path \"$1\" does not exist!"
 
   fi
 }
@@ -94,6 +94,8 @@ $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
 _fzf-wrapper() {
   # args: --help "help text for function specific bindings"
   #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
+  #       --prompt "text" - overiding default prompt"
+  #       --script "name" - overriding default for use in diagnostic messages
   # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
   # config including a match dependent scroll offset (s.a. fzf-rg()).
   local -a _args _prompt
@@ -105,12 +107,16 @@ _fzf-wrapper() {
                                  --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
                          shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
                --prompt) _prompt="$2"; shift;;
+               --script) script="$2"; shift;;
       *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
                       *) _args+=("$1");;
     esac
     shift
   done
 
+  [ -n "$script" ] || script="${FUNCNAME[1]}"
+  export script
+  
 # fn-vars _args
   fzf --bind "load:change-prompt(${_prompt:->} )" \
       --prompt '< .. loading .. > ' \

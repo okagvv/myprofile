@@ -17,7 +17,7 @@ _dnf-package-url() {
     { _dnf-is-installed "$1" && rpm -q --queryformat "%{URL}" "$1" || dnf-repoquery --queryformat "%{url}" "$1"
     } | xargs -r "$BROWSER"
   else
-    fn-error "\$BROWSER is not defined!"
+    fn-logger err "\$BROWSER is not defined!"
   fi
 }
 
@@ -54,6 +54,7 @@ _fzf-dnf-packages() {
                --preview-window "70%,~2:wrap" \
                --reverse \
                --query "$3" \
+               --script "${FUNCNAME[1]}" \
                $(_fzf-query-history 2)
 }
 
