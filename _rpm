@@ -13,9 +13,11 @@ _rpm-inspect-scope() {
   xargs --no-run-if-empty
 }
 
-_rpm-package_url() {
+_rpm-package-url() {
   if [ -n "$BROWSER" ] ; then
     rpm -q --queryformat "%{URL}" "$1" | xargs -r "$BROWSER"
+  else
+    fn-error "\$BROWSER is undefined!"
   fi
 }
 

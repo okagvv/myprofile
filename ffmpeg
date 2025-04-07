@@ -76,13 +76,13 @@ fzf-ffprobes() (
       _ffprobes-all | xargs -r0 file -ni | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p' | tr '\n' '\0'
     }
 
-    _vlc_enqueue() {
+    _vlc-enqueue() {
       local _winid
       _winid="$(xdotool search --name 'VLC media player')"
       [ -z "$_winid" ] || xdotool windowactivate "$_winid"
       nohup vlc --verbose 0 --playlist-enqueue "$@" &
     }
-    export -f _vlc_enqueue
+    export -f _vlc-enqueue
     
     cd "$1"
     local -a _selected
@@ -91,7 +91,7 @@ fzf-ffprobes() (
                            $([ -n "$_all" ] && echo _ffprobes-all || echo _ffprobes-filter) "$1" | \
                            sort | \
                            IFS=" " _fzf-wrapper --bind "alt-a:clear-selection" \
-                                                --bind "alt-v:execute-silent(_vlc_enqueue {+})+clear-selection" \
+                                                --bind "alt-v:execute-silent(_vlc-enqueue {+})+clear-selection" \
                                                 --bind "enter:accept" \
                                                 --border none \
                                                 --exit-0 \

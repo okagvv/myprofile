@@ -12,10 +12,12 @@ _dnf-is-installed() {
   rpm --query --quiet "$1" 
 }
 
-_dnf-package_url() {
+_dnf-package-url() {
   if [ -n "$BROWSER" ] ; then
     { _dnf-is-installed "$1" && rpm -q --queryformat "%{URL}" "$1" || dnf-repoquery --queryformat "%{url}" "$1"
     } | xargs -r "$BROWSER"
+  else
+    fn-error "\$BROWSER is not defined!"
   fi
 }
 
@@ -43,7 +45,7 @@ _fzf-dnf-packages() {
                --bind "zero:execute(echo \"No matching packages found!\")+abort" \
                --border-label " $1 " \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-i:Package info;Alt-f:Files in package;Alt-h:Open package URL in \\\$BROWSER;Alt-w:What packages relate to selected one;Enter:$1" \
+               --help "Alt-b:Search package on Bodhi via \\\$BROWSER;Alt-i:Package info;Alt-f:Files in package;Alt-h:Open package URL via \\\$BROWSER;Alt-w:What packages relate to selected one;Enter:$1" \
                --list-label " $2 " \
                --multi \
                --no-sort \
