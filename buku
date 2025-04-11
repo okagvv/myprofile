@@ -1,0 +1,17 @@
+# -*- mode:shell-script -*-
+# support for bookmark manager "buku".
+
+in-path buku || return 0
+
+export BUKU_COLORS=xenxc
+
+buku() {
+  if [[ ! "$*" =~ --np ]] ; then
+    # no UI
+    /usr/bin/buku "$@"
+  else
+    EDITOR="${EDITOR/ --no-wait/}" \
+    $(in-path rlwrap && echo "rlwrap --history-filename $HOME/.local/share/buku/history --always-readline --no-children") \
+    /usr/bin/buku "$@"
+  fi
+}
