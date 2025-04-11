@@ -1,6 +1,6 @@
 # -*- mode: Shell-script -*-
 
-if in-path emacs && ! is-root && [ -d ~/.emacs.d ] ; then
+if in-path emacs && ! is-root && [ "$(stat --dereference --format=%s ~/.emacs 2>/dev/null || echo 0)" -gt 0 ] ; then
 
   if [ -n "$DISPLAY" ] ; then
 
@@ -8,7 +8,7 @@ if in-path emacs && ! is-root && [ -d ~/.emacs.d ] ; then
     
   fi
   
-  export EDITOR="emacsclient -n"
+  export EDITOR="emacsclient --no-wait"
   export GIT_EDITOR="emacsclient"
 
 elif in-path gvim && ! is-root && [ -n "$DISPLAY" ] ; then
