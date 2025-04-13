@@ -1,5 +1,6 @@
 common
 env
+colors
 editor
 fn
 interactive
