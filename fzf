@@ -61,8 +61,8 @@ fzf-fn() (
 complete -A function fzf-fn
 
 fzf-apply() (
-  local _find _query _root
-  _root=.
+  local _query _root
+  _root="$(pwd)"
 
   while [ $# -gt 0 ] ; do
     case "$1" in
@@ -78,9 +78,9 @@ fzf-apply() (
     myprofile _fzf
 
     cd "$_root" || fn-abort "Change directory to \"$_root\" failed!"
-    _find="find-beyond-git . -type f -printf %P\\0"
+    export _root
 
-    $_find |& \
+    find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null | \
     _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
                  --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                  --border-label-pos "2:bottom" \
@@ -112,10 +112,12 @@ fzf-locate() (
                  --help "Alt-f:Path info" \
                  --list-label " plocate $* " \
                  --multi \
+                 --no-sort \
                  --preview-init "alt-f:_fzf-preview-path {}" \
                  --preview-label " File info " \
                  --preview-window "60%,~2:wrap" \
-                 --print0 | \
+                 --print0 \
+                 $([[ $# -gt 1 ]] || echo "--query $1") | \
     xargs -0 -r -i@ echo -n '"@" '
     echo
 
