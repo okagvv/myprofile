@@ -87,7 +87,7 @@ Ctrl-p:Search history up.
 Ctrl-n:Search history down.
 Home:First match.
 End:Last match.
-$(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort --ignore-case; fi)"
+$(if [ -n "$1" ] ; then echo -; tr ';' '\n'  <<<"$1" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; fi)"
   ) | column -t -s: -o": " | sed 's/^- *://'
 }
 
