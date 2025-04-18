@@ -94,13 +94,13 @@ dnf-search() (
     { echo "Package : Summary"
       myprofile _dnf
       sudo -A dnf search --quiet "$@" | \
-      sed -rn 's/^ ?([[:alnum:]_\.-]+: [[:alnum:]].*)$/\1/p' | \
+      sed -rn 's/^ ?([[:alnum:]_\.-]+ *:? +[[:alnum:]].*)$/\1/p' | \
       sort | \
       uniq
     } | column -t -s: -l2 | \
     _fzf-dnf-packages "Search package matching $*" "Matching packages" | \
     xargs --no-run-if-empty --open-tty sudo dnf install
-
+    
   else
 
     fn-usage "<pattern>"
