@@ -15,7 +15,6 @@ export IGNOREEOF=1
 export LESS="-R -iQ -P?f%f:stdio .?n?m(file %i of %m) ..?lt line %lt?L/%L. :byte %bB?s/%s. .?e(END) ?x- Next\: %x. :?pB%pB\%..%t"
 export LESSBINFMT="'*u\%X"
 export LESSCHARSET="utf-8"
-export LESSKEY_SYSTEM="/etc/lesskey"
 export PROMPT_DIRTRIM=5
 export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
