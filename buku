@@ -6,7 +6,7 @@ in-path buku || return 0
 export BUKU_COLORS=xenxc
 
 buku() {
-  if [[ ! "$*" =~ --np ]] ; then
+  if [[ "$*" =~ --np ]] ; then
     # no UI
     /usr/bin/buku "$@"
   else
@@ -15,3 +15,43 @@ buku() {
     /usr/bin/buku "$@"
   fi
 }
+
+fzf-buku() (
+  if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
+    fn-usage "[--exclude keyword .. --sany keyword .. | --sall keyword .. | --sreg exp | --stag tag [,|+] ... [- tag, ...]]"
+    return 0
+  fi
+  
+  myprofile _fzf
+
+  _url() {
+    buku --nostdin --np --print "$1" -f 10
+  }
+  _browse() {
+    if [ -n "$BROWSER" ] ; then
+      "$BROWSER" "$(_url "$1")"
+    else
+      fn-error "Missing \$BROWSER value!"
+    fi
+  }
+  export -f _url _browse
+  
+  { echo "ID|Tags|Title"
+    buku --np --nc --json --format 5 $([ $# -gt 0 ] || echo "--print") "$@" | \
+    gojq -r '.[] | [ .index, .tags, .title ] | join("|")' | \
+    sed -r 's/bookmarks toolbar//;s/,,/,/;s/,\|/\|/;s/\|[[:digit:]]{4}[[:alpha:]]{3}[[:digit:]]{2},/\|/'
+  } | column -t -s"|" -R1 -l3 | \
+  _fzf-wrapper --border-label " Bookmarks fetched from ~/.local/share/buku/bookmarks.db " \
+               --bind "enter:execute-silent(_browse {1})" \
+               --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
+               --ghost="..query.." \
+               --header-lines 1 \
+               --list-border none \
+               --no-multi \
+               --preview "_url {1}" \
+               --preview-window "down,1,border-top,wrap" \
+               --preview-label " ENTER opens current URL in \$BROWSER " \
+               --reverse \
+               --smart-case \
+               --wrap
+)
