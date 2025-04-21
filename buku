@@ -5,7 +5,7 @@ in-path buku || return 0
 
 export BUKU_COLORS=xenxc
 
-buku() {
+bukuFIXME() {
   if [[ "$*" =~ --np ]] ; then
     # no UI
     /usr/bin/buku "$@"
@@ -14,6 +14,11 @@ buku() {
     $(in-path rlwrap && echo "rlwrap --history-filename $HOME/.local/share/buku/history --always-readline --no-children") \
     /usr/bin/buku "$@"
   fi
+}
+
+buku-import() {
+  # non-interactive (re)import sjuppressing error messages concerning repeated imports of same URLs
+  /usr/bin/buku --nostdin --ai <<<"$(yes|head -3)" 2> >(grep -v -E ' URL .+ already exists at index ') > >(sed -r 's~^.*\(y/n\): ~~;/^$/d')
 }
 
 fzf-buku() (
