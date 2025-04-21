@@ -5,16 +5,20 @@ in-path buku || return 0
 
 export BUKU_COLORS=xenxc
 
-bukuFIXME() {
+buku() {
   if [[ "$*" =~ --np ]] ; then
     # no UI
     /usr/bin/buku "$@"
   else
+    # enable edit of bookmarks in case Emacs is in use and provide persistent UI history
     EDITOR="${EDITOR/ --no-wait/}" \
     $(in-path rlwrap && echo "rlwrap --history-filename $HOME/.local/share/buku/history --always-readline --no-children") \
     /usr/bin/buku "$@"
   fi
 }
+
+# CAUTION: For unknown reasons bash completion is not loaded on F40.
+source /usr/share/bash-completion/completions/buku-completion.bash
 
 buku-import() {
   # non-interactive (re)import sjuppressing error messages concerning repeated imports of same URLs
@@ -26,7 +30,7 @@ fzf-buku() (
     fn-usage "[--exclude keyword .. --sany keyword .. | --sall keyword .. | --sreg exp | --stag tag [,|+] ... [- tag, ...]]"
     return 0
   fi
-  
+
   myprofile _fzf
 
   _url() {
@@ -40,7 +44,7 @@ fzf-buku() (
     fi
   }
   export -f _url _browse
-  
+
   { echo "ID|Tags|Title"
     buku --np --nc --json --format 5 $([ $# -gt 0 ] || echo "--print") "$@" | \
     gojq -r '.[] | [ .index, .tags, .title ] | join("|")' | \
@@ -59,3 +63,34 @@ fzf-buku() (
                --smart-case \
                --wrap
 )
+
+if in-path sqlite3 ; then
+  mozplaces() {
+    # s.a. https://en.wikiversity.org/wiki/Firefox/Browsing_history_database
+    # history returns empty list unless "Remember browsing and download history" is enabled in FF settings
+    local _places _query
+    case "$1" in
+        h|history) _query="SELECT datetime(moz_historyvisits.visit_date/1000000,'unixepoch'), moz_places.url, moz_places.title
+                           FROM moz_places, moz_historyvisits
+                           WHERE moz_places.id = moz_historyvisits.place_id
+                           ORDER BY visit_date";;
+      b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch'), b.title, h.url
+                           FROM moz_places h
+                           JOIN moz_bookmarks b
+                           ON h.id = b.fk";;
+                *) fn-usage "bookmarks|history"; return 1;;
+    esac
+    
+    for _places in ~/.mozilla/firefox/*/places.sqlite ; do
+
+      # copy may be locked DB to avoid potential corruption (s.a. https://www.sqlite.org/c3ref/open.html)
+      cp -f "$_places" /tmp/places.sqlite
+
+      sqlite3 /tmp/places.sqlite "$_query"
+
+    done
+
+    rm -f /tmp/places.sqlite
+  }
+fi
+
