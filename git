@@ -27,15 +27,28 @@ export TIGRC_USER=/etc/tigrc.site
 new-alias tig TERM=xterm tig
 
 git-search() (
-  myprofile _fzf
+  if [ $# -gt 0 ] ; then
+    
+    myprofile _fzf
 
-  { echo "Commit|Date|Author|Subject"
-    git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" -G "$@"
-  } | column -t -s"|" -l 4 | \
-  _fzf-wrapper --bind "alt-l:execute(tig log {1})" \
-               --bind "alt-s:execute(tig show {1})" \
-               --border none \
-               --header-lines 1 \
-               --reverse
-# git grep -n --heading --context 2 "$@" "{1}"
+    { echo "Commit|Date|Author|Subject"
+      git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" --regexp-ignore-case -G "$@"
+    } | column -t -s"|" -l 4 | \
+    _fzf-wrapper --accept-nth 1 \
+                 --bind "alt-l:execute(tig log {1})" \
+                 --bind "alt-s:execute(tig show {1})" \
+                 --bind "enter:accept" \
+                 --border none \
+                 --exit-0 \
+                 --header-lines 1 \
+                 --list-label " Commits adding or (re)moving case-insensitive regexp \"$@\" " \
+                 --help "Alt-g:git grep;Alt-l:tig log;Alt-s:tig show" \
+                 --preview-label " Git grep output " \
+                 --preview-init "alt-g:git grep --color=always --line-number --heading --full-name --ignore-case --context 2 --extended-regexp \"$@\" {1}" \
+                 --preview-window "60%:wrap" \
+                 --reverse
+
+  else
+    fn-usage "<pattern>"
+  fi
 )
