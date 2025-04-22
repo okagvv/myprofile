@@ -184,6 +184,7 @@ ssh-loadkey() {
 }
 
 _complete-ssh-keys() {
+  [ "${#COMP_WORDS[@]}" == 2 ] || return
   COMPREPLY=($(compgen -W "$(find ~/.ssh/ -type f -prune | xargs -r file | sed -rn 's~^.*/([^/]+): .* private key$~\1~p')" -- "${COMP_WORDS[1]}"))
 }
-complete -o bashdefault -o default -F _complete-ssh-keys ssh-loadkey
+complete -F _complete-ssh-keys ssh-loadkey
