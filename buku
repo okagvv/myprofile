@@ -63,6 +63,11 @@ fzf-buku() (
                --smart-case \
                --wrap
 )
+_complete-fzf-buku() {
+  [ "${#COMP_WORDS[@]}" == 2 ] || return
+  COMPREPLY=($(compgen -W "--{deep,sall,sany,sreg,stag}" -- "${COMP_WORDS[1]}"))
+}
+complete -F _complete-fzf-buku fzf-buku
 
 if in-path sqlite3 ; then
   mozplaces() {
