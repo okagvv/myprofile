@@ -13,7 +13,7 @@ branches() {
   git branch --format="%(HEAD)~%(committerdate:human)~%(authorname)~%(objectname:short)~%(refname:short)~%(upstream:short) %(upstream:track)~%(contents:lines=1)" --sort='-committerdate' "$@" | \
   column -t -s"~" -o" " -l 7
 }
-complete -W "--all --remote" branches 
+complete -W "--all --remote" branches
 
 [ -d ~git ] && new-alias origin 'cd "$(git remote get-url --push origin)"'
 
@@ -25,3 +25,17 @@ in-path tig || return 0
 export TIGRC_USER=/etc/tigrc.site
 
 new-alias tig TERM=xterm tig
+
+git-search() (
+  myprofile _fzf
+
+  { echo "Commit|Date|Author|Subject"
+    git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" -G "$@"
+  } | column -t -s"|" -l 4 | \
+  _fzf-wrapper --bind "alt-l:execute(tig log {1})" \
+               --bind "alt-s:execute(tig show {1})" \
+               --border none \
+               --header-lines 1 \
+               --reverse
+# git grep -n --heading --context 2 "$@" "{1}"
+)
