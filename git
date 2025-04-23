@@ -29,11 +29,16 @@ new-alias tig TERM=xterm tig
 
 git-search() (
   if [ $# -gt 0 ] ; then
+    local _all
+    if [[ "$1" =~ ^-+a(ll)?$ ]] ; then
+      _all="--all"
+      shift
+    fi
     
     myprofile _fzf
 
     { echo "Commit|Date|Author|Subject"
-      git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" --regexp-ignore-case -G "$@"
+      git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" --regexp-ignore-case $_all -G "$@"
     } | column -t -s"|" -l 4 | \
     _fzf-wrapper --accept-nth 1 \
                  --bind "alt-g:change-preview(git grep --color=always --line-number --heading --full-name --ignore-case --context 2 --extended-regexp \"$@\" {1})" \
@@ -51,6 +56,8 @@ git-search() (
                  --reverse
 
   else
-    fn-usage "<regexp>"
+    fn-usage "[--all] <regexp>"
   fi
 )
+
+complete -W "--all" git-search
