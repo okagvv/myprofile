@@ -102,7 +102,7 @@ Sample:
 )
 
 if in-path plocate ; then \
-  
+
   fzf-locate() (
     if [ $# -gt 0 ] ; then
 
@@ -130,38 +130,66 @@ if in-path plocate ; then \
       fn-usage "<locate args>"
     fi
   )
-  
+
   complete -W "--{basename,ignore-case,regexp}" fzf-locate
-  
+
 fi
 
-in-path man && \
-fzf-man() (
-  _fzf-man() {
-    # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
-    # fonts referenced in some manual pages.
-    man --warnings="!font" $(tr -d '()' <<<"$2") "$1"
-  }
-  export -f _fzf-man
+if in-path man ; then
 
-  myprofile _fzf
+  fzf-man() (
+    local -a _args
+    while [ $# -gt 0 ] ; do
+      case "$1" in
+        -a|--apropos) _args+=(--apropos);;
+          -r|--regex) _args+=(--regex);;
+         -w|--whatis) _args+=(--whatis);;
+         -s|--search) _args+=(--path --global-apropos);;
+           -h|--help) fn-usage "[--help] [--regexp] --apropos | --search | --whatis [--] pattern"; return 0;;
+                  --) shift; _args+=("$*"); break;;
+                  -*) fn-error "Unsupported option: $1"; return 1;;
+                   *) _args+=("$1");;
+      esac
+      shift
+    done
 
-  man -k "${1:-.}" | \
-  sort | \
-  sed -r 's/\) *- */\)~/' | \
-  column -t -s"~" -l2 | \
-  _fzf-wrapper --border-label "Manual pages" \
-               --help "Alt-m:Manual page;Enter:Show selected manual page(s)" \
-               --multi \
-               --no-sort \
-               --query "$1" \
-               --preview-init "alt-m:_fzf-man {1} {2}" \
-               --preview-window "60%,~2:wrap" \
-               --reverse | \
-  tr -d '()' | \
-  awk '{printf "%s ", $2} {print $1}' | \
-  xargs -r man # '
-)
+    [ ${#_args[@]} -gt 0 ] || _args=(.)
+    [[ "${_args[0]}" =~ ^- ]] || _args=(--apropos "${_args[@]}")
+
+    _fzf-man() {
+      # CAUTION: "man --warnings=!font" is used to suppress troff warnings triggered by obsolete
+      # fonts referenced in some manual pages.
+      man --warnings="!font" $(tr -d '()' <<<"$2") "$1" | \
+      bat --color always --style plain --language man
+    }
+    export -f _fzf-man
+
+    myprofile _fzf
+
+    { if [[ "${_args[@]}" =~ --path\ --global-apropos ]] ; then
+        man --apropos $(man "${_args[@]}" | sed -r 's~^.+/([^[:space:]]+)\.[[:digit:]]+\.[[:alnum:]]+$~\1~')
+      else
+        man "${_args[@]}"
+      fi
+    } | \
+    sort | \
+    sed -r 's/\) *- */\)~/' | \
+    column -t -s"~" -l2 | \
+    _fzf-wrapper --bind 'enter:execute(man $(tr -d "()" <<<{2}) {1})' \
+                 --border-label " Manual pages " \
+                 --exit-0 \
+                 --help "Alt-m:Preview manual page;Enter:Browse selected manual page" \
+                 --no-multi \
+                 --no-sort \
+                 --preview-init "alt-m:_fzf-man {1} {2}" \
+                 --preview-window "60%,~2:wrap" \
+                 --reverse \
+                 --smart-case
+  )
+
+  complete -W "--{apropos,regex,search,whatis}" fzf-man
+
+fi
 
 fzf-ps() (
   # TODO: - Select via option from several ps columns sets.
