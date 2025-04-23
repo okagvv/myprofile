@@ -10,8 +10,9 @@ remotes() {
 }
 
 branches() {
-  git branch --format="%(HEAD)~%(committerdate:human)~%(authorname)~%(objectname:short)~%(refname:short)~%(upstream:short) %(upstream:track)~%(contents:lines=1)" --sort='-committerdate' "$@" | \
-  column -t -s"~" -o" " -l 7
+  { echo "|Date|Author|Commit|Branch|Upstream|Subject"
+    git branch --format="%(HEAD)|%(committerdate:format:%F %T)|%(authorname)|%(objectname:short)|%(refname:short)|%(upstream:short) %(upstream:track)|%(contents:lines=1)" --sort='-committerdate' "$@"
+  } | column -t -s"|" -l 7
 }
 complete -W "--all --remote" branches
 
