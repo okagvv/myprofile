@@ -101,30 +101,39 @@ Sample:
   fi
 )
 
-in-path locate && \
-fzf-locate() (
-  if [ $# -gt 0 ] ; then
+if in-path plocate ; then \
+  
+  fzf-locate() (
+    if [ $# -gt 0 ] ; then
 
-    myprofile _fzf
+      myprofile _fzf
 
-    plocate "$@" | \
-    _fzf-wrapper --border none \
-                 --help "Alt-f:Path info" \
-                 --list-label " plocate $* " \
-                 --multi \
-                 --no-sort \
-                 --preview-init "alt-f:_fzf-preview-path {}" \
-                 --preview-label " File info " \
-                 --preview-window "60%,~2:wrap" \
-                 --print0 \
-                 $([[ $# -gt 1 ]] || echo "--query $1") | \
-    xargs -0 -r -i@ echo -n '"@" '
-    echo
+      plocate "$@" | \
+      _fzf-wrapper --bind "alt-e:execute(_fzf-editor {})" \
+                   --border none \
+                   --exit-0 \
+                   --help "Alt-e:Open selected file in \\\$EDITOR;Alt-f:Path info" \
+                   --list-label " plocate $* " \
+                   --multi \
+                   --no-sort \
+                   --preview-init "alt-f:_fzf-preview-path {}" \
+                   --preview-label " File info " \
+                   --preview-window "60%,~2:wrap" \
+                   --print0 \
+                   --query "${@: -1}" \
+                   --reverse \
+                   --smart-case | \
+      xargs -0 -r -i@ echo -n '"@" '
+      echo
 
-  else
-    fn-usage "<locate args>"
-  fi
-)
+    else
+      fn-usage "<locate args>"
+    fi
+  )
+  
+  complete -W "--{basename,ignore-case,regexp}" fzf-locate
+  
+fi
 
 in-path man && \
 fzf-man() (
