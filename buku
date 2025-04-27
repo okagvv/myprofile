@@ -36,14 +36,6 @@ fzf-buku() (
   _url() {
     buku --nostdin --np --print "$1" -f 10
   }
-  _browse() {
-    if [ -n "$BROWSER" ] ; then
-      "$BROWSER" "$(_url "$1")"
-    else
-      fn-error "Missing \$BROWSER value!"
-    fi
-  }
-  export -f _url _browse
 
   { echo "ID|Tags|Title"
     buku --np --nc --json --format 5 $([ $# -gt 0 ] || echo "--print") "$@" | \
@@ -51,7 +43,7 @@ fzf-buku() (
     sed -r 's/bookmarks toolbar//;s/,,/,/;s/,\|/\|/;s/\|[[:digit:]]{4}[[:alpha:]]{3}[[:digit:]]{2},/\|/'
   } | column -t -s"|" -R1 -l3 | \
   _fzf-wrapper --border-label " Bookmarks fetched from ~/.local/share/buku/bookmarks.db " \
-               --bind "enter:execute-silent(_browse {1})" \
+               --bind "enter:execute-silent(_fzf_browser {1})" \
                --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
                --header-lines 1 \
                --list-border none \
