@@ -135,7 +135,7 @@ dnf-upgrades() (
       else
         sudo -A dnf list updates $_testing --quiet
       fi
-    } | sed -n '/Obsoleting packages/q;p' | \
+    } | sed -n '/Obsoleting packages/Iq;p' | \
         column -t
   }
   export -f __bodhi __dnf __upgrades
