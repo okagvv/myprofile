@@ -7,8 +7,9 @@ myprofile() {
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--verbose] [{script}]]";
+         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}]]";
                     return 0;;
+      -d|--default) _default=y;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
                       ln -sfv "$MYPROFILE" "/etc/profile.d/zz-$FUNCNAME.sh"
                     else
@@ -28,7 +29,7 @@ myprofile() {
 
   _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME" "${MYPROFILE%/*}")
 
-  if [[ ${#_scripts[@]} -eq 0 && -n "$PS1" ]] ; then
+  if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
     for _dir in ${_search[@]} ; do
       _default="$_dir/default"
       if [ -s "$_default" ] ; then
