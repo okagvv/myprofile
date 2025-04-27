@@ -134,6 +134,16 @@ _fzf-editor() {
   fi
 }
 
+_fzf-browser() {
+  if [ -n "$1" ] ; then
+    if [ -n "$BROWSER" ] ; then
+      "$BROWSER" "$@"
+    else
+      fn-logger err "\$BROWSER is undefined!"
+    fi 
+  fi
+}
+
 _fzf-journal() {
   local _sudo
 

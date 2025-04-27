@@ -5,7 +5,7 @@ myprofile _fzf
 _bodhi-updates() {
   # arg: "%{name}-%{evr}.%{arch}"
   # CAUTION: For Bodhi search ".%{arch}" must be removed!
-  [ -z "$BROWSER" ] || "$BROWSER" "https://bodhi.fedoraproject.org/updates/?search=${1%.*}"
+  _fzf-browser "https://bodhi.fedoraproject.org/updates/?search=${1%.*}"
 }
 
 _dnf-is-installed() {
@@ -13,12 +13,7 @@ _dnf-is-installed() {
 }
 
 _dnf-package-url() {
-  if [ -n "$BROWSER" ] ; then
-    { _dnf-is-installed "$1" && rpm -q --queryformat "%{URL}" "$1" || dnf-repoquery --queryformat "%{url}" "$1"
-    } | xargs -r "$BROWSER"
-  else
-    fn-logger err "\$BROWSER is not defined!"
-  fi
+  _dnf-is-installed "$1" && rpm -q --queryformat "%{URL}" "$1" || dnf-repoquery --queryformat "%{url}" "$1"
 }
 
 _dnf-preview-info() {
@@ -39,7 +34,7 @@ _dnf-preview-what() {
 _fzf-dnf-packages() {
   _fzf-wrapper --bind "alt-b:execute(_bodhi-updates {1})" \
                --bind "alt-f:change-preview(_dnf-preview-files {1})" \
-               --bind "alt-h:execute-silent(_dnf-package-url {1})" \
+               --bind 'alt-h:execute-silent(_fzf-browser "$(_dnf-package-url {1})")' \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind "enter:become(echo {+1})" \
                --bind "zero:execute(echo \"No matching packages found!\")+abort" \
