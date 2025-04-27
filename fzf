@@ -80,8 +80,13 @@ fzf-apply() (
     cd "$_root" || fn-abort "Change directory to \"$_root\" failed!"
     export _root
 
-    find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null | \
-    _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
+    _find-apply() {
+      find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null
+    }
+    export -f _find-apply find-beyond-git
+    
+    _find-apply | \
+    _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload(_find-apply)" \
                  --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
                  --border-label-pos "2:bottom" \
                  --help "Alt-p:Path info;Enter:Apply command to selected paths" \
