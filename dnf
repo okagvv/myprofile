@@ -103,7 +103,7 @@ dnf-search() (
     
   else
 
-    fn-usage "<pattern>"
+    fn-usage "[--all] <pattern>"
 
   fi
 )

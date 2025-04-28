@@ -45,12 +45,14 @@ fzf-buku() (
   _fzf-wrapper --border-label " Bookmarks fetched from ~/.local/share/buku/bookmarks.db " \
                --bind "enter:execute-silent(_fzf_browser {1})" \
                --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
+               --color "label:reverse" \
                --header-lines 1 \
                --list-border none \
                --no-multi \
                --preview "_url {1}" \
+               --preview-label-pos 1 \
                --preview-window "down,1,border-top,wrap" \
-               --preview-label " ENTER opens current URL in \$BROWSER " \
+               --preview-label " Press ENTER to open current URL in \$BROWSER: " \
                --reverse \
                --smart-case \
                --wrap
@@ -82,7 +84,7 @@ if in-path sqlite3 ; then
 
     shift
     [ $# -gt 0 ] && _pattern="($(IFS="|" echo "$@"))" || _pattern=".*"
-    
+
     for _places in ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
 
       if [ -s "$_places" ] ; then
@@ -104,22 +106,37 @@ if in-path sqlite3 ; then
 
   fzf-mozplaces() (
     if [[ "$1" =~ ^(b(ookmarks)?|h(istory)?)$ ]] ; then
-      
+
       myprofile _fzf
-      export -f mozplaces
-      export FZF_DEFAULT_COMMAND="mozplaces $@"
-      
-      _fzf-wrapper --border-label " Bookmarks fetched from \"places.sqlite\". Use CTRL-R for refresh from current browser session. " \
+
+      _label-text() {
+        printf " %s fetched from \"places.sqlite\". Use \"ALT-{b,h}\" to (re)load bookmarks/history from active browser session. " "${1^}"
+      }
+      export -f mozplaces _label-text
+
+      local _scope
+      _scope="$1"
+      case "$_scope" in
+        b*) _scope=bookmarks;;
+        h*) _scope=history;;
+      esac
+      shift
+
+      mozplaces "$_scope" $@ | \
+      _fzf-wrapper --border-label "$(_label-text "$_scope")" \
+                   --bind "alt-b:reload(mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
+                   --bind "alt-h:reload(mozplaces history $@)+transform-border-label(_label-text history)" \
                    --bind "enter:execute-silent(_fzf-browser {2})" \
-                   --bind "ctrl-r:reload($FZF_DEFAULT_COMMAND)" \
                    --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
+                   --color "label:reverse" \
                    --delimiter "|" \
                    --exit-0 \
                    --list-border none \
                    --no-multi \
                    --preview "echo {2}" \
                    --preview-window "down,1,border-top,wrap" \
-                   --preview-label " ENTER opens current URL in \$BROWSER " \
+                   --preview-label-pos 1 \
+                   --preview-label " Press ENTER to open current URL in \$BROWSER: " \
                    --smart-case \
                    --tac \
                    --tiebreak=chunk,begin,length \
