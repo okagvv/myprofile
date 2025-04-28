@@ -22,6 +22,9 @@ _fzf-query-history () {
   echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
 }
 
+# CAUTION: With default pager setting ("less -RF") fzf "--bind '..:execute(..)" exits immediately after printing last line
+export BAT_PAGER="less -R"
+
 _fzf-preview-bat() {
   bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
 }
@@ -139,10 +142,19 @@ _fzf-browser() {
     if [ -n "$BROWSER" ] ; then
       "$BROWSER" "$@"
     else
-      fn-logger err "\$BROWSER is undefined!"
+      fn-logger err "Failed to open URL: \$BROWSER is not defined!"
     fi 
   fi
 }
+
+_fzf-copy() {
+  if [ -n "$DISPLAY" ] ; then
+    xclip -in -selection clipboard
+  else
+    fn-logger err "Copy to clipboard failed: \$DISPLAY is not defined."
+  fi
+}
+
 
 _fzf-journal() {
   local _sudo
@@ -152,9 +164,8 @@ _fzf-journal() {
     shift
   fi
 
-  # CAUTION: whithout --pager less may exit immediately fzf execute binding after printing last line
   $_sudo journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
-  bat --color always --language syslog --number --pager "less -R"
+  bat --color always --language syslog --number
 }
 
 if in-path podman ; then
