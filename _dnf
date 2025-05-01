@@ -40,8 +40,8 @@ _fzf-dnf-packages() {
                --bind "zero:execute(echo \"No matching packages found!\")+abort" \
                --border-label " $1 " \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi via \\\$BROWSER;Alt-i:Package info;Alt-f:Files in package
-                       Alt-h:Open package URL via \\\$BROWSER;Alt-w:What packages relate to selected one;Enter:$1" \
+               --help "Alt-b:Search package on Bodhi via \$BROWSER;Alt-i:Package info;Alt-f:Files in package
+                       Alt-h:Open package URL via \$BROWSER;Alt-w:What packages relate to selected one;Enter:$1" \
                --list-label " $2 " \
                --multi \
                --no-sort \
