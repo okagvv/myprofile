@@ -68,8 +68,8 @@ _fzf-preview-header() {
 }
 
 _fzf-help() {
-  _fzf-preview-header "fzf key bindings"
-  ( echo "
+  local _help _w _h
+  _help="$({ echo "
 ESC:Cancel.
 Tab:Toggle selection for current match.
 F1:This help.
@@ -90,8 +90,16 @@ Ctrl-p:Search history up.
 Ctrl-n:Search history down.
 Home:First match.
 End:Last match.
-$(if [ -n "$1" ] ; then echo -; tr ';' '\n'  <<<"$1" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; fi)"
-  ) | column -t -s: -o": " | sed 's/^- *://'
+$(if [ -n "$1" ] ; then echo -; tr ';' '\n'  <<<"$2" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; fi)"
+  } | column -t -s: -o": " | sed 's/^- *://')"
+
+  eval "$(wc -l -L <<<"$_help" | sed -rn 's/^[[:space:]]+([[:digit:]]+)[[:space:]]+([[:digit:]]+)/_h=\1;_w=\2/p')"
+  ((_h+=8))
+  ((_w+=8))
+  [ "$FZF_LINES" -gt "$_h" ] || _h="$FZF_LINES"
+  [ "$FZF_COLUMNS" -gt "$_w" ] || _w="$FZF_COLUMNS"
+  
+  whiptail --ok-button Close --fullbuttons --title "$1 key bindings" --msgbox "$_help" "$_h" "$_w"
 }
 
 _fzf-wrapper() {
@@ -104,7 +112,7 @@ _fzf-wrapper() {
   local -a _args _prompt
   while [ $# -gt 0 ]; do
     case "$1" in
-                 --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+change-preview-window(+0)")
+                 --help) _args+=(--bind "f1:execute(_fzf-help ${FUNCNAME[1]} '$2')")
                          shift;;
          --preview-init) _args+=(--preview "${2#*:}"
                                  --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
@@ -143,7 +151,7 @@ _fzf-browser() {
       "$BROWSER" "$@"
     else
       fn-logger err "Failed to open URL: \$BROWSER is not defined!"
-    fi 
+    fi
   fi
 }
 
