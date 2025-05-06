@@ -172,7 +172,7 @@ _fzf-journal() {
     shift
   fi
 
-  $_sudo journalctl --no-hostname --catalog --lines 1000 --reverse --boot --pager-end "$@" | \
+  $_sudo journalctl --no-hostname --lines 1000 --reverse --boot --pager-end "$@" | \
   bat --color always --language syslog --number
 }
 
