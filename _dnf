@@ -36,12 +36,13 @@ _fzf-dnf-packages() {
                --bind "alt-f:change-preview(_dnf-preview-files {1})" \
                --bind 'alt-h:execute-silent(_fzf-browser "$(_dnf-package-url {1})")' \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
+               --bind "ctrl-a:toggle-all" \
                --bind "enter:become(echo {+1})" \
-               --bind "zero:execute(echo \"No matching packages found!\")+abort" \
                --border-label " $1 " \
                --header-lines 1 \
                --help "Alt-b:Search package on Bodhi via \$BROWSER;Alt-i:Package info;Alt-f:Files in package
-                       Alt-h:Open package URL via \$BROWSER;Alt-w:What packages relate to selected one;Enter:$1" \
+                       Alt-h:Open package URL via \$BROWSER;Alt-w:What packages relate to selected one
+                       Ctrl-a:Toggle select all;Enter:$1" \
                --list-label " $2 " \
                --multi \
                --no-sort \
