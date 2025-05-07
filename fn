@@ -6,27 +6,50 @@ is-fn() {
 
 script=
 
+fn-parent() {
+  local _parent _i
+
+  if [ -n "$script" ] ; then
+
+    _parent="$script"
+
+  elif [ -n "$FUNCNAME" ] ; then
+
+    for ((_i = 0 ; _i < ${#FUNCNAME[@]} ; _i++ )) ; do
+
+      [[ "${FUNCNAME[$_i]}" =~ ^fn- ]] && continue
+
+      if [[ "${FUNCNAME[$_i]}" =~ ^[[:alpha:]] ]] ; then
+        _parent="${FUNCNAME[$_i]}"
+        break
+      fi
+    done
+  fi
+
+  echo -n "${_parent:-?}"
+}
+
 fn-usage() {
-  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m" >&2
+  echo -e "\e[34mUsage: $(fn-parent) $1\e[0m" >&2
   return 2
 }
 
 fn-error() {
-  echo -e "\e[1m\e[31m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  echo -e "\e[1m\e[31m$(fn-parent): $1\e[0m" >&2
   return 1
 }
 
 fn-info() {
-  echo -e "\e[1m\e[35m${script:-${FUNCNAME[1]}}: $1\e[0m"
+  echo -e "\e[1m\e[35m$(fn-parent): $1\e[0m"
 }
 
 fn_trace=
 fn-trace() {
-  [ -z "$fn_trace" ] || echo -e "\e[1m\e[36m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
+  [ -z "$fn_trace" ] || echo -e "\e[1m\e[36m$(fn-parent): $1\e[0m" >&2
 }
 
 fn-vars() {
-  echo -e "\e[1m\e[34m${script:-${FUNCNAME[1]}}: $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')\e[0m" >&2
+  echo -e "\e[1m\e[34m$(fn-parent): $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')\e[0m" >&2
 }
 
 fn-abort() {
@@ -39,7 +62,7 @@ fn-abort() {
   else
 
     # work-around to abort (nested) functions
-    local _origin="${script:-${FUNCNAME[1]}}"
+    local _origin="$(fn-parent)"
     eval "_fn-abort() { unset $_origin; : \"\${$_origin:?\$1}\"; }"
     _fn-abort "$1"
 
@@ -47,7 +70,7 @@ fn-abort() {
 }
 
 fn-logger() {
-  logger --tag "${script:-${FUNCNAME[1]}}" --priority "user.$1" "$2"
+  logger --tag "$(fn-parent)" --priority "user.$1" "$2"
 }
 
 fn-export() {
@@ -70,9 +93,9 @@ fn-xtrace() {
   [ -n "$fn_xtrace" ] || return 0
 
   fn_trace=y
-  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped xtrace for $fn_xtrace() -===-"; fn_xtrace=; fn_trace=; fi' RETURN
+  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped xtrace for $fn_xtrace() -===-" >&2; fn_xtrace=; fn_trace=; fi' RETURN
   trap 'set +x; fn_xtrace=; fn_trace=; trap - RETURN ERR' ERR
 
-  echo "-===- Start xtrace for $fn_xtrace() -===-"
+  echo "-===- Start xtrace for $fn_xtrace() -===-" >&2
   set -x
 }
