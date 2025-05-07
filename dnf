@@ -143,16 +143,17 @@ dnf-upgrades() (
   FZF_DEFAULT_COMMAND=__upgrades \
   _fzf-wrapper --bind "ctrl-a:toggle-all" \
                --bind "alt-b:execute(__bodhi {1} {2})" \
-               --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-13s: %s\" Current \$(rpm -q {1}))" \
+               --bind "alt-d:execute(sudo dnf remove {+1})+reload(__upgrades)" \
+               --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-15s: %s\" Current \$(rpm -q {1}))" \
                --bind 'alt-h:execute-silent(_fzf-browser "$(__dnf repoquery {1} {2} --queryformat "%{url}")")' \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind 'enter:become(echo {+1})' \
                --bind 'zero:execute(echo "No pending updates found!")+abort' \
                --border none \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \$BROWSER
-                       Alt-i:Package info;Alt-w:What packages relate to selected one;Ctrl-a:Toggle select all
-                       Enter:Upgrade selected packages" \
+               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-d:Remove selected packages
+                       Alt-h:Open package URL in \$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one
+                       Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \
                --multi \
                --no-sort \
