@@ -98,7 +98,7 @@ End:Last match."
   ((_h+=8))
   [ "$FZF_COLUMNS" -gt "$_w" ] || _w="$FZF_COLUMNS"
   [ "$FZF_LINES" -gt "$_h" ] || { _h="$FZF_LINES"; _scroll="--scrolltext"; }
-  
+
   whiptail $_scroll --ok-button Close --fullbuttons --title "$1 key bindings" --msgbox "$_help" "$_h" "$_w"
 }
 
@@ -112,7 +112,7 @@ _fzf-wrapper() {
   local -a _args _prompt
   while [ $# -gt 0 ]; do
     case "$1" in
-                 --help) _args+=(--bind "f1:execute(_fzf-help ${FUNCNAME[1]} '$2')")
+                 --help) _args+=(--bind "f1:execute(_fzf-help $(fn-parent) '$2')")
                          shift;;
          --preview-init) _args+=(--preview "${2#*:}"
                                  --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
