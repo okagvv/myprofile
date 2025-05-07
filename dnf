@@ -25,21 +25,37 @@ dnf-history() (
 
     myprofile _fzf
 
-    sudo -A dnf history "$@" | \
-    tail -n +3 | \
-    awk -v FS="|" '{ printf "%s|%s|%s\n",$1,$3,$2 }' | \
-    sed -r 's/ \| /\|/g' | \
-    column -t -s"|" -C name=No,right -C name=Timestamp -C name=Scope | \
-    _fzf-wrapper --bind "enter:become(echo sudo dnf history info,redo,rollback,undo {1})" \
-                 --border-label " DNF history " \
+    _history() {
+      sudo -A dnf history "$@"
+    }
+    _info() {
+      _history info "$1" | _fzf-preview-bat --style plain --language log
+    }
+    export -f _history _info
+
+    local _packages
+    [ $# -eq 0 ] || _packages="--contains-pkgs=$(IFS=,; echo "$*")"
+
+    _history list $_packages | \
+    tail -n +2 | \
+    awk  '{ printf "%s|%s %s|%s %s|%s\n",$1,$(NF-2),$(NF-1),$2,$3,$NF }' | \
+    column -t -s"|" -C name=No,right -C name=Timestamp -C name=Command -C name=Packages,right | \
+    _fzf-wrapper --bind "enter:execute(_info {1})" \
+                 --bind "alt-r:execute(_history redo {1})" \
+                 --bind "alt-R:execute(_history rollback {1})" \
+                 --bind "alt-u:execute(_history undo {1})" \
+                 --border none \
+                 --color "label:reverse" \
                  --header-lines 1 \
-                 --help "alt-i:history info;enter:Print command-line template for processing selected transaction" \
-                 --list-label " DNF transaction(s) " \
+                 --help "Enter:Open transaction info in pager;Alt-r:Redo selected transaction;Alt-u:Undo selected transaction
+                         Alt-R:Rollback to selected transaction" \
+                 --list-label "[${_packages/*=/ } DNF transaction(s) ]" \
+                 --no-multi \
                  --no-sort \
                  --reverse \
-                 --preview-init "alt-i:dnf history info {1}" \
-                 --preview-label " DNF transaction info " \
-                 --preview-window "40%,~1:wrap"
+                 --preview "_info {1}" \
+                 --preview-label "[ DNF transaction info ]" \
+                 --preview-window "70%,~1:wrap"
 
   fi
 )
