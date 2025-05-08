@@ -130,7 +130,7 @@ dnf-upgrades() (
     case "$1" in
            -b|--bugfix) _scopes+=" --bugfix";;
       -e|--enhancement) _scopes+=" --enhancement";;
-             -h|--help) fn-usage "[--help] [--testing] [pattern]"; return 0;;
+             -h|--help) fn-usage "[--bugfix] [--enhancement] [--help] [--security] [--testing] [pattern]"; return 0;;
          -s|--security) _scopes+=" --security";;
           -t|--testing) _testing="--enablerepo *updates-testing";;
                      *) break;;
