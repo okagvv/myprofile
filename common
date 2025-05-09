@@ -2,7 +2,10 @@
 # Bash functions applicable in interactive login shells and scripts.
 
 in-path() {
-  type -fp "$1" >/dev/null
+  local _cmd
+  for _cmd in "$@" ; do
+    type -fp "$_cmd" >/dev/null || return 1
+  done
 }
 
 is-root() {

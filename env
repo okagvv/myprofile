@@ -37,7 +37,6 @@ if [ -n "$PS1" ] ; then
   else
 
     export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
-    
+
   fi
 fi
-
