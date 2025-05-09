@@ -163,13 +163,15 @@ dnf-upgrades() (
                --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-15s: %s\" Current \$(rpm -q {1}))" \
                --bind 'alt-h:execute-silent(_fzf-browser "$(__dnf repoquery {1} {2} --queryformat "%{url}")")' \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
+               --bind 'alt-x:toggle-all+become(echo {+1})' \
                --bind 'enter:become(echo {+1})' \
                --bind 'zero:execute(echo "No pending updates found!")+abort' \
+               --bind 'change:unbind(zero)' \
                --border none \
                --header-lines 1 \
                --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-d:Remove selected packages
                        Alt-h:Open package URL in \$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one
-                       Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
+                       Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \
                --multi \
                --no-sort \
