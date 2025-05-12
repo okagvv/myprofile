@@ -110,7 +110,7 @@ dnf-search() (
     { echo "Package : Summary"
       myprofile _dnf
       sudo -A dnf search --quiet "$@" | \
-      sed -rn 's/^ ?([[:alnum:]_\.-]+ *:? +[[:alnum:]].*)$/\1/p' | \
+      sed -rn '/^Matched fields/d;s/^ ?([[:alnum:]_\.-]+ *:? +[[:alnum:]].*)$/\1/p' | \
       sort | \
       uniq
     } | column -t -s: -l2 | \
