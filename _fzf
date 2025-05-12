@@ -173,7 +173,7 @@ _fzf-journal() {
   fi
 
   $_sudo journalctl --no-hostname --lines 1000 --reverse --boot --pager-end "$@" | \
-  bat --color always --language syslog --number
+  BAT_STYLE="${BAT_STYLE:-numbers}" bat --color always --language syslog
 }
 
 if in-path podman ; then

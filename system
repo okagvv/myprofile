@@ -74,13 +74,15 @@ fzf-units() (
                --bind "alt-P:execute($_prio_journal --catalog)" \
                --bind "alt-r:change-preview(_fzf-preview-header \"Restart unit {1}\"; $_systemctl restart --show-transaction {1})" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
+               --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
                --border-label " Systemd Units with journal entries logged during last $_since in reverse order " \
                --header-lines 1 \
                --help "Alt-d:Unit dependencies;Alt-f:List unit files;Alt-h:Help for unit
                        Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
                        Alt-o:Show properties;Alt-O:Show properties in pager
                        Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
-                       Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units" \
+                       Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units
+                       Alt-Enter:Return journal entries for selected unit" \
                --multi \
                --no-sort \
                --preview-init "alt-s:_fzf-preview-header \"Status of unit {1}\"; $_systemctl status -- {1}" \
@@ -128,10 +130,12 @@ fzf-journal() (
   _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
                --bind "alt-J:execute($_journal --catalog)" \
                --bind "alt-P:execute($_prio_journal --catalog)" \
+               --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
                --border-label " Journal entries per syslog identifier logged during last $_since in reverse order " \
                --header-lines 1 \
                --help "Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
-                       Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager" \
+                       Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
+                       Alt-Enter:Return journal entries for selected syslog identifier" \
                --no-sort \
                --preview-init "$([[ "$_prio" == debug ]] && echo "alt-j:$_altj" || echo "alt-p:$_altp")" \
                --preview-window "70%,~2:wrap" \
