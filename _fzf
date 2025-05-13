@@ -29,6 +29,10 @@ _fzf-preview-bat() {
   bat --color=always ${FZF_PREVIEW_COLUMNS:+--terminal-width $FZF_PREVIEW_COLUMNS} "$@"
 }
 
+_fzf-bat-highlight() {
+  rg --ignore-case --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
+}
+
 _fzf-preview-path() {
   _fzf-preview-header "Path \"$1\""
 
