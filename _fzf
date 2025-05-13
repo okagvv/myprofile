@@ -163,19 +163,6 @@ _fzf-copy() {
   fi
 }
 
-
-_fzf-journal() {
-  local _sudo
-
-  if [[ "$1" =~ ^[[:alnum:]]+$ ]] && id --user "$1" >/dev/null 2>&1 ; then
-    _sudo="sudo -A -u $1"
-    shift
-  fi
-
-  $_sudo journalctl --no-hostname --lines 1000 --reverse --boot --pager-end "$@" | \
-  BAT_STYLE="${BAT_STYLE:-numbers}" bat --color always --language syslog
-}
-
 if in-path podman ; then
 
   _fzf-podman-query() {
