@@ -157,7 +157,7 @@ _fzf-browser() {
 
 _fzf-copy() {
   if [ -n "$DISPLAY" ] ; then
-    xclip -in -selection clipboard
+    sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' | xclip -in -selection clipboard
   else
     fn-logger err "Copy to clipboard failed: \$DISPLAY is not defined."
   fi
