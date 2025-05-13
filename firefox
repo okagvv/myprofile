@@ -8,11 +8,11 @@ mozplaces() (
   # enabled in FF settings
   local _places _query _pattern
   case "$1" in
-      h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch') AS Visited, p.url AS URL, p.title AS Title
+      h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch','localtime') AS Visited, p.url AS URL, p.title AS Title
                          FROM moz_places p, moz_historyvisits h
                          WHERE p.id = h.place_id
                          ORDER BY Visited";;
-    b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch') AS Added, p.url AS URL , b.title AS Title
+    b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch','localtime') AS Added, p.url AS URL , b.title AS Title
                          FROM moz_places p
                          JOIN moz_bookmarks b
                          ON p.id = b.fk
