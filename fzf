@@ -86,16 +86,19 @@ fzf-apply() (
     export -f _find-apply find-beyond-git
 
     _find-apply | \
-    _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload(_find-apply)" \
-                 --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
-                 --border-label-pos "2:bottom" \
-                 --help "Alt-p:Path info;Enter:Apply command to selected paths" \
+    _fzf-wrapper --bind "ctrl-a:toggle-all" \
+                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload(_find-apply)" \
+                 --border-label "[ Each ENTER calls \"$*\" for selected argument(s) ]" \
+                 --color "label:reverse" \
+                 --help "Ctrl-a:Toggle all selections;Enter:Apply command to selected paths" \
                  --multi \
                  --no-sort \
-                 --preview-init "alt-p:_fzf-preview-path {}" \
-                 --preview-window "60%,~2:wrap" \
+                 --preview "_fzf-preview-path {}" \
+                 --preview-window "70%,~2:wrap" \
                  --query "$_query" \
-                 --read0
+                 --read0 \
+                 --reverse \
+                 --smart-case
 
   else
 
@@ -114,18 +117,17 @@ if in-path plocate ; then \
       myprofile _fzf
 
       plocate "$@" | \
-      _fzf-wrapper --bind "alt-e:execute(_fzf-editor {})" \
+      _fzf-wrapper --bind "ctrl-a:toggle-all" \
+                   --bind "alt-e:execute(_fzf-editor {})" \
                    --border none \
                    --exit-0 \
-                   --help "Alt-e:Open selected file in \\\$EDITOR;Alt-f:Path info" \
-                   --list-label " plocate $* " \
+                   --help "Alt-e:Open selected file in \\\$EDITOR;Ctrl-a:Toggle all selections" \
+                   --list-label "[ plocate $* ]" \
                    --multi \
                    --no-sort \
-                   --preview-init "alt-f:_fzf-preview-path {}" \
-                   --preview-label " File info " \
-                   --preview-window "60%,~2:wrap" \
+                   --preview "_fzf-preview-path {}" \
+                   --preview-window "70%,~2:wrap" \
                    --print0 \
-                   --query "${@: -1}" \
                    --reverse \
                    --smart-case | \
       xargs -0 -r -i@ echo -n '"@" '
@@ -181,13 +183,14 @@ if in-path man ; then
     sed -r 's/\) *- */\)~/' | \
     column -t -s"~" -l2 | \
     _fzf-wrapper --bind 'enter:execute(man $(tr -d "()" <<<{2}) {1})' \
-                 --border-label " Manual pages " \
+                 --border-label "[ Manual pages ]" \
+                 --color "label:reverse" \
                  --exit-0 \
-                 --help "Alt-m:Preview manual page;Enter:Browse selected manual page" \
+                 --help "Enter:Browse selected manual page" \
                  --no-multi \
                  --no-sort \
-                 --preview-init "alt-m:_fzf-man {1} {2}" \
-                 --preview-window "60%,~2:wrap" \
+                 --preview "_fzf-man {1} {2}" \
+                 --preview-window "70%,~2:wrap" \
                  --reverse \
                  --smart-case
   )
@@ -202,18 +205,19 @@ fzf-ps() (
   myprofile _fzf
 
   local _ps
-  _ps="ps aux --sort=-%cpu | column -t -l 11"
-  eval "$_ps" | \
+  _ps="ps aux --sort=-%cpu"
+  eval "$_ps | column -t -l 11" | \
   _fzf-wrapper --bind "ctrl-r:reload(eval \"$_ps\")" \
-               --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)" \
-               --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)" \
-               --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)" \
-               --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)" \
-               --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)" \
-               --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)" \
-               --border-label " Output of \"$_ps\". " \
+               --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)+change-preview-label([ IO stats ])" \
+               --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)+change-preview-label([ Memory utilization ])" \
+               --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)+change-preview-label([ Stack utilization ])" \
+               --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)+change-preview-label([ CPU utilization ])" \
+               --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)+change-preview-label([ Kernel table values ])" \
+               --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)+change-preview-label([ Task switching activity ])" \
+               --border-label "[ Output of \"$_ps\" ]" \
+               --color "label:reverse" \
                --header-lines 1 \
-               --help "Ctrl-r:Reload;Alt-i:Show full command-line;Alt-d:IO stats;Alt-r:Memory utilization
+               --help "Ctrl-r:Refresh ps output;Alt-i:Show full command-line;Alt-d:IO stats;Alt-r:Memory utilization
                        Alt-s:Stack utilization;Alt-u:CPU utilization;Alt-v:Kernel table values
                        Alt-w:Task switching activity" \
                --hscroll-off=800 \
@@ -237,15 +241,15 @@ fzf-rg() (
     rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
     _fzf-wrapper --ansi \
                  --bind "enter:execute(_fzf-editor {1} {2})" \
-                 --border-label " Each ENTER opens selected file in editor with cursor on matching line. " \
+                 --border-label "[ Each ENTER opens selected file in editor with cursor on matching line ]" \
                  --border-label-pos "3:bottom" \
-                 --color "hl:-1:underline,hl+:-1:underline:reverse" \
+                 --color "label:reverse" \
                  --delimiter : \
                  --extended \
-                 --help "Alt-f:Show match in preview window;Enter:Load file into editor" \
+                 --help "Enter:Load file into editor" \
                  --list-border none \
                  --no-multi \
-                 --preview-init "alt-f:_fzf-preview-bat --highlight-line {2} {1}" "+change-preview-window(+{2})" \
+                 --preview "_fzf-preview-bat --highlight-line {2} {1}" \
                  --preview-window "up,60%,border-bottom,+{2}+3/3,~3:wrap" \
                  --smart-case
 
@@ -293,12 +297,12 @@ fzf-data() (
     _fzf-wrapper --ansi \
                  --bind "alt-c:execute-silent(_data-preview {} | _fzf-copy)" \
                  --bind "enter:execute(_data-preview {})" \
-                 --border-label " $1 " \
+                 --border-label "[ $1 ]" \
                  --exit-0 \
-                 --help "Alt-c:Copy preview to clipboard;Alt-d:Preview selected key;Enter:Load selected key into pager" \
+                 --help "Alt-c:Copy preview to clipboard;Enter:Load selected key into pager" \
                  --list-border none \
                  --no-multi \
-                 --preview-init "alt-d:_data-preview {} header" \
+                 --preview "_data-preview {} header" \
                  --preview-window "60%,~2:wrap" \
                  --reverse
 
