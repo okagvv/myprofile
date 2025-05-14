@@ -2,6 +2,9 @@
 
 in-path fzf || return 0
 
+# if packaged for RH derivates the default bash key bindings are not contained in bash completion for fzf
+[ -s /usr/share/fzf/shell/key-bindings.bash ] && source /usr/share/fzf/shell/key-bindings.bash
+
 _fzf_comprun () {
   # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
   local cmd=$1
