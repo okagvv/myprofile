@@ -4,7 +4,7 @@
 
 myprofile common fn rpm ffmpeg
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-preview-wrap,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:preview-half-page-up,f8:preview-half-page-down,f9:preview-top,f10:preview-bottom,f12:toggle-sort,shift-up:toggle+up,shift-down:toggle+down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
+FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:preview-top,f10:preview-bottom,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
@@ -78,19 +78,21 @@ ESC:Cancel.
 Tab:Toggle selection for current match.
 F1:This help.
 F2:Toggle horizontal scroll to match.
-F3:Toggle line wrap for preview.
+F3:Toggle sort.
 F4:Step through preconfigured preview widths.
 F5:Toggle preview.
 F6:Toggle jump mode.
-F7:Preview half page up.
-F8:Preview half page down.
+F7:Toggle line wrap.
+F8:Toggle line wrap for preview.
 F9:Preview top.
 F10:Preview bottom.
-F12:Toggle sort.
+F12:Toggle header.
 Alt-Left:Preview page up.
 Alt-Right:Preview page down.
 Alt-Up:Preview line up.
 Alt-Down:Preview line down.
+Shift-Left:Preview half page up.
+Shift-Right:Preview half page down.
 Ctrl-p:Search history up.
 Ctrl-n:Search history down.
 Home:First match.
