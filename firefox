@@ -3,42 +3,72 @@
 in-path firefox sqlite3 || return 0
 
 mozplaces() (
-  # s.a. https://en.wikiversity.org/wiki/Firefox/Browsing_history_database history returns empty
-  # list (even for active browser session) unless "Remember browsing and download history" is
-  # enabled in FF settings
-  local _places _query _pattern
+  # - s.a. https://en.wikiversity.org/wiki/Firefox/Browsing_history_database
+  # - history returns empty list (even for active browser session) unless "Remember browsing and
+  #   download history" is enabled in FF settings
+  # - column "folder" returned for bookmarks only contains bookmark tags too (with folder path
+  #   "/Tags/...")
+  local _color _query _pattern _places
   case "$1" in
       h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch','localtime') AS Visited, p.url AS URL, p.title AS Title
                          FROM moz_places p, moz_historyvisits h
                          WHERE p.id = h.place_id
-                         ORDER BY Visited";;
-    b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch','localtime') AS Added, p.url AS URL , b.title AS Title
-                         FROM moz_places p
-                         JOIN moz_bookmarks b
-                         ON p.id = b.fk
-                         ORDER BY Added";;
+                         ORDER BY visited";;
+    b|bookmarks) _query="WITH RECURSIVE  -- derived from https://chatgpt.com/c/6824b4f0-8c20-800d-85d8-00fecadf9778
+                           folder(id, path) AS (
+                             SELECT b.id, b.title
+                             FROM moz_bookmarks b
+                             WHERE b.parent = 0  -- root folders
+                             UNION ALL
+                             SELECT b.id, 
+                                    CASE 
+                                      WHEN b.title IS NOT NULL THEN fp.path || '/' || b.title
+                                      ELSE fp.path || '/(untitled)'
+                                    END
+                             FROM moz_bookmarks b
+                             JOIN folder fp ON b.parent = fp.id
+                             WHERE b.type = 2  -- folder
+                           )
+                         SELECT 
+                           datetime(bm.dateAdded/1000000,'unixepoch','localtime') AS Added,
+                           p.url AS URL,
+                           fp.path AS Folder,
+                           bm.title AS Title
+                         FROM moz_bookmarks bm
+                         JOIN moz_places p ON bm.fk = p.id
+                         JOIN folder fp ON bm.parent = fp.id
+                         WHERE bm.type = 1  -- type 1 = bookmark
+                         ORDER BY added, folder, title";;
               *) fn-usage "bookmarks|history [pattern ..]"; return 1;;
   esac
 
+  # function internal exit trap works for subshell functions only
   trap 'rm -f /tmp/places.sqlite*' EXIT
 
   shift
-  [ $# -gt 0 ] && _pattern="($(IFS="|" echo "$@"))" || _pattern=".*"
+  if [ $# -gt 0 ] ; then
+    printf -v _pattern "%s|" "$@"
+    _pattern="(${_pattern%|})"
+    _color=auto
+  else
+    _pattern=".*"
+    _color=never
+  fi
 
   for _places in ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
 
     if [ -s "$_places" ] ; then
 
       fn-trace "Examine \"$_places\"."
-
       # use a copy to avoid potential DB corruption (s.a. https://www.sqlite.org/c3ref/open.html)
       cp -f "$_places"* /tmp/
 
-      sqlite3 -readonly /tmp/places.sqlite "$_query" | grep --ignore-case --extended-regexp "$_pattern"
+      fn-trace "Search for pattern $_pattern."
+      # not unusual that bookmark titles contain the default sqlite delimiter "|"
+      sqlite3 -separator "¦" -header -readonly /tmp/places.sqlite "$_query" | grep --ignore-case --extended-regexp --color="$_color" "$_pattern"
       break
 
     fi
-
   done
 )
 
@@ -50,7 +80,10 @@ fzf-mozplaces() (
     _label-text() {
       printf " %s fetched from \"places.sqlite\". Press F1 for supported key bindings. " "${1^}"
     }
-    export -f mozplaces _label-text
+    _mozplaces() {
+      mozplaces $@ | column -t -s "¦" -o $'\u00a0 ' -l 4
+    }
+    export -f mozplaces _mozplaces _label-text
 
     local _scope
     _scope="$1"
@@ -60,15 +93,16 @@ fzf-mozplaces() (
     esac
     shift
 
-    mozplaces "$_scope" $@ | \
+    _mozplaces "$_scope" $@ | \
     _fzf-wrapper --border-label "$(_label-text "$_scope")" \
-                 --bind "alt-b:reload(mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
-                 --bind "alt-h:reload(mozplaces history $@)+transform-border-label(_label-text history)" \
+                 --bind "alt-b:reload(_mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
+                 --bind "alt-h:reload(_mozplaces history $@)+transform-border-label(_label-text history)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
                  --bind 'result:unbind(f4)+unbind(f5)' \
                  --color "label:reverse" \
-                 --delimiter "|" \
+                 --delimiter $'\u00a0' \
                  --exit-0 \
+                 --header-lines 1 \
                  --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Enter:Open selected entry in \$BROWSER" \
                  --list-border none \
                  --no-multi \
@@ -77,10 +111,11 @@ fzf-mozplaces() (
                  --preview-label-pos 1 \
                  --preview-label " Press ENTER to open current URL in \$BROWSER: " \
                  --smart-case \
+                 --reverse \
                  --tac \
                  --tiebreak=chunk,begin,length \
-                 --with-nth '{1}  {3}' \
-                 --wrap
+                 --with-nth '1,3,4' \
+                 --no-wrap
 
   else
     fn-usage "bookmarks|history [pattern ..]"
