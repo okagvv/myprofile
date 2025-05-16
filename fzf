@@ -84,7 +84,7 @@ fzf-apply() (
     export _root
 
     _find-apply() {
-      find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null
+      find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null | sort -z
     }
     export -f _find-apply find-beyond-git
 
