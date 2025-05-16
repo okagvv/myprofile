@@ -46,6 +46,7 @@ _fzf-preview-path() {
 Type: $_mime
 $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
 $(is-fn rpm-owner && echo "RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')")
+$(in-path git && echo "Git: $(git log -1 --pretty="%h %ad %an %s" --date="format:%F %T" -- "$1" 2>/dev/null || echo "Not committed.")")
 EOF
 
     if [[ -r "$1" && -s "$1" ]] ; then
@@ -55,6 +56,7 @@ EOF
                        *rpm*) if in-path rpm ; then _fzf-preview-header; rpm -qip "$1"; fi;;
                       *text*) _fzf-preview-header; _fzf-preview-bat --number "$1";;
         *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
+                           *) _fzf-preview-header; file "$1";;
       esac
     fi
 
