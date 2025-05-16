@@ -10,11 +10,11 @@ export FZF_HISTORY_DIR="$HOME/.config/fzf"
 
 if is-root ; then
 
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,alt-bg:#ffd7d7,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
 
 else
 
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:230,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:#ffffd7,alt-bg:#f8f8d7,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
 
 fi
 
