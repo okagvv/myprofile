@@ -3,14 +3,22 @@
 myprofile _fzf
 
 _rpm-inspect-scope() {
-  rpm --query --$1 "$2" | \
-  fzf --border none \
-      --list-label " ${1^} in package \"$2\" " \
-      --multi \
-      --preview '_fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
-      --preview-window '60%:~2:wrap' \
-      $(_fzf-query-history 2) | \
-  xargs --no-run-if-empty
+  if [ "$(rpm --query "$2" | wc -w)" -eq 1 ] ; then
+
+    rpm --query --$1 "$2" | \
+    _fzf-wrapper --border none \
+                 --list-label " ${1^} in package \"$2\" " \
+                 --multi \
+                 --preview '_fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
+                 --preview-window '60%:~2:wrap' \
+                 $(_fzf-query-history 2) | \
+    xargs --no-run-if-empty
+
+  else
+
+    fn-error "Package \"$2\" is not installed!"
+
+  fi
 }
 
 _rpm-preview-docs() {
@@ -114,4 +122,3 @@ _fzf-rpm() {
 }
 
 fn-export "^_rpm-[[:alnum:]-]+$" "rpm-(required|requires|what)" is-fn
-
