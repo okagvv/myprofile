@@ -62,14 +62,14 @@ _fzf-units() {
   _systemctl="$_sudo systemctl"
   _properties="$_systemctl show {1} | sort | bat --color always --number --language ini"
 
-  if [[ -z "$_all" && -n "$_prio" ]] ; then
+  if [[ -z "$_all$_failed" && -n "$_prio" ]] ; then
     echo Unit
     $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
                       --boot $_boot --since "$_since ago" --priority="$_priorange" $_grep | \
     sed --silent --regexp-extended 's/^.*UNIT=(.+)$/\1/p' | \
     sort --unique
   else
-    $_sudo systemctl --plain $_all | \
+    $_sudo systemctl --plain $_all $_failed | \
     sed '/^$/,$d'
   fi | \
   _fzf-wrapper --bind "alt-d:change-preview(_fzf-preview-header \"Dependencies for unit {1}\"; $_systemctl list-dependencies {1})" \
