@@ -211,17 +211,18 @@ fzf-ps() (
   _ps="ps aux --sort=-%cpu"
   eval "$_ps | column -t -l 11" | \
   _fzf-wrapper --bind "ctrl-r:reload(eval \"$_ps\")" \
-               --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)+change-preview-label([ IO stats ])" \
-               --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)+change-preview-label([ Memory utilization ])" \
-               --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)+change-preview-label([ Stack utilization ])" \
-               --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)+change-preview-label([ CPU utilization ])" \
-               --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)+change-preview-label([ Kernel table values ])" \
-               --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)+change-preview-label([ Task switching activity ])" \
+               --bind "alt-d:change-preview(pidstat -d --human -p {2} 1)+change-preview-label([ IO stats ])" \
+               --bind "alt-e:change-preview(grep -zvE '^(BASH_FUNC|LS_COLORS=|PS1=)' </proc/{2}/environ | sort -z | tr '\0' '\n')" \
+               --bind "alt-r:change-preview(pidstat -r --human -p {2} 1)+change-preview-label([ Memory utilization ])" \
+               --bind "alt-s:change-preview(pidstat -s -p {2} 1)+change-preview-label([ Stack utilization ])" \
+               --bind "alt-u:change-preview(pidstat -u -I -p {2} 1)+change-preview-label([ CPU utilization ])" \
+               --bind "alt-v:change-preview(pidstat -v -p {2} 1)+change-preview-label([ Kernel table values ])" \
+               --bind "alt-w:change-preview(pidstat -w -p {2} 1)+change-preview-label([ Task switching activity ])" \
                --border-label "[ Output of \"$_ps\" ]" \
                --color "label:reverse" \
                --header-lines 1 \
-               --help "Ctrl-r:Refresh ps output;Alt-i:Show full command-line;Alt-d:IO stats;Alt-r:Memory utilization
-                       Alt-s:Stack utilization;Alt-u:CPU utilization;Alt-v:Kernel table values
+               --help "Ctrl-r:Refresh ps output;Alt-e:List process environment;Alt-i:Show full command-line;Alt-d:IO stats
+                       Alt-r:Memory utilization;Alt-s:Stack utilization;Alt-u:CPU utilization;Alt-v:Kernel table values
                        Alt-w:Task switching activity" \
                --hscroll-off=800 \
                --list-border none \
