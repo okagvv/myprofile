@@ -12,11 +12,19 @@ fi
 fzf-tasmota() (
   myprofile _fzf
 
-  _graph() {
-    sed -rn 's/^.*;'"$1"'=([[:digit:]\.]+).*$/\1/p' "$plugs/$2" | \
-    asciigraph -w "$(($FZF_PREVIEW_COLUMNS-7))" -h "$(($FZF_PREVIEW_LINES-2))" -c "$1 from \"$2\"" -cc navy -lc navy -ac navy
+  _asciigraph() {
+    asciigraph -w "$(($FZF_PREVIEW_COLUMNS-7))" -h "$(($FZF_PREVIEW_LINES-2))" -cc navy -lc navy -ac navy "$@"
   }
-  export -f _graph
+  _graph() {
+    if [[ "$1" == combined ]] ; then
+      sed -rn 's/^.*?;power=([[:digit:]\.]+).*reactive=([[:digit:]\.]+).*apparent=([[:digit:]\.]+).*$/\3,\2,\1/p' "$plugs/$2" | \
+      _asciigraph -sn 3 -sc green,red,navy -sl "apparent,reactive,active power from \"$2\""
+    else
+      sed -rn 's/^.*;'"$1"'=([[:digit:]\.]+).*$/\1/p' "$plugs/$2" | \
+      _asciigraph -c "$1 from \"$2\""
+    fi
+  }
+  export -f _graph _asciigraph
 
   find "$plugs" -type f -iname \*.log -size +1k -printf "%T@ %P\n" | \
   sort -nr | \
@@ -25,16 +33,18 @@ fzf-tasmota() (
                --bind "alt-a:change-preview(_graph apparent {1})" \
                --bind "alt-c:change-preview(_graph current {1})" \
                --bind "alt-f:change-preview(_graph factor {1})" \
-               --bind "alt-p:change-preview(_graph power {1})" \
+               --bind "alt-P:change-preview(_graph combined {1})" \
                --bind "alt-r:change-preview(_graph reactive {1})" \
                --bind "alt-t:change-preview(_graph today {1})" \
                --bind "alt-v:change-preview(_graph voltage {1})" \
-               --border-label " Graphs for tasmota plugs. Press \"ALT-{a,c,f,p,r,t,v}\" to change rendered value. " \
+               --border-label "[ Graphs for tasmota plugs. Press F1 for help on key bindings. ]" \
                --color "label:reverse" \
+               --help "Alt-a:Apparent power;Alt-c:Current;Alt-f:Power factor;Alt-p:Active power;Alt-r:Reactive power
+                       Alt-t:Today;Alt-v:Voltage;Enter:Open plug log in pager;Alt-P:Combined active, apparent and reactive power" \
                --exit-0 \
                --no-multi \
                --list-border none \
-               --preview "_graph power {1}" \
+               --preview-init "alt-p:_graph power {1}" \
                --preview-window "up,80%,border-bottom" \
                --query "$1"
 )
