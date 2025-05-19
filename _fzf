@@ -4,19 +4,24 @@
 
 myprofile common fn rpm ffmpeg
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:preview-top,f10:preview-bottom,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
 export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
-if is-root ; then
+_fzf-defaults() {
+  FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:preview-top,f10:preview-bottom,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
 
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,alt-bg:#ffd7d7,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+  if is-root || [ -n "$1" ] ; then
 
-else
+    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,alt-bg:#ffd7d7,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+    export NEWT_COLORS="root=,#ffdfdf title=blue,"
 
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:#ffffd7,alt-bg:#f8f8d7,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+  else
 
-fi
+    export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:#ffffd7,alt-bg:#f8f8d7,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
+    export NEWT_COLORS="root=,#ffffd7 title=blue,"
+
+  fi
+}
 
 _fzf-query-history () {
   echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
@@ -117,7 +122,7 @@ _fzf-wrapper() {
   #       --script "name" - overriding default for use in diagnostic messages
   # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
   # config including a match dependent scroll offset (s.a. fzf-rg()).
-  local -a _args _prompt
+  local -a _args _prompt _sudo
   while [ $# -gt 0 ]; do
     case "$1" in
                  --help) _args+=(--bind "f1:execute(_fzf-help $(fn-parent) '$2')")
@@ -127,14 +132,14 @@ _fzf-wrapper() {
                          shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
                --prompt) _prompt="$2"; shift;;
                --script) script="$2"; shift;;
+                 --sudo) _sudo=y;;
       *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
                       *) _args+=("$1");;
     esac
     shift
   done
 
-  [ -n "$script" ] || script="${FUNCNAME[1]}"
-  export script
+  _fzf-defaults "$_sudo"
 
 # fn-vars _args
   fzf --bind "load:change-prompt(${_prompt:->} )+change-ghost([query])" \
@@ -173,8 +178,8 @@ _fzf-find() {
     size) _find="%s"; _sort="-n";;
        *) fn-error "Unsupported --sort argument: $4"; exit;;
   esac
-  
-  find-beyond-git "${1:-.}" -type "${2:-f}" -readable -printf "$_find|${3:-%P}\0" | sort -z $_sort | cut -z -d"|" -f2-
+
+  find-beyond-git "${1:-.}" -type "${2:-f}" -readable -printf "$_find|${3:-%P}\0" 2>/dev/null | sort -z $_sort | cut -z -d"|" -f2-
 }
 
 _fzf-copy() {

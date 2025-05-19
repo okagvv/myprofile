@@ -9,7 +9,7 @@ _bodhi-updates() {
 }
 
 _dnf-is-installed() {
-  rpm --query --quiet "$1" 
+  rpm --query --quiet "$1"
 }
 
 _dnf-package-url() {
@@ -49,9 +49,10 @@ _fzf-dnf-packages() {
                --preview-init "alt-i:_dnf-preview-info {1}" \
                --preview-label " Press F1 for help. " \
                --preview-window "70%,~2:wrap" \
-               --reverse \
                --query "$3" \
+               --reverse \
                --script "${FUNCNAME[1]}" \
+               --sudo \
                $(_fzf-query-history 2)
 }
 
@@ -117,23 +118,24 @@ _dnf-upgrades() {
                --preview-label " Press F1 for help " \
                --preview-window "70%,~1:wrap" \
                --query "$1" \
-               --reverse | \
+               --reverse \
+               --sudo | \
   xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
 }
 
 _dnf-history() {
   _history() {
       sudo -A dnf history "$@"
-  }  
+  }
   _info() {
     local _hl _pattern
-    
+
     if [ -n "$_packages" ] ; then
       _pattern="${_packages/*=/}"
       _pattern="${_pattern//\*/.*}"
       _hl="$(_history info "$1" | _fzf-bat-highlight "$_pattern")"
     fi
-    
+
     _history info "$1" | _fzf-preview-bat --style plain --language log $_hl
   }
   export -f _history _info
@@ -141,7 +143,7 @@ _dnf-history() {
   declare _packages
   [ $# -eq 0 ] || _packages="--contains-pkgs=$(IFS=,; echo "$*")"
   export _packages
-  
+
   _history list $_packages | \
   tail -n +2 | \
   awk  '{ printf "%s|%s %s|%s %s|%s\n",$1,$(NF-2),$(NF-1),$2,$3,$NF }' | \
@@ -158,10 +160,11 @@ _dnf-history() {
                --list-label "[${_packages/*=/ } DNF transaction(s) ]" \
                --no-multi \
                --no-sort \
-               --reverse \
                --preview "_info {1}" \
                --preview-label "[ DNF transaction info ]" \
-               --preview-window "70%,~1:wrap"
+               --preview-window "70%,~1:wrap" \
+               --reverse \
+               --sudo
 }
 
 fn-export _bodhi-updates "^_dnf-[[:alnum:]-]+$" _fzf-dnf-packages "^dnf-(repoquery|what)$"
