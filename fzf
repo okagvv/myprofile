@@ -64,13 +64,15 @@ fzf-fn() (
 complete -A function fzf-fn
 
 fzf-apply() (
-  local _query _root
+  local _query _root _sort _find
   _root="$(pwd)"
+  _sort=path
 
   while [ $# -gt 0 ] ; do
     case "$1" in
       -q|--query) _query="$2"; shift;;
        -r|--root) _root="$2"; shift;;
+       -s|--sort) _sort="$2"; shift;;
                *) break;;
     esac
     shift
@@ -81,18 +83,19 @@ fzf-apply() (
     myprofile _fzf
 
     cd "$_root" || fn-abort "Change directory to \"$_root\" failed!"
-    export _root
+    export _root _sort
 
     _find-apply() {
-      find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null | sort -z
+      _fzf-find . f %P $_sort
     }
-    export -f _find-apply find-beyond-git
+    export -f _find-apply
 
     _find-apply | \
     _fzf-wrapper --bind "ctrl-a:toggle-all" \
-                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload(_find-apply)" \
+                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\"; echo)+reload(_find-apply)" \
                  --border-label "[ Each ENTER calls \"$*\" for selected argument(s) ]" \
                  --color "label:reverse" \
+                 --exit-0 \
                  --help "Ctrl-a:Toggle all selections;Enter:Apply command to selected paths" \
                  --multi \
                  --no-sort \
@@ -105,7 +108,7 @@ fzf-apply() (
 
   else
 
-    fn-usage "[--query \"text\"] [--root dir] <cmd> [{<arg>}]
+    fn-usage "[--query \"text\"] [--root dir] [--sort date|name|path|size] <cmd> [{<arg>}]
 Sample:
 \$ $FUNCNAME rm -iv"
 
