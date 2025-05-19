@@ -163,6 +163,20 @@ _fzf-browser() {
   fi
 }
 
+_fzf-find() {
+  local _sort _find
+
+  case "${4:-path}" in
+    date) _find="%T@"; _sort="-n";;
+    name) _find="%f"; _sort="-d";;
+    path) _find="%P"; _sort="-d";;
+    size) _find="%s"; _sort="-n";;
+       *) fn-error "Unsupported --sort argument: $4"; exit;;
+  esac
+  
+  find-beyond-git "${1:-.}" -type "${2:-f}" -readable -printf "$_find|${3:-%P}\0" | sort -z $_sort | cut -z -d"|" -f2-
+}
+
 _fzf-copy() {
   if [ -n "$DISPLAY" ] ; then
     sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' | xclip -in -selection clipboard
@@ -182,4 +196,4 @@ if in-path podman ; then
 
 fi
 
-fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes
+fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes find-beyond-git
