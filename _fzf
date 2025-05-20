@@ -170,7 +170,7 @@ _fzf-browser() {
 
 _fzf-copy() {
   if [ -n "$DISPLAY" ] ; then
-    sed 's/\x1B\[[0-9;]*[a-zA-Z]//g' | xclip -in -selection clipboard
+    strip_esc | xclip -in -selection clipboard
   else
     fn-logger err "Copy to clipboard failed: \$DISPLAY is not defined."
   fi
@@ -187,4 +187,4 @@ if in-path podman ; then
 
 fi
 
-fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes fdl find-beyond-git
+fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes strip_esc fdl find-beyond-git
