@@ -65,14 +65,14 @@ complete -A function fzf-fn
 
 fzf-apply() (
   local _query
-  local -a _fd
+  local -a _fdargs
 
   while [ $# -gt 0 ] ; do
     case "$1" in
       -q|--query) _query="$2"; shift;;
-       -s|--sort) _fd+=(--sort "$2"); shift;;
+       -s|--sort) _fdargs+=(--sort "$2"); shift;;
               --) shift; break;;
-               *) _fd+=("$1");;
+               *) _fdargs+=("$1");;
     esac
     shift
   done
@@ -81,10 +81,10 @@ fzf-apply() (
 
     myprofile _fzf
 
-    [ ${#_fd[@]} -gt 0 ] || _fd=(. --type f)
+    [ ${#_fdargs[@]} -gt 0 ] || _fdargs=(. --type f)
 
     eval "_find-apply() {
-      fdl --header ${_fd[@]}
+      fdl --header ${_fdargs[@]}
     }"
     export -f _find-apply
 
