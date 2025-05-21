@@ -20,38 +20,42 @@ cleanup-path() {
   export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
 }
 
-find-beyond-git() {
-  if [ $# -gt 1 ] ; then
-    find "$1" -name .git -prune -o "${@: 2}"
-  else
-    fn-usage "<path> {<find expression>}"
-  fi
-}
-
 fdl() {
-  # - fd with colored detailed output.
+  # - fd with colored detailed output ignoring Git worktree repos.
   # - "sed | column" is required to align fd output and to create columns suitable for feeding to
   #   fzf (desired columns might be selected via "--delimiter $'\u00a0' --with-nth
   #   <comma-separated-column-ids").
-  # - Optional leading argument controls sorting: r?(date|path|size). CAUTION: Because of color
-  #   escape sequences sorting by path sorts by $LS_COLORS type first and then by path.
-  # - All other arguments will be forwarded to fd.
+  # - CAUTION: Because of color escape sequences sorting by path sorts by $LS_COLORS type first and
+  #   then by path.
 
-  local -a _sort
-  case "$1" in
-    date|rdate) _sort=(sort -t"|" -k6d${1/date/}); shift;;
-    path|rpath) _sort=(sort -t"|" -k7ifdb${1/path/}); shift;;
-    size|rsize) _sort=(sort -t"|" -k5h${1/size/}); shift;;
-             *) _sort=(cat);;
+  local _header _sort
+  local -a _fd _sortcmd
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+        -h|--help) fn-usage "[--help] [--header] [--sort r?(date|path|size)] [{fd-argument}]"; return 0;;
+        -s|--sort) [[ "$2" =~ ^r?(date|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"; shift;;
+      -H|--header) _header=y;;
+                *) _fd+=("$1");;
+    esac
+    shift
+  done
+
+  case "$_sort" in
+    date|rdate) _sortcmd=(sort -t"|" -k6d${_sort/date/});;
+    path|rpath) _sortcmd=(sort -t"|" -k7ifdb${_sort/path/});;
+    size|rsize) _sortcmd=(sort -t"|" -k5h${_sort/size/});;
+             *) _sortcmd=(cat);;
   esac
 
-  fd "$@" --exclude .git --color=always --list-details | \
+  fd "${_fd[@]}" --exclude .git --color=always --list-details | \
   sed -r 's~^([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[0-9]+,) ([0-9]+)~\1\2~;
-          s~^([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ].+[0-9]) ([/\.\x1B])~\1|\2|\3|\4|\5|\6|\7~;
+          s~^([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ][^\x1B]+) +([/\.\x1B])~\1|\2|\3|\4|\5|\6|\7~;
           s~(|\x1B\[[0-9\;]m)\./~\1~' | \
-  ${_sort[@]} | \
-  column -t -s"|" -o$'\u00a0 ' -l8
+  { [ -z "$_header" ] || echo "Permission|Blk|Owner|Group|Size|Modified|Path"
+    ${_sortcmd[@]}
+  } | column -t -s"|" -o$'\u00a0 ' -l8
 }
+complete -o bashdefault -o default -o nosort -F _fd fdl
 
 find-last() {
   find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
