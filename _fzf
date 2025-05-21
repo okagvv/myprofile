@@ -187,4 +187,4 @@ if in-path podman ; then
 
 fi
 
-fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes strip_esc fdl find-beyond-git
+fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes strip_esc fdl
