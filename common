@@ -21,7 +21,7 @@ cleanup-path() {
 }
 
 fdl() {
-  # - fd with colored detailed output ignoring Git worktree repos.
+  # - fd with colored detailed list output ignoring Git worktree repos.
   # - "sed | column" is required to align fd output and to create columns suitable for feeding to
   #   fzf (desired columns might be selected via "--delimiter $'\u00a0' --with-nth
   #   <comma-separated-column-ids").
@@ -40,6 +40,11 @@ fdl() {
     shift
   done
 
+  if [[ ${#_fd[@]} -gt 0 && ! "${_fd[0]}" == "." && -d "${_fd[0]}" ]] ; then
+    _fd=(. "${_fd[@]}")
+    [ -n "$_sort" ] || _sort=date
+  fi
+  
   case "$_sort" in
     date|rdate) _sortcmd=(sort -t"|" -k6d${_sort/date/});;
     path|rpath) _sortcmd=(sort -t"|" -k7ifdb${_sort/path/});;
