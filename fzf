@@ -66,11 +66,11 @@ complete -A function fzf-fn
 fzf-apply() (
   local _query
   local -a _fd
-  
+
   while [ $# -gt 0 ] ; do
-    case "$1" in 
+    case "$1" in
       -q|--query) _query="$2"; shift;;
-       -s|--sort) _fd+=(--sort "$2"); shift;;                                                        
+       -s|--sort) _fd+=(--sort "$2"); shift;;
               --) shift; break;;
                *) _fd+=("$1");;
     esac
@@ -82,12 +82,12 @@ fzf-apply() (
     myprofile _fzf
 
     [ ${#_fd[@]} -gt 0 ] || _fd=(. --type f)
-    
+
     eval "_find-apply() {
       fdl --header ${_fd[@]}
     }"
     export -f _find-apply
-    
+
     _find-apply | \
     _fzf-wrapper --ansi \
                  --bind "ctrl-a:toggle-all" \
@@ -112,7 +112,7 @@ fzf-apply() (
     fn-usage "[--query \"text\"] [--sort r?(date|path|size)] [{<fd arg>}] -- <cmd> [{<arg>}]
 Sample:
 \$ $FUNCNAME -- rm -iv
-\$ $FUNCNAME --sort rdate --type f --extension mpeg -- vlc"
+\$ $FUNCNAME --sort path --type f --no-ignore --extension mkv -- vlc --verbose 0 --playlist-enqueue"
   fi
 )
 
