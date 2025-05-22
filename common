@@ -28,6 +28,7 @@ fdl() {
   # - It is assumed that "fd --list-details .." output is sorted by path column. Applying sort(1) to
   #   a column with escape sequences creates an undesired order (sorts by colors selected vi $LS_COLORS).
   #   And even this sorting is partly broken.
+  # - $TIME_STYLE is set to ensure that "sort --general-numeric-sort .." works for "Modified" column.
 
   local _header _sort
   local -a _fdargs _sortcmd
@@ -53,7 +54,7 @@ fdl() {
              *) _sortcmd=(cat);;
   esac
 
-  fd "${_fdargs[@]}" --exclude .git --color=always --list-details | \
+  TIME_STYLE="+%F %T" fd "${_fdargs[@]}" --exclude .git --color=always --list-details | \
   sed -r 's~^([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[0-9]+,) ([0-9]+)~\1\2~;
           s~^([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ][^\x1B]+) +([/\.\x1B])~\1|\2|\3|\4|\5|\6|\7~;
           s~(|\x1B\[[0-9\;]m)\./~\1~' | \

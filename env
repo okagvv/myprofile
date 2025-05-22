@@ -18,6 +18,7 @@ export LESSCHARSET="utf-8"
 export PROMPT_DIRTRIM=5
 export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
+export TIME_STYLE="+%F %T"
 
 in-path bat   && export BAT_CONFIG_PATH="/etc/bat.conf"
 in-path rg    && export RIPGREP_CONFIG_PATH="/etc/ripgrep/config"
