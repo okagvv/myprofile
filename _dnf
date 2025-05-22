@@ -107,7 +107,7 @@ _dnf-upgrades() {
                --bind 'change:unbind(zero)' \
                --border none \
                --header-lines 1 \
-               --help "Alt-a:Show advisory (if available);Alt-A:Open advisor in pager;Alt-b:Search package on Bodhi
+               --help "Alt-a:Show advisory (if available);Alt-A:Open advisory in pager;Alt-b:Search package on Bodhi
                        Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in \$BROWSER
                        Alt-i:Package info;Alt-w:What packages relate to selected one
                        Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
