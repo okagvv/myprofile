@@ -21,7 +21,7 @@ dnf-history() (
     fn-usage "[--help] [package ..]"
   else
     myprofile _dnf
-    _dnf-history "$@"    
+    _dnf-history "$@"
   fi
 )
 
@@ -109,14 +109,17 @@ dnf-upgrades() (
 complete -W "--{bugfix,enhancement,help,security,testing}" dnf-upgrades
 
 dnf-what() {
-  local _installed _query _rpm
+  local _installed _query _rpm _cap
 
-  if [[ "$1" =~ ^-+i(nstalled)?$ ]] ; then
-
-    _installed="--installed"
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+       -c|--capabilties) _cap=y;;
+      -h|--help|--usage) fn-usage "[--capabilties] [--help] [--installed] package"; [[ "$1" =~ ^-h ]]; return;;
+         -i|--installed) _installed="--installed";;
+                      *) break;;
+    esac
     shift
-
-  fi
+  done
 
   if [ $# -eq 1 ] ; then
 
@@ -129,17 +132,18 @@ dnf-what() {
 
     fi
 
-    for _query in requires depends enhances provides recommends suggests supplements obsoletes conflicts requires-pre; do
+    for _query in requires depends enhances provides recommends suggests supplements obsoletes conflicts; do
 
-      { echo -e "=${_query^}:\n$(dnf-repoquery --$_query $_installed --resolve "$_rpm")\n"
-        [[ "$_query" == "requires-pre" ]] || echo -e "\n=What $_query:\n$(dnf-repoquery --qf "%{NAME}" $_installed --what$_query "$_rpm")\n\n"
+      { [[ "$_query" == "requires-pre" ]] || \
+          echo -e "=What $_query:\n$(dnf-repoquery $_installed --queryformat="%{name}\n" --what$_query "$_rpm")\n"
+        [ -z "$_cap" ] || echo -e "\n=${_query^}:\n$(dnf-repoquery --$_query $_installed "$_rpm")\n\n"
       } | sed -r 's/^no package .+$//;s/^([^=][^ ]+)/  - \1/;s/^=//' | cat --squeeze-blank
 
     done
 
   else
 
-    fn-usage "[--installed] package"
+    $FUNCNAME --usage
 
   fi
 }
