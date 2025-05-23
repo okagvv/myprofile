@@ -94,6 +94,7 @@ _dnf-upgrades() {
 
   FZF_DEFAULT_COMMAND=__upgrades \
     _fzf-wrapper --bind "ctrl-a:toggle-all" \
+               --bind "alt-!:execute(PS1=\"[${FUNCNAME[1]}] $PS1\" \"$SHELL\" --noprofile --norc)" \
                --bind "alt-a:change-preview(__advisory {1} {2})" \
                --bind "alt-A:execute(__advisory {1} {2} | less)" \
                --bind "alt-b:execute(__bodhi {1} {2})" \
@@ -110,7 +111,8 @@ _dnf-upgrades() {
                --help "Alt-a:Show advisory (if available);Alt-A:Open advisory in pager;Alt-b:Search package on Bodhi
                        Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in \$BROWSER
                        Alt-i:Package info;Alt-w:What packages relate to selected one
-                       Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
+                       Alt-x:Apply all upgrades except selected ones;Alt-!:Open subshell
+                       Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \
                --multi \
                --no-sort \
