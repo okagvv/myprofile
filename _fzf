@@ -94,6 +94,7 @@ F8:Toggle line wrap for preview.
 F9:Preview top.
 F10:Preview bottom.
 F12:Toggle header.
+Alt-!:Open subshell
 Alt-Left:Preview page up.
 Alt-Right:Preview page down.
 Alt-Up:Preview line up.
@@ -143,6 +144,7 @@ _fzf-wrapper() {
 
 # fn-vars _args
   fzf --bind "load:change-prompt(${_prompt:->} )+change-ghost([query])" \
+      --bind "alt-!:execute(SUBSHELL=\"${FUNCNAME[2]}\" \"$SHELL\")" \
       --prompt '[loading] > ' \
       $(_fzf-query-history 2) \
       "${_args[@]}"

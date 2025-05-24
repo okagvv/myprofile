@@ -33,11 +33,11 @@ if [ -n "$PS1" ] ; then
 
   elif in-path git ; then
 
-    export PS1="\$? \u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
+    export PS1="${SUBSHELL:+[\[\033[36m\]$SUBSHELL\[\033[00m\]] }\$? \u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
 
   else
 
-    export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
+    export PS1="${SUBSHELL:+[\[\033[36m\]$SUBSHELL\[\033[00m\]] }\$? \u@\h:\$(abbr-pwd) \$ "
 
   fi
 fi
