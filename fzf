@@ -246,8 +246,15 @@ fzf-rg() (
 
     myprofile _fzf
 
-    rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
+    _rg() {
+      rg --color=always --hidden --line-number --no-heading --smart-case "$*"
+    }
+    export -f _rg
+    
+    _rg "$*" | \
     _fzf-wrapper --ansi \
+                 --bind "alt-c:execute-silent(echo {} | _fzf-copy)" \
+                 --bind "ctrl-s:reload(_rg {q})" \
                  --bind "enter:execute(_fzf-editor {1} {2})" \
                  --bind 'zero:execute(echo "No matches found!")+abort' \
                  --bind 'change:unbind(zero)' \
@@ -256,7 +263,7 @@ fzf-rg() (
                  --color "label:reverse" \
                  --delimiter : \
                  --extended \
-                 --help "Enter:Load file into editor" \
+                 --help "Alt-c:Copy current entry to clipboard;Ctrl-s:Restart search for current query string;Enter:Load file into editor" \
                  --list-border none \
                  --no-multi \
                  --preview "_fzf-preview-bat --highlight-line {2} {1}" \
