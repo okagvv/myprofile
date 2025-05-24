@@ -94,6 +94,8 @@ F8:Toggle line wrap for preview.
 F9:Preview top.
 F10:Preview bottom.
 F12:Toggle header.
+Home:First match.
+End:Last match.
 Alt-!:Open subshell
 Alt-Left:Preview page up.
 Alt-Right:Preview page down.
@@ -102,9 +104,9 @@ Alt-Down:Preview line down.
 Shift-Left:Preview half page up.
 Shift-Right:Preview half page down.
 Ctrl-p:Search history up.
-Ctrl-n:Search history down.
-Home:First match.
-End:Last match."
+Ctrl-n:Search history down.$([[ "$XDG_SESSION_TYPE" = tty ]] || echo "
+Ctrl-c:Copy current entry to clipboard.
+Ctrl-v:Insert clipboard content in query.")"
   } | column -t -s: -o": " | sed 's/^- *://')"
 
   eval "$(wc -l -L <<<"$_help" | sed -rn 's/^[[:space:]]+([[:digit:]]+)[[:space:]]+([[:digit:]]+)/_h=\1;_w=\2/p')"
@@ -121,8 +123,6 @@ _fzf-wrapper() {
   #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
   #       --prompt "text" - overiding default prompt"
   #       --script "name" - overriding default for use in diagnostic messages
-  # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
-  # config including a match dependent scroll offset (s.a. fzf-rg()).
   local -a _args _prompt _sudo
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -140,9 +140,16 @@ _fzf-wrapper() {
     shift
   done
 
+  # ctrl-v bindings found at https://github.com/junegunn/fzf/issues/3376
+  case "$XDG_SESSION_TYPE" in
+        x11) _args+=(--bind 'ctrl-v:transform(echo "put($(xclip -o -selection clipboard))")'
+                     --bind "ctrl-c:execute-silent(echo {} | _fzf-copy)");;
+    wayland) _args+=(--bind 'ctrl-v:transform(echo "put($(wl-paste))")');;
+  esac
+
   _fzf-defaults "$_sudo"
 
-# fn-vars _args
+  # fn-xtrace
   fzf --bind "load:change-prompt(${_prompt:->} )+change-ghost([query])" \
       --bind "alt-!:execute(SUBSHELL=\"${FUNCNAME[2]}\" \"$SHELL\")" \
       --prompt '[loading] > ' \

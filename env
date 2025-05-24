@@ -25,6 +25,7 @@ in-path rg    && export RIPGREP_CONFIG_PATH="/etc/ripgrep/config"
 in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
+[ -n "$XDG_SESSION_TYPE" ] || export XDG_SESSION_TYPE="$(loginctl show-session "$XDG_SESSION_ID" --value --property=Type 2>/dev/null || true)"
 
 if [ -n "$PS1" ] ; then
   if in-path starship && [ -s ~/.config/starship.toml ] ; then
