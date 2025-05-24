@@ -2,21 +2,23 @@
 # -*- shell-script -*-
 
 myprofile() {
-  local _default _dir _script _src _verbose
+  local _default _dir _script _self _src _verbose
   local -a _scripts _search
 
+  _self="$MYPROFILE/$FUNCNAME"
+  
   while [ $# -gt 0 ] ; do
     case "$1" in
          -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}]]";
                     return 0;;
       -d|--default) _default=y;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
-                      ln -sfv "$MYPROFILE" "/etc/profile.d/zz-$FUNCNAME.sh"
+                      ln -sfv "$_self" "/etc/profile.d/zz-$FUNCNAME.sh"
                     else
                       touch ~/.bash_profile
-                      _script="$(sed "\~$MYPROFILE~d" ~/.bash_profile)"
-                      echo -e "source $MYPROFILE\n\n$_script" >~/.bash_profile
-                      grep --with-filename "$MYPROFILE" ~/.bash_profile
+                      _script="$(sed "\~$_self~d" ~/.bash_profile)"
+                      echo -e "source $_self\n\n$_script" >~/.bash_profile
+                      grep --with-filename "$_self" ~/.bash_profile
                     fi
                     return 0;;
       -v|--verbose) _verbose=echo;;
@@ -27,7 +29,7 @@ myprofile() {
     shift
   done
 
-  _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME" "${MYPROFILE%/*}")
+  _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME" "$MYPROFILE")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
     for _dir in ${_search[@]} ; do
@@ -68,6 +70,6 @@ export -f myprofile
 
 # CAUTION: During initial "source .../myprofile" it is assured that "$BASH_SOURCE[0]" points to this
 # script. For later myprofile() calls this is not guaranteed.
-export MYPROFILE="$(realpath "${BASH_SOURCE[0]}")"
+export MYPROFILE="$(realpath --canonicalize-missing "${BASH_SOURCE[0]}/..")"
 
 myprofile "$@"
