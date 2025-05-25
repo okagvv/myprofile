@@ -151,7 +151,7 @@ _fzf-wrapper() {
 
   # fn-xtrace
   fzf --bind "load:change-prompt(${_prompt:->} )+change-ghost([query])" \
-      --bind "alt-!:execute(SUBSHELL=\"${FUNCNAME[2]}\" \"$SHELL\" -l)" \
+      --bind "alt-!:execute(SUBSHELL=\"$(fn-parent)\" \"$SHELL\" -l)" \
       --prompt '[loading] > ' \
       $(_fzf-query-history 2) \
       "${_args[@]}"
