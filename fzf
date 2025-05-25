@@ -128,7 +128,7 @@ if in-path plocate ; then \
                    --bind "alt-e:execute(_fzf-editor {})" \
                    --border none \
                    --exit-0 \
-                   --help "Alt-e:Open selected file in \\\$EDITOR;Ctrl-a:Toggle all selections" \
+                   --help "Alt-e:Open selected file in \$EDITOR;Ctrl-a:Toggle all selections" \
                    --list-label "[ plocate $* ]" \
                    --multi \
                    --no-sort \
@@ -181,7 +181,7 @@ if in-path man ; then
     myprofile _fzf
 
     { if [[ "${_args[@]}" =~ --path\ --global-apropos ]] ; then
-        man --apropos $(man "${_args[@]}" | sed -r 's~^.+/([^[:space:]]+)\.[[:digit:]]+\.[[:alnum:]]+$~\1~')
+        man --whatis $(man "${_args[@]}" | sed -r 's~^.+/([^[:space:]]+)\.[[:digit:]]+[[:alnum:]]*\.[[:alnum:]]+$~\1~') || fn-abort "Nothing found!"
       else
         man "${_args[@]}"
       fi
