@@ -60,7 +60,7 @@ fdl() {
           s~(|\x1B\[[0-9\;]m)\./~\1~' | \
   { [ -z "$_header" ] || echo "Permission|Blk|Owner|Group|Size|Modified|Path"
     ${_sortcmd[@]}
-  } | column -t -s"|" -o$' \u00a0' -l8
+  } | column -t -s"|" -o$' \u00a0' -l8 -R5
 }
 complete -o bashdefault -o default -o nosort -F _fd fdl
 
