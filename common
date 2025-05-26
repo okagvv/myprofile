@@ -90,6 +90,14 @@ if in-path keepassxc-cli ; then
 
 fi
 
+sort-keep-header() {
+  # derived from https://linuxconfig.org/bash-function-to-sort-docker-ps-output
+  local _header
+  read -r _header
+  echo "$_header"
+  sort "$@"
+}
+
 strip_esc() {
   sed 's/\x1B\[[0-9;]*[a-zA-Z]//g'
 }
