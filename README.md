@@ -88,7 +88,5 @@ functions. Otherwise the alias creation is silently skipped.
 
 ## Customization
 
-- `$BROWSER`
-
 ## Scripting
 
