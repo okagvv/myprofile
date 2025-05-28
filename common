@@ -36,7 +36,7 @@ fdl() {
     case "$1" in
         -h|--help) fn-usage "[--help] [--header] [--sort r?(date|path|size)] [{fd-argument}]"; return 0;;
         -s|--sort) [[ "$2" =~ ^r?(date|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"; shift;;
-      -H|--header) _header=y;;
+         --header) _header=y;;
                 *) _fdargs+=("$1");;
     esac
     shift
