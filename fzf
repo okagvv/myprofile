@@ -311,11 +311,11 @@ fzf-data() (
     $_jq '[path(..)|map(if type=="number" then "[]" else tostring end)|join(".")|split(".[]")|join("[]")]|unique|map("."+.)|.[]' "$_data" | \
     sed '/^---$/d' | \
     _fzf-wrapper --ansi \
-                 --bind "alt-c:execute-silent(_data-preview {} | _fzf-copy)" \
+                 --bind "ctrl-c:execute-silent(_data-preview {} | _fzf-copy)" \
                  --bind "enter:execute(_data-preview {})" \
                  --border-label "[ $1 ]" \
                  --exit-0 \
-                 --help "Alt-c:Copy preview to clipboard;Enter:Load selected key into pager" \
+                 --help "Ctrl-c:Copy preview to clipboard;Enter:Load selected key into pager" \
                  --list-border none \
                  --no-multi \
                  --preview "_data-preview {} header" \

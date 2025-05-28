@@ -20,8 +20,8 @@ mozplaces() (
                              FROM moz_bookmarks b
                              WHERE b.parent = 0  -- root folders
                              UNION ALL
-                             SELECT b.id, 
-                                    CASE 
+                             SELECT b.id,
+                                    CASE
                                       WHEN b.title IS NOT NULL THEN fp.path || '/' || b.title
                                       ELSE fp.path || '/(untitled)'
                                     END
@@ -29,7 +29,7 @@ mozplaces() (
                              JOIN folder fp ON b.parent = fp.id
                              WHERE b.type = 2  -- folder
                            )
-                         SELECT 
+                         SELECT
                            datetime(bm.dateAdded/1000000,'unixepoch','localtime') AS Added,
                            p.url AS URL,
                            fp.path AS Folder,
@@ -97,13 +97,15 @@ fzf-mozplaces() (
     _fzf-wrapper --border-label "$(_label-text "$_scope")" \
                  --bind "alt-b:reload(_mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
                  --bind "alt-h:reload(_mozplaces history $@)+transform-border-label(_label-text history)" \
+                 --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
                  --bind 'result:unbind(f4)+unbind(f5)' \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Enter:Open selected entry in \$BROWSER" \
+                 --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Ctrl-c:Copy URL to clipboard
+                         Enter:Open selected entry in \$BROWSER" \
                  --list-border none \
                  --no-multi \
                  --preview "echo {2}" \
