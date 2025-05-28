@@ -105,13 +105,13 @@ fzf-mozplaces() (
                  --exit-0 \
                  --header-lines 1 \
                  --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Ctrl-c:Copy URL to clipboard
-                         Enter:Open selected entry in \$BROWSER" \
+                         Enter:Open selected entry in default browser" \
                  --list-border none \
                  --no-multi \
                  --preview "echo {2}" \
                  --preview-window "down,1,border-top,wrap" \
                  --preview-label-pos 1 \
-                 --preview-label " Press ENTER to open current URL in \$BROWSER: " \
+                 --preview-label " Press ENTER to open current URL in default browser: " \
                  --smart-case \
                  --reverse \
                  --tac \

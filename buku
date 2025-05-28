@@ -52,7 +52,7 @@ fzf-buku() (
                --preview "_url {1}" \
                --preview-label-pos 1 \
                --preview-window "down,1,border-top,wrap" \
-               --preview-label " Press ENTER to open current URL in \$BROWSER: " \
+               --preview-label " Press ENTER to open current URL in default browser: " \
                --reverse \
                --smart-case \
                --wrap
