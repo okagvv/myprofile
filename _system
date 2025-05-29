@@ -16,12 +16,7 @@ _journal() {
 export -f _journal
 
 _fzf-journal() {
-  [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
-  [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
-  _since+=" ago"
-  
-  # validate journalctl parameters
-  $_sudo journalctl --boot $_boot --lines 1 --since "$_since" --priority="$_priorange" >/dev/null || exit 1
+  _journal-params
 
   _header="Journal entries for {1}"
   _journal="_journal $_user --boot $_boot --identifier={1} --since \"$_since\" $_grep"
@@ -38,7 +33,8 @@ _fzf-journal() {
                --bind "alt-J:execute($_journal --catalog)" \
                --bind "alt-P:execute($_prio_journal --catalog)" \
                --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
-               --border-label " Journal entries per syslog identifier logged since $_since in reverse order " \
+               --border-label "[ Journal entries per syslog identifier logged since $_since in reverse order ]" \
+               --color "label:reverse" \
                --header-lines 1 \
                --help "Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
                        Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
@@ -51,13 +47,10 @@ _fzf-journal() {
 }
 
 _fzf-units() {
-  [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
-  [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
-  # validate journalctl parameters
-  $_sudo journalctl --boot $_boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
+  _journal-params
 
   _header="Journal entries for unit {1}"
-  _journal="_journal ${_sudo:+$_user} --unit {1} --boot $_boot --since \"$_since ago\" $_grep"
+  _journal="_journal ${_sudo:+$_user} --unit {1} --boot $_boot --since \"$_since\" $_grep"
   _prio_journal="$_journal --priority=$_priorange"
   _systemctl="$_sudo systemctl"
   _properties="$_systemctl show {1} | sort | bat --color always --number --language ini"
@@ -65,7 +58,7 @@ _fzf-units() {
   if [[ -z "$_all$_failed" && -n "$_prio" ]] ; then
     echo Unit
     $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
-                      --boot $_boot --since "$_since ago" --priority="$_priorange" $_grep | \
+                      --boot $_boot --since "$_since" --priority="$_priorange" $_grep | \
     sed --silent --regexp-extended 's/^.*UNIT=(.+)$/\1/p' | \
     sort --unique
   else
@@ -84,7 +77,8 @@ _fzf-units() {
                --bind "alt-r:change-preview(_fzf-preview-header \"Restart unit {1}\"; $_systemctl restart --show-transaction {1})" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
-               --border-label " Systemd Units with journal entries logged during last $_since in reverse order " \
+               --border-label "[ Systemd Units with journal entries logged during $_since in reverse order ]" \
+               --color "label:reverse" \
                --header-lines 1 \
                --help "Alt-d:Unit dependencies;Alt-f:List unit files;Alt-h:Help for unit
                        Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
@@ -98,4 +92,33 @@ _fzf-units() {
                --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
+}
+
+_journal-params() {
+  [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
+  [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
+  _since+=" ago"
+  
+  if [[ ! "$_boot" =~ ^\-[[:digit:]]+$ ]] ; then
+    
+    _boot="$($_sudo journalctl --list-boots --reverse --output json | \
+             gojq -r '.[] |
+                      [ .index, (.first_entry|(./1000000|strftime("%F %T %Z"))), (.last_entry|(./1000000|strftime("%F %T %Z"))) ] |
+                      join(";")' | \
+             column -t -s ";" -o$' \u00a0' -C name=IDX,right -C name="FIRST ENTRY" -C name="LAST ENTRY" | \
+             _fzf-wrapper --accept-nth '_boot="{1}";_since="{2}"' \
+                          --border-label "[ Select boot to examine ]" \
+                          --color "label:reverse" \
+                          --delimiter $'\u00a0' \
+                          --header-lines 1 \
+                          --no-multi \
+                          --reverse)"
+    
+    [ -n "$_boot" ] && eval "$_boot" || fn-abort "No boot selected!"
+    _boot="${_boot// /}"
+
+  fi
+  
+  # validate journalctl parameters
+  $_sudo journalctl --boot $_boot --lines 1 --since "$_since" --priority="$_priorange" >/dev/null || exit 1
 }

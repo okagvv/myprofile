@@ -48,7 +48,7 @@ fzf-units() (
 
 fzf-journal() (
   # Iterate over syslog identifiers of recent journal entries.
-  local _priorange _prio _since _altp _altj _journal _prio_journal _header _sudo _user _grep _boot
+  declare -g _priorange _prio _since _altp _altj _journal _prio_journal _header _sudo _user _grep _boot
   _boot="-0"
   _prio=debug
   _since=48
