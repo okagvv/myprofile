@@ -34,7 +34,7 @@ _fzf-preview-bat() {
   bat --color=always ${FZF_PREVIEW_COLUMNS:+--terminal-width $FZF_PREVIEW_COLUMNS} "$@"
 }
 
-_fzf-bat-highlight() {
+_fzf-bat-highlight-args() {
   rg --ignore-case --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
 }
 
