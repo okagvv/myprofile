@@ -72,14 +72,13 @@ dnf-search() (
 
     myprofile _dnf
 
-    { echo "Package : Summary"
-      myprofile _dnf
-      sudo -A dnf search --quiet "$@" | \
-      sed -rn '/^Matched fields/d;s/^ ?([[:alnum:]_\.-]+ *:? +[[:alnum:]].*)$/\1/p' | \
+    { sudo -A dnf search --quiet "$@" | \
+      sed -rn '/^Matched fields/d;
+               s/^ ?([[:alnum:]_\.-]+) *:? +([[:alnum:]].*)$/\1:\2/p;' | \
       sort | \
       uniq
-    } | column -t -s: -l2 | \
-    _fzf-dnf-packages "Search package matching $*" "Matching packages" | \
+    } | column -t -s: -l2 -C name=Package -C name=Summary | \
+    _fzf-dnf-packages "Search package matching $*" "Matching packages" "" "Install select package(s)" | \
     xargs --no-run-if-empty --open-tty sudo dnf install
 
   else
