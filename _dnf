@@ -133,7 +133,7 @@ _dnf-history() {
     if [ -n "$_packages" ] ; then
       _pattern="${_packages/*=/}"
       _pattern="${_pattern//\*/.*}"
-      _hl="$(_history info "$1" | _fzf-bat-highlight "$_pattern")"
+      _hl="$(_history info "$1" | _fzf-bat-highlight-args "$_pattern")"
     fi
 
     _history info "$1" | _fzf-preview-bat --style plain --language log $_hl
