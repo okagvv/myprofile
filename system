@@ -3,14 +3,25 @@
 new-alias failed 'systemctl list-units --failed'
 new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
 new-alias sysmounted 'systemctl --type mount'
-new-alias avcrecent sudo 'ausearch -ts recent -m avc'
-new-alias avctoday sudo 'ausearch -ts today -m avc'
-new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc'
 new-alias boot_blame sudo 'systemd-analyze blame'
 new-alias boot_times sudo 'systemd-analyze plot | display -'
 new-alias dstat sudo 'dstat --time --load --vmstat --net --swap --io'
 new-alias iotop sudo 'iotop -a -c -o -P'
 new-alias iostat sudo 'iostat -xmt 1'
+
+if in-path ausearch ; then
+
+  new-alias avcrecent sudo 'ausearch -ts recent -m avc'
+  new-alias avctoday sudo 'ausearch -ts today -m avc'
+  new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc'
+
+else
+
+  avcrecent() {
+    sudo journalctl --dmesg "$@" | grep -e type=1300 -e type=1400
+  }
+
+fi
 
 if ! is-root ; then
 
@@ -43,7 +54,7 @@ fzf-units() (
   done
 
   myprofile _system
-  _fzf-units  
+  _fzf-units
 )
 
 fzf-journal() (
