@@ -11,17 +11,19 @@ new-alias iostat sudo 'iostat -xmt 1'
 
 if in-path ausearch ; then
 
-  new-alias avcrecent sudo 'ausearch -ts recent -m avc'
   new-alias avctoday sudo 'ausearch -ts today -m avc'
   new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc'
 
-else
-
-  avcrecent() {
-    sudo journalctl --dmesg "$@" | grep -e type=1300 -e type=1400
-  }
-
 fi
+
+avcrecent() {
+  if in-path ausearch ; then
+    sudo ausearch -ts recent -m avc "$@"
+  else
+    # fallback for hosts without auditd installation
+    sudo journalctl --dmesg "$@" | grep -e type=1300 -e type=1400
+  fi
+}
 
 if ! is-root ; then
 
@@ -111,3 +113,15 @@ complete -A command -o default mysu
 oom-killed() {
   myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
 }
+
+set-dns() {
+  case "$1" in
+    router|pihole) sudo resolvectl dns "$(resolvectl default-route | sed -rn 's/^Link [[:digit:]]+ \(([[:alnum:]]+)\): yes$/\1/p')" \
+                                       "$(host -t A "$1" | sed 's/^.* //')"
+                   sudo resolvectl flush-caches;;
+             curr) resolvectl status
+                   sudo resolvectl statistics;;
+                *) fn-usage "router|pihole|curr";;
+  esac
+}
+complete -W "{router,pihole,curr}" set-dns
