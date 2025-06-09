@@ -56,6 +56,11 @@ _fzf-units() {
   _systemctl="$_sudo systemctl"
   _properties="$_systemctl show {1} | sort | bat --color always --number --language ini"
 
+  local _altp _alts _preview_init
+  _altp="_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal"
+  _alts="_fzf-preview-header \"Status of unit {1}\"; $_systemctl status -- {1}"
+  [[ "$_boot" =~ [1-9] ]] && _preview_init="alt-p:$_altp" || _preview_init="alt-s:$_alts"
+
   if [[ -z "$_all$_failed" && -n "$_prio" ]] ; then
     $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
                       --boot $_boot --since "$_since" --priority="$_priorange" $_grep | \
@@ -74,7 +79,7 @@ _fzf-units() {
                --bind "alt-J:execute($_journal --catalog)" \
                --bind "alt-o:change-preview(_fzf-preview-header \"Show properties for unit {1}\"; $_properties)" \
                --bind "alt-O:execute($_properties)" \
-               --bind "alt-p:change-preview(_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal)" \
+               --bind "alt-p:change-preview($_altp)" \
                --bind "alt-P:execute($_prio_journal --catalog)" \
                --bind "alt-r:change-preview(_fzf-preview-header \"Restart unit {1}\"; $_systemctl restart --show-transaction {1})" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
@@ -86,11 +91,11 @@ _fzf-units() {
                        Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
                        Alt-o:Show properties;Alt-O:Show properties in pager
                        Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
-                       Alt-r:Restart unit;Alt-s:Unit status;Enter:Print systemctl template for selected units
-                       Alt-Enter:Return journal entries for selected unit" \
+                       Alt-r:Restart unit;Enter:Print systemctl template for selected units
+                       Alt-Enter:Return journal entries for selected unit$([[ "$_boot" =~ [1-9] ]] || echo -n ";Alt-s:Unit status")" \
                --multi \
                --no-sort \
-               --preview-init "alt-s:_fzf-preview-header \"Status of unit {1}\"; $_systemctl status -- {1}" \
+               --preview-init "$_preview_init" \
                --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
@@ -100,9 +105,9 @@ _journal-params() {
   [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
   [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
   _since+=" ago"
-  
+
   if [[ ! "$_boot" =~ ^\-[[:digit:]]+$ ]] ; then
-    
+
     _boot="$($_sudo journalctl --list-boots --reverse --output json | \
              gojq -r '.[] |
                       [ .index, (.first_entry|(./1000000|strftime("%F %T %Z"))), (.last_entry|(./1000000|strftime("%F %T %Z"))) ] |
@@ -115,12 +120,12 @@ _journal-params() {
                           --header-lines 1 \
                           --no-multi \
                           --reverse)"
-    
+
     [ -n "$_boot" ] && eval "$_boot" || fn-abort "No boot selected!"
     _boot="${_boot// /}"
 
   fi
-  
+
   # validate journalctl parameters
   $_sudo journalctl --boot $_boot --lines 1 --since "$_since" --priority="$_priorange" >/dev/null || exit 1
 }
