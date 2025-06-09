@@ -28,7 +28,7 @@ _fzf-journal() {
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
     sort | \
     uniq -c | \
-    column -t -C name=Entries,right -C name=Identifier -O Identifier,Entries
+    column -t -C name=Entries,right -C name=Identifier -O Identifier,Entries -c unlimited
   } | \
   _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
                --bind "alt-J:execute($_journal --catalog)" \
@@ -67,7 +67,7 @@ _fzf-units() {
     sed -rn 's/^.*UNIT=(.+)$/\1/p' | \
     sort | \
     uniq -c | \
-    column -t -C name=Entries,right -C name=Unit -O Unit,Entries
+    column -t -C name=Entries,right -C name=Unit -O Unit,Entries -c unlimited
   else
     $_sudo systemctl --plain $_all $_failed | \
     sed '/^$/,$d'
