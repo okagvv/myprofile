@@ -3,15 +3,23 @@
 myprofile _fzf
 
 _journal() {
-  local _sudo
-
-  if [[ "$1" =~ ^[[:alnum:]]+$ ]] && id --user "$1" >/dev/null 2>&1 ; then
-    _sudo="sudo -A -u $1"
-    shift
-  fi
-
-  $_sudo journalctl --no-hostname --lines 1000 --reverse --boot --pager-end "$@" | \
-  BAT_STYLE="${BAT_STYLE:-numbers}" bat --color always --language syslog
+  $_sudo journalctl --no-hostname --reverse "$@" | \
+  { if [ -n "$_uniq" ] ; then
+      sed -r '/^[[:space:]]*$/d;
+              s/^[[:space:]]+//;
+              s/[[:space:]]+$//;
+              s/[[:space:]]{2,}//g;
+              s/^[[:alpha:]]{3} [[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2} //;
+              s/ audit\([[:digit:]\.:]+\)//;
+              s/ ?\[[[:digit:]]+\.[[:digit:]]+\]//;
+              s/ ?[[:digit:]]{4}-[[:digit:]]{2}-[[:digit:]]{2} [[:digit:]]{2}:[[:digit:]]{2}:[[:digit:]]{2}(\.[[:digit:]]+)?//' | \
+      sort | \
+      uniq -c | \
+      bat --style plain --color always --language syslog
+    else
+      BAT_STYLE="${BAT_STYLE:-numbers}" bat --color always --language syslog
+    fi
+  }
 }
 export -f _journal
 
@@ -19,10 +27,11 @@ _fzf-journal() {
   _journal-params
 
   _header="Journal entries for {1}"
-  _journal="_journal $_user --boot $_boot --identifier={1} --since \"$_since\" $_grep"
+  _journal="_journal --boot $_boot --identifier={1} --since \"$_since\" $_grep"
   _prio_journal="$_journal --priority=$_priorange"
   _altj="_fzf-preview-header \"$_header\"; $_journal"
   _altp="_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal"
+  declare -g _uniq
 
   { $_sudo journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot $_boot --since "$_since" --priority="$_priorange" $_grep | \
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
@@ -33,12 +42,15 @@ _fzf-journal() {
   _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
                --bind "alt-J:execute($_journal --catalog)" \
                --bind "alt-P:execute($_prio_journal --catalog)" \
+               --bind "alt-U:change-preview(_uniq=y $_journal)" \
+               --bind "alt-u:change-preview(_uniq=y $_prio_journal)" \
                --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
                --border-label "[ Journal entries per syslog identifier logged since $_since in reverse order ]" \
                --color "label:reverse" \
                --header-lines 1 \
                --help "Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
                        Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
+                       Alt-U:Unique recent journal entries;Alt-u:Unique recent journal entries with priority $_priorange
                        Alt-Enter:Return journal entries for selected syslog identifier" \
                --no-sort \
                --preview-init "$([[ "$_prio" == debug ]] && echo "alt-j:$_altj" || echo "alt-p:$_altp")" \
@@ -51,7 +63,7 @@ _fzf-units() {
   _journal-params
 
   _header="Journal entries for unit {1}"
-  _journal="_journal ${_sudo:+$_user} --unit {1} --boot $_boot --since \"$_since\" $_grep"
+  _journal="_journal --unit {1} --boot $_boot --since \"$_since\" $_grep"
   _prio_journal="$_journal --priority=$_priorange"
   _systemctl="$_sudo systemctl"
   _properties="$_systemctl show {1} | sort | bat --color always --number --language ini"
@@ -60,6 +72,7 @@ _fzf-units() {
   _altp="_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal"
   _alts="_fzf-preview-header \"Status of unit {1}\"; $_systemctl status -- {1}"
   [[ "$_boot" =~ [1-9] ]] && _preview_init="alt-p:$_altp" || _preview_init="alt-s:$_alts"
+  declare -g _uniq
 
   if [[ -z "$_all$_failed" && -n "$_prio" ]] ; then
     $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
@@ -82,9 +95,11 @@ _fzf-units() {
                --bind "alt-p:change-preview($_altp)" \
                --bind "alt-P:execute($_prio_journal --catalog)" \
                --bind "alt-r:change-preview(_fzf-preview-header \"Restart unit {1}\"; $_systemctl restart --show-transaction {1})" \
+               --bind "alt-u:change-preview(_uniq=y $_prio_journal)" \
+               --bind "alt-U:change-preview(_uniq=y $_journal)" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --bind "alt-enter:become(BAT_STYLE=plain BAT_PAGER= $_prio_journal)" \
-               --border-label "[ Systemd Units with journal entries logged during $_since in reverse order ]" \
+               --border-label "[ Systemd Units with journal entries logged since $_since in reverse order ]" \
                --color "label:reverse" \
                --header-lines 1 \
                --help "Alt-d:Unit dependencies;Alt-f:List unit files;Alt-h:Help for unit
@@ -92,6 +107,7 @@ _fzf-units() {
                        Alt-o:Show properties;Alt-O:Show properties in pager
                        Alt-p:Recent journal entries with priority $_priorange;Alt-P:Recent journal entries with priority $_priorange in pager
                        Alt-r:Restart unit;Enter:Print systemctl template for selected units
+                       Alt-U:Unique recent journal entries;Alt-u:Unique recent journal entries with priority $_priorange
                        Alt-Enter:Return journal entries for selected unit$([[ "$_boot" =~ [1-9] ]] || echo -n ";Alt-s:Unit status")" \
                --multi \
                --no-sort \
