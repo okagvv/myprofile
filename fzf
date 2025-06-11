@@ -143,18 +143,14 @@ fzf-monitor() (
     fdl --header ${_fdargs[@]}
   }"
   _preview_monitored() {
-    local _lines
-    _lines="$(wc -l "$1" | cut -d' ' -f1)"
-    # ensure that last line will be printed even without line end marker
-    [ "$_lines" -ge "$_tail" ] || ((_lines+=1))
-    _fzf-preview-bat --style plain --number --line-range "$_lines:-$_tail" "$1"
+    tail -n $_tail "$1" | _fzf-preview-bat --style plain --file-name "$1"
   }
   export -f _find-monitored _preview_monitored
   export _tail
   
   _find-monitored | \
   _fzf-wrapper --ansi \
-               --bind "ctrl-r:reload(_find-monitored)" \
+               --bind "ctrl-r:reload(_find-monitored)+change-preview(_preview_monitored {7})+preview-bottom" \
                --bind "enter:execute(less {+7})+reload(_find-monitored)" \
                --bind "focus:transform-preview-label(echo -n \"[ Last up to $_tail lines of {7} ]\")" \
                --border none \
