@@ -20,6 +20,25 @@ cleanup-path() {
   export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
 }
 
+broken-symlinks() {
+  local _cmd
+  _cmd="echo \"'@'\""
+  
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [--ls|--rm] [[--] path]"; return 0;;
+        -l|--ls) _cmd="ls -l @";;
+        -r|--rm) _cmd="rm -vf @";;
+             --) shift; break;;
+             -*) fn-error "Unsupported option: $1"; return 1;;
+              *) break;;
+    esac
+    shift
+  done
+  
+  find "${1:-.}" -xtype l -print0 | xargs -0r -i@ $_cmd
+}
+
 fdl() {
   # - fd with colored detailed list output ignoring Git worktree repos.
   # - "sed | column" is required to align fd output and to create columns suitable for feeding to
