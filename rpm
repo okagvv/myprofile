@@ -117,7 +117,7 @@ rpm-required() {
 rpm-what() {
   if [ $# -eq 1 ] ; then
     local _query _rpm
-    _rpm="$(rpm --query --queryformat="%{NAME}" "$1")"
+    _rpm="$(rpm --query --queryformat="%{NAME}\n" "$1" | head -1)"
 
     { echo -e "=Requires:\n$(rpm-requires "$_rpm")\n\n=What requires:\n$(rpm-required "$_rpm")\n\n"
       for _query in enhances recommends suggests supplements ; do
