@@ -27,33 +27,42 @@ fzf-tasmota() (
     asciigraph -w "$(($FZF_PREVIEW_COLUMNS-7))" -h "$(($FZF_PREVIEW_LINES-3))" -cc navy -lc navy -ac navy "$@"
   }
   _graph() {
+    local _log
+    _log="$3-$2.log"
+
     if [[ "$1" == combined ]] ; then
-      sed -rn 's/^.*?;power=([[:digit:]\.]+).*reactive=([[:digit:]\.]+).*apparent=([[:digit:]\.]+).*$/\3,\2,\1/p' "$plugs/$2" | \
-      _asciigraph -sn 3 -sc green,red,navy -sl "apparent,reactive,active power from \"$2\""
+      sed -rn 's/^.*?;power=([[:digit:]\.]+).*reactive=([[:digit:]\.]+).*apparent=([[:digit:]\.]+).*$/\3,\2,\1/p' "$plugs/$_log" | \
+      _asciigraph -sn 3 -sc green,red,navy -sl "apparent,reactive,active power from \"$_log\""
+    elif [[ "$1" == distribution ]] ; then
+      sed -rn 's/^.*;power=([[:digit:]\.]+).*$/\1/p' "$plugs/$_log" | \
+      sort -g | \
+      _asciigraph -c "power distribution from \"$_log\""
     else
-      sed -rn 's/^.*;'"$1"'=([[:digit:]\.]+).*$/\1/p' "$plugs/$2" | \
-      _asciigraph -c "$1 from \"$2\""
+      sed -rn 's/^.*;'"$1"'=([[:digit:]\.]+).*$/\1/p' "$plugs/$_log" | \
+      _asciigraph -c "$1 from \"$_log\""
     fi
   }
   export -f _graph _asciigraph
 
-  _named_plugs="$(sed -rn 's~^[[:digit:]\.]+[[:space:]]+(tasmota[[:digit:]]+)[[:space:]]+([[:alnum:]]+).*$~s/(\1-.*)$/\\1 \2/~p' /etc/hosts | \
+  _named_plugs="$(sed -rn 's~^[[:digit:]\.]+[[:space:]]+(tasmota[[:digit:]]+)[[:space:]]+([[:alnum:]]+).*$~s/(\1)$/\\1 \2/~p' /etc/hosts | \
                   tr '\n' ';')"
-  
+
   find "$plugs" -type f -iname \*.log -size +1k -printf "%T@ %P\n" | \
   sort -nr | \
   cut -d" " -f2 | \
-  sed -r "$_named_plugs" | \
+  sed -r "s/^(tasmota[[:digit:]]+)-([[:digit:]-]+)\.log$/\2 \1/;$_named_plugs" | \
   grep -i -E "$_plugs_re" | \
-  column -t | \
-  _fzf-wrapper --bind "enter:execute(less $plugs/{1})" \
-               --bind "alt-a:change-preview(_graph apparent {1})" \
-               --bind "alt-c:change-preview(_graph current {1})" \
-               --bind "alt-f:change-preview(_graph factor {1})" \
-               --bind "alt-P:change-preview(_graph combined {1})" \
-               --bind "alt-r:change-preview(_graph reactive {1})" \
-               --bind "alt-t:change-preview(_graph today {1})" \
-               --bind "alt-v:change-preview(_graph voltage {1})" \
+  nl | \
+  column -t -d -C right | \
+  _fzf-wrapper --bind "enter:execute(less $plugs/{3}-{2}.log)" \
+               --bind "alt-a:change-preview(_graph apparent {2} {3})" \
+               --bind "alt-c:change-preview(_graph current {2} {3})" \
+               --bind "alt-d:change-preview(_graph distribution {2} {3})" \
+               --bind "alt-f:change-preview(_graph factor {2} {3})" \
+               --bind "alt-P:change-preview(_graph combined {2} {3})" \
+               --bind "alt-r:change-preview(_graph reactive {2} {3})" \
+               --bind "alt-t:change-preview(_graph today {2} {3})" \
+               --bind "alt-v:change-preview(_graph voltage {2} {3})" \
                --border-label "[ Graphs for tasmota plugs. Press F1 for help on key bindings. ]" \
                --color "label:reverse" \
                --help "Alt-a:Apparent power;Alt-c:Current;Alt-f:Power factor;Alt-p:Active power;Alt-r:Reactive power
@@ -61,6 +70,7 @@ fzf-tasmota() (
                --exit-0 \
                --no-multi \
                --list-border none \
-               --preview-init "alt-p:_graph power {1}" \
-               --preview-window "up,80%,border-bottom"
+               --preview-init "alt-p:_graph power {2} {3}" \
+               --preview-window "up,80%,border-bottom" \
+               --reverse
 )
