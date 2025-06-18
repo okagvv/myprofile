@@ -13,7 +13,7 @@ fzf-tasmota() (
   myprofile _fzf
 
   _asciigraph() {
-    asciigraph -w "$(($FZF_PREVIEW_COLUMNS-7))" -h "$(($FZF_PREVIEW_LINES-2))" -cc navy -lc navy -ac navy "$@"
+    asciigraph -w "$(($FZF_PREVIEW_COLUMNS-7))" -h "$(($FZF_PREVIEW_LINES-3))" -cc navy -lc navy -ac navy "$@"
   }
   _graph() {
     if [[ "$1" == combined ]] ; then
