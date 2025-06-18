@@ -10,6 +10,17 @@ else
 fi
 
 fzf-tasmota() (
+  local _named_plugs _plugs_re
+
+  if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
+    fn-usage "[--help] [{pattern}]"
+    return 0
+  elif [ $# -gt 0 ] ; then
+    _plugs_re="$(printf ".*%s" "$@")"
+  else
+    _plugs_re=".*"
+  fi
+
   myprofile _fzf
 
   _asciigraph() {
@@ -26,9 +37,15 @@ fzf-tasmota() (
   }
   export -f _graph _asciigraph
 
+  _named_plugs="$(sed -rn 's~^[[:digit:]\.]+[[:space:]]+(tasmota[[:digit:]]+)[[:space:]]+([[:alnum:]]+).*$~s/(\1-.*)$/\\1 \2/~p' /etc/hosts | \
+                  tr '\n' ';')"
+  
   find "$plugs" -type f -iname \*.log -size +1k -printf "%T@ %P\n" | \
   sort -nr | \
   cut -d" " -f2 | \
+  sed -r "$_named_plugs" | \
+  grep -i -E "$_plugs_re" | \
+  column -t | \
   _fzf-wrapper --bind "enter:execute(less $plugs/{1})" \
                --bind "alt-a:change-preview(_graph apparent {1})" \
                --bind "alt-c:change-preview(_graph current {1})" \
@@ -45,6 +62,5 @@ fzf-tasmota() (
                --no-multi \
                --list-border none \
                --preview-init "alt-p:_graph power {1}" \
-               --preview-window "up,80%,border-bottom" \
-               --query "$1"
+               --preview-window "up,80%,border-bottom"
 )
