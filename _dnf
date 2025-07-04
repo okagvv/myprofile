@@ -93,6 +93,7 @@ _dnf-upgrades() {
         column -t
   }
   export -f __advisory __bodhi __dnf __package __upgrades
+  export _testing _scopes
 
   FZF_DEFAULT_COMMAND=__upgrades \
     _fzf-wrapper --bind "ctrl-a:toggle-all" \
