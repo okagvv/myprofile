@@ -77,9 +77,9 @@ _dnf-upgrades() {
   __advisory() {
     local _advisory _pkg
     _pkg="$(__package "$1" "$2")"
-    _advisory="$(sudo -A dnf updateinfo --quiet list | sed -rn "s/^([^[:space:]]+).*[[:space:]]$_pkg.*/\1/p")"
+    _advisory="$(sudo -A dnf updateinfo $_testing --quiet list | sed -rn "s/^([^[:space:]]+).*[[:space:]]$_pkg.*/\1/p")"
     if [ -n "$_advisory" ] ; then
-      sudo -A dnf updateinfo --quiet info "$_advisory" | bat --color=always --style plain --language yaml
+      sudo -A dnf updateinfo $_testing --quiet info "$_advisory" | bat --color=always --style plain --language yaml
     else
       echo "No advisory found."
     fi
