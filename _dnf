@@ -31,6 +31,11 @@ _dnf-preview-what() {
   dnf-what "$1" | bat --color always --style plain --language yaml
 }
 
+_dnf-advisory() {
+  _fzf-preview-header "Advisories for \"$1\""
+  dnf advisory info --quiet --installed --contains-pkgs="$1"
+}
+
 _fzf-dnf-packages() {
   _fzf-wrapper --bind "alt-b:execute(_bodhi-updates {1})" \
                --bind "alt-f:change-preview(_dnf-preview-files {1})" \
