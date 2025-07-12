@@ -33,7 +33,7 @@ _dnf-preview-what() {
 
 _dnf-advisory() {
   _fzf-preview-header "Advisories for \"$1\""
-  dnf advisory info --quiet --installed --contains-pkgs="$1"
+  _dnf-cached-advisory "$1" installed
 }
 
 _fzf-dnf-packages() {
@@ -69,6 +69,32 @@ _dnf-packages() {
   ) | column -t -l2
 }
 
+_dnf-cached-advisory() {
+  local _cache _list _id _adv
+  _cache=/tmp/advisories
+  _list="$_cache/$2"
+
+  if [ ! -s "$_list" ] ; then
+    [ -d "$_cache" ] || mkdir "$_cache" 
+    sudo -A dnf advisory list --quiet --$2 $3 >"$_list"
+  fi
+
+  for _id in $(sed -rn "s/^([^[:space:]]+).*[[:space:]]$1.*/\1/p" "$_list") ; do
+
+    _adv="$_cache/$_id"
+    
+    [ -s "$_adv" ] || sudo -A dnf advisory info --quiet --$2 $3 "$_id" >"$_adv"
+
+    if [ -s "$_adv" ] ; then
+      cat "$_adv" | bat --color=always --style plain --language yaml
+    else
+      echo "Failed to fetch advisory \"$_id\"!"
+    fi
+  done
+
+  [ -n "$_id" ] || echo "No advisory found for package \"$1\"."
+}
+
 _dnf-upgrades() {
   __package() {
     echo "${1%.*}-$2.${1##*.}"
@@ -80,14 +106,7 @@ _dnf-upgrades() {
     sudo -A dnf $1 $_testing --quiet "${@: 4}" "$(__package "$2" "$3")"
   }
   __advisory() {
-    local _advisory _pkg
-    _pkg="$(__package "$1" "$2")"
-    _advisory="$(sudo -A dnf updateinfo $_testing --quiet list | sed -rn "s/^([^[:space:]]+).*[[:space:]]$_pkg.*/\1/p")"
-    if [ -n "$_advisory" ] ; then
-      sudo -A dnf updateinfo $_testing --quiet info "$_advisory" | bat --color=always --style plain --language yaml
-    else
-      echo "No advisory found."
-    fi
+    _dnf-cached-advisory "$(__package "$1" "$2")" "updates" "$_testing"
   }
   __upgrades() {
     {
@@ -101,7 +120,7 @@ _dnf-upgrades() {
   export _testing _scopes
 
   FZF_DEFAULT_COMMAND=__upgrades \
-    _fzf-wrapper --bind "ctrl-a:toggle-all" \
+  _fzf-wrapper --bind "ctrl-a:toggle-all" \
                --bind "alt-a:change-preview(__advisory {1} {2})" \
                --bind "alt-A:execute(__advisory {1} {2} | less)" \
                --bind "alt-b:execute(__bodhi {1} {2})" \
