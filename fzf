@@ -273,7 +273,7 @@ fzf-ps() (
     shift
   done
   eval "__ps() {
-    $_ps -o user,pid,ppid,%cpu,%mem,vsz,rss,tty,stat,start,time,command | column -t -l 12
+    $_ps -o user,sid,pid,ppid,%cpu,%mem,vsz,rss,tty,stat,start,time,command | column -t -l 13
   }"
   export -f __ps
 
@@ -297,8 +297,9 @@ fzf-ps() (
                --hscroll-off=800 \
                --list-border none \
                --multi \
+               --no-hscroll \
                --no-sort \
-               --preview-init "alt-i:echo {12..-1} | sed -r 's/^[ \|_]+ //;s/ +-/\n-/g'" \
+               --preview-init "alt-i:echo {13..-1} | sed -r 's/^[ \|_]+ //;s/ +-/\n-/g'" \
                --preview-window "50%,~3:hidden:wrap:follow" \
                --query "$1" \
                --reverse
