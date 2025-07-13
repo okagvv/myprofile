@@ -38,13 +38,17 @@ _fzf-bat-highlight-args() {
   rg --ignore-case --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
 }
 
+_fzf-mime() {
+  file --brief --mime "$@"
+}
+
 _fzf-preview-path() {
   _fzf-preview-header "Path \"$1\""
 
   if [ -e "$1" ] ; then
 
     local _mime _size
-    _mime="$(file --brief --mime "$1")"
+    _mime="$(_fzf-mime "$1")"
     _size="$(du -sh "$1" | cut -f1)"
 
     cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
@@ -61,7 +65,7 @@ EOF
                        *rpm*) if in-path rpm ; then _fzf-preview-header; rpm -qip "$1"; fi;;
                       *text*) _fzf-preview-header; _fzf-preview-bat --number "$1";;
         *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
-                           *) _fzf-preview-header; file "$1";;
+                           *) _fzf-preview-header; file --brief "$1";;
       esac
     fi
 
@@ -155,6 +159,17 @@ _fzf-wrapper() {
       --prompt '[loading] > ' \
       $(_fzf-query-history 2) \
       "${_args[@]}"
+}
+
+_fzf-open() {
+  if [[ -f "$1" && -r "$1" ]] ; then
+
+    case "$(_fzf-mime --dereference "$1")" in
+      *audio*|*video*) if is-fn vlc-enqueue ; then vlc-enqueue "$1"; fi;;
+              image/*) if in-path display ; then display -immutable -backdrop "$1"; fi;;
+               *text*) _fzf-editor "$1";;
+    esac
+  fi
 }
 
 _fzf-editor() {
