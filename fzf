@@ -122,7 +122,7 @@ fzf-monitor() (
   local -a _fdargs
   _sort=rdate
   _tail=100
-  
+
   while [ $# -gt 0 ] ; do
     case "$1" in
        -h|--help) fn-usage "[--tail n] [--query \"text\"] [--sort r?(date|path|size)] [{<fd arg>}]"; return 0;;
@@ -147,7 +147,7 @@ fzf-monitor() (
   }
   export -f _find-monitored _preview_monitored
   export _tail
-  
+
   _find-monitored | \
   _fzf-wrapper --ansi \
                --bind "ctrl-r:reload(_find-monitored)+change-preview(_preview_monitored {7})+preview-bottom" \
@@ -179,10 +179,10 @@ if in-path plocate ; then \
 
       plocate "$@" | \
       _fzf-wrapper --bind "ctrl-a:toggle-all" \
-                   --bind "alt-e:execute(_fzf-editor {})" \
+                   --bind "alt-o:execute(_fzf-open {})" \
                    --border none \
                    --exit-0 \
-                   --help "Alt-e:Open selected file in \$EDITOR;Ctrl-a:Toggle all selections" \
+                   --help "Alt-o:Open selected file;Ctrl-a:Toggle all selections;Enter:Return list of selected paths" \
                    --list-label "[ plocate $* ]" \
                    --multi \
                    --no-sort \
@@ -304,7 +304,7 @@ fzf-rg() (
       rg --color=always --hidden --line-number --no-heading --smart-case "$*"
     }
     export -f _rg
-    
+
     _rg "$*" | \
     _fzf-wrapper --ansi \
                  --bind "ctrl-s:reload(_rg {q})" \
