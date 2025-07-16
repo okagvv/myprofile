@@ -11,6 +11,7 @@ fzf
 rpm
 dnf
 podman
+pdf
 system
 rsync
 #k8s

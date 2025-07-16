@@ -142,14 +142,6 @@ new-alias() {
   fi
 }
 
-if in-path pdfgrep ; then
-
-  pdfgrep() {
-    /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
-  }
-
-fi
-
 ssh-loadkey() {
   local _key
   [[ "$1" =~ / ]] && _key="$1" || _key="$HOME/.ssh/$1"

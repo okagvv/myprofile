@@ -1,0 +1,63 @@
+# -*- shell-script -*-
+
+myprofile fn
+
+if in-path pdfgrep ; then
+
+  pdfgrep() {
+    /usr/bin/pdfgrep "$@" | sed -r 's/ +/ /g' | m
+  }
+
+fi
+
+if in-path mutool ; then
+
+  pdf2txt() {
+    local _xhtml _rc
+
+    if [ -s "$1" ] ; then
+
+      _xhtml="$(mktemp "${1%%*/}_XXXXX.xhtml")"
+
+      mutool convert -o "$_xhtml" -O inhibit-spaces,dehyphenate "$1"
+
+      if [ -s "$_xhtml" ] ; then
+
+        sed -rn 's~&#xc4;~Ä~g;
+                 s~&#xe4;~ä~g;
+                 s~&#xd6;~Ö~g;
+                 s~&#xf6;~ö~g;
+                 s~&#xdc;~Ü~g;
+                 s~&#xfc;~ü~g;
+                 s~&#xdf;~ß~g;
+                 s~&quot;~"~g;
+                 s~[[:space:]]+~ ~g;
+                 s~</?(b|sup)>~~g;
+                 s~^<p>(.+)</p>$~\1~p;
+                ' "$_xhtml"
+
+      else
+
+        _rc=1
+        fn-error "Failed to extract text from \"$1\"!"
+
+      fi
+
+    elif [ $# -eq 1 ] ; then
+
+      fn-error "PDF file \"$1\" does not exist or is empty!"
+      _rc=2
+
+    else
+
+      fn-usage "pdf-file"
+      _rc=1
+
+    fi
+
+    rm -f "$_xhtml"
+    return "${_rc:-0}"
+  }
+
+fi
+
