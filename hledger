@@ -1,0 +1,30 @@
+# -*- mode: Shell-script -*-
+
+[[ -n "$LEDGER_FILE" && "$(in-path hledger)" -eq 0 ]] || return 0
+
+fzf-hledger() (
+  myprofile _fzf
+
+  _bal() {
+    hledger bal --no-total | \
+    sed -r 's/^ *([^ ]+ [^ ]) +([^ ].+) *$/\2~\1/' | \
+    column -t -s"~" -o"  " -C name=Account -C name=Value,right
+  }
+  _reg() {
+    #fn-xtrace
+    hledger reg --pretty --commodity-style="1.000,00 €" --width=$FZF_PREVIEW_COLUMNS,$(($FZF_PREVIEW_COLUMNS-43)) "$@" | tac
+  }
+  export -f _bal _reg
+  
+  _bal | \
+  _fzf-wrapper --bind "focus:transform-preview-label(echo -n \"[ account history for {1} ]\")" \
+               --border none \
+               --color "label:reverse" \
+               --header-lines 1 \
+               --list-label "[ hledger balance ]" \
+               --no-sort \
+               --preview-label "[ account history ]" \
+               --preview "_reg {1}" \
+               --preview-window "80%,~1:wrap" \
+               --reverse
+)

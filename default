@@ -18,5 +18,6 @@ rsync
 ffmpeg
 desktop
 firefox
-buku
+#buku
+hledger
 tasmota
