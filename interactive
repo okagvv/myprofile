@@ -108,23 +108,24 @@ m() {
 complete -o bashdefault -o default l lmt lm m
 
 new-alias() {
+  # args: alias-name [{var=value|nohup}] "command-line"
   if [ $# -ge 2 ] ; then
     
     local _cmd _cmdln
     _cmdln="${@: -1}"
     [[ "$_cmdln" =~ ^[^[:alnum:]_-]*([[:alnum:]_-]+) ]] && _cmd="${BASH_REMATCH[1]}"
 
-    local -a _env
+    local -a _prefix
     if [ $# -gt 2 ] ; then
       
-      _env=("${@: 2}")
-      _env[-1]=""
+      _prefix=("${@: 2}")
+      _prefix[-1]=""
       
     fi
     
     if in-path "$_cmd" || is-fn "$_cmd" ; then
     
-      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='${_env[@]}\\$_cmdln'" || eval "alias -- $1='${_env[@]}$_cmdln'"
+      [[ "$1" == "$_cmd" ]] && eval "alias -- $1='${_prefix[@]}\\$_cmdln'" || eval "alias -- $1='${_prefix[@]}$_cmdln'"
 
     else
 

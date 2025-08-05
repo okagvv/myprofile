@@ -24,11 +24,3 @@ new-alias trans2de 'trans -t de'
 new-alias trans2en 'trans -t en'
 new-alias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
 new-alias vi TERM=xterm vim
-
-if in-path fetchmail && [ -s ~/.fetchmailrc ] ; then
-
-  new-alias imap fetchmail
-  new-alias imapstats 'rg --color always -a " (error|querying|messages for) " ~/.fetchmail.log | grep -a -v GSSAPI | tail'
-  # complete imap p/1/"(`sed -r -n 's%^poll ([^ ]+) .*%\1%p' ~/.fetchmailrc | tr '\n' ' '`)"/
-
-fi
