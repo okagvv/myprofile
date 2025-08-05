@@ -65,11 +65,11 @@ fzf-units() (
                --bind "alt-f:change-preview(_fzf-preview-header \"Unit files for {1}\"; $_systemctl cat -- {1})" \
                --bind "alt-h:change-preview(_fzf-preview-header \"Help for unit {1}\"; $_systemctl help {1} | bat --color=always --style plain --language man)" \
                --bind "alt-j:change-preview(_fzf-preview-header \"$_header\"; $_journal)" \
-               --bind "alt-J:execute($_journal)" \
+               --bind "alt-J:execute($_journal --catalog)" \
                --bind "alt-o:change-preview(_fzf-preview-header \"Show properties for unit {1}\"; $_properties)" \
                --bind "alt-O:execute($_properties)" \
                --bind "alt-p:change-preview(_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal)" \
-               --bind "alt-P:execute($_prio_journal)" \
+               --bind "alt-P:execute($_prio_journal --catalog)" \
                --bind "alt-r:change-preview(_fzf-preview-header \"Restart unit {1}\"; $_systemctl restart --show-transaction {1})" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --border-label " Systemd Units with journal entries logged during last $_since in reverse order " \
@@ -122,8 +122,8 @@ fzf-journal() (
     sort -u
   } | \
   _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
-               --bind "alt-J:execute($_journal)" \
-               --bind "alt-P:execute($_prio_journal)" \
+               --bind "alt-J:execute($_journal --catalog)" \
+               --bind "alt-P:execute($_prio_journal --catalog)" \
                --border-label " Journal entries per syslog identifier logged during last $_since in reverse order " \
                --header-lines 1 \
                --help "Alt-j:Recent journal entries;Alt-J:Recent journal entries in pager
