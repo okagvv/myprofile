@@ -207,11 +207,11 @@ dnf-history() {
 
 _fzf-dnf-packages() {
   local _default
-  _default="dnf-repoquery --info {1}"
+  _default="sudo dnf repoquery --cacheonly --quiet --info {1}; i=\$(rpm -q --queryformat '%{INSTALLTIME:date}' {1}) && echo \"Package installed at \$i.\""
 
   # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
-  fzf --bind "alt-i:+change-preview($default)" \
-      --bind "alt-f:+change-preview(fzf-preview-header \"Files in package {1}\"; dnf repoquery --quiet --list {1})" \
+  fzf --bind "alt-i:change-preview($_default)" \
+      --bind "alt-f:change-preview(fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
       --bind 'enter:become(echo {+1})' \
       --border-label " $1 " \
       --header-lines 1 \
@@ -266,11 +266,17 @@ dnf-upgrades() {
   local _default _package
   _package='name={1}; pkg=${name%.*}-{2}.${name##*.}'
   _default="$_package; sudo dnf changelog --quiet \$pkg"
-  
-  sudo dnf list updates --quiet | \
+  {
+    if in-path dnf5 ; then
+      echo "Package Version Repository"
+      sudo dnf check-upgrade --quiet
+    else
+      sudo dnf list updates --quiet
+    fi
+  } | column -t | \
   fzf --bind "ctrl-a:toggle-all" \
-      --bind "alt-c:+change-preview($_default)" \
-      --bind "alt-i:+change-preview($_package; sudo dnf repoquery --info \$pkg)" \
+      --bind "alt-c:change-preview($_default)" \
+      --bind "alt-i:change-preview($_package; sudo dnf repoquery --quiet --info \$pkg)" \
       --bind 'enter:become(echo {+1})' \
       --border none \
       --exit-0 \
