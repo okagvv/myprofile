@@ -7,7 +7,7 @@ is-fn() {
 script=
 
 fn-usage() {
-  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
+  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m" >&2
   return 2
 }
 
