@@ -1,0 +1,36 @@
+# -*- shell-script -*-
+
+myprofile _fzf
+
+_bodhi_updates() {
+  # arg: "%{name}-%{evr}.%{arch}"
+  # CAUTION: For Bodhi search ".%{arch}" must be removed!
+  [-z "$BROWSER" ] || $BROWSER "https://bodhi.fedoraproject.org/updates/?search=${1%.*}"
+}
+export -f _bodhi_updates
+
+_fzf-dnf-packages() {
+  _fzf-wrapper --bind "alt-f:change-preview(_fzf-preview-header \"Files in package {1}\"; sudo dnf repoquery --quiet --list {1})" \
+               --bind "alt-h:execute(sudo dnf repoquery --quiet --queryformat '%{url}' {1} | xargs -r $BROWSER 2>/dev/null)" \
+               --bind "alt-b:execute(_bodhi_updates {1})" \
+               --bind "enter:become(echo {+1})" \
+               --border-label " $1 " \
+               --header-lines 1 \
+               --help "Alt-b:Search package on Bodhi;Alt-i:Package info;Alt-f:Files in package;Alt-h:Open package URL in \\\$BROWSER;Enter:$1" \
+               --list-label " $2 " \
+               --multi \
+               --no-sort \
+               --preview-init "alt-i:_fzf-preview-header \"Info for package {1}\"; sudo dnf repoquery --cacheonly --quiet --info {1}; i=\$(rpm -q --queryformat '%{INSTALLTIME:date}' {1}) && echo \"Package installed at \$i.\"" \
+               --preview-label " Press F1 for help. " \
+               --preview-window "70%,~2:wrap" \
+               --reverse \
+               --query "$3" \
+               $(_fzf-query-history 2)
+}
+
+_dnf-packages() {
+  ( echo "Package Repository"
+    sudo -A dnf repoquery --quiet --queryformat '%{name}-%{evr}.%{arch} %{reponame}\n' "$@" | \
+    sort --ignore-case
+  ) | column -t -l2
+}
