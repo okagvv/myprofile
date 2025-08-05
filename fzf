@@ -38,13 +38,14 @@ fzf-preview-bat() {
 }
 
 fzf-preview-file() {
-  local _mime
+  local _mime _size
   _mime="$(file --brief --mime "$1")"
-
-  fzf-preview-header "$1"
+  _size="$(du -h "$1" | cut -f1)"
+  
+  fzf-preview-header "File \"$1\""
   cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
 Type: $_mime
-$(stat "$1")
+$(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
 RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
 EOF
 
