@@ -27,20 +27,24 @@ git-root() {
 }
 
 git-changed() (
-  if [ $# -eq 1 ] ; then
+  if [[ $# -ge 1 && $# -le 2 ]] ; then
 
     if git-root ; then
 
+      local _ref
+      _ref="${2:-HEAD}"
+      export _ref
+      
       myprofile _fzf
 
       _changed() {
-        git log --since-as-filter="$1" --pretty="" --name-only
+        git log --since-as-filter="$1" --pretty="" --name-only "$_ref"
       }
       _changes() {
-        git log --since-as-filter="$1" --patch -- "$2"
+        git log --since-as-filter="$1" --patch "$_ref" -- "$2"
       }
       _label() {
-        echo "[ commits changing \"$1\" ]"
+        echo "[ commits changing \"$1\" in \"$_ref\" history ]"
       }
       export -f _changes _label
 
@@ -58,7 +62,7 @@ git-changed() (
     fi
 
   else
-    fn-usage "<since date>"
+    fn-usage "since-date [ref]"
   fi
 )
 
