@@ -37,7 +37,7 @@ if in-path rsync ; then
 
 fi
 
-sync_timestamps() {
+sync-timestamps() {
   # (re)sync timestamps for two dir trees normally synched via rsync(p).
   local _dry _filter _help
    while [ $# -gt 0 ] ; do
