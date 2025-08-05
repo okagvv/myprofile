@@ -91,13 +91,14 @@ fzf-apply() (
     _find-apply | \
     _fzf-wrapper --ansi \
                  --bind "ctrl-a:toggle-all" \
+                 --bind "ctrl-r:reload(_find-apply)" \
                  --bind "enter:execute($* {+7} || true; read -s -p \"Press ENTER to return.\"; echo)+reload(_find-apply)" \
                  --border-label "[ Each ENTER calls \"$*\" for selected path(s) ]" \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Ctrl-a:Toggle all selections;Enter:Apply command to selected paths" \
+                 --help "Ctrl-a:Toggle all selections;Ctrl-r:Reload path list;Enter:Apply command to selected paths" \
                  --multi \
                  --no-sort \
                  --preview "_fzf-preview-path {7}" \
@@ -114,6 +115,63 @@ Sample:
 \$ $FUNCNAME -- rm -iv
 \$ $FUNCNAME --sort path --type f --no-ignore --extension mkv -- vlc --verbose 0 --playlist-enqueue"
   fi
+)
+
+fzf-monitor() (
+  local _query _sort _tail
+  local -a _fdargs
+  _sort=rdate
+  _tail=100
+  
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+       -h|--help) fn-usage "[--tail n] [--query \"text\"] [--sort r?(date|path|size)] [{<fd arg>}]"; return 0;;
+       -t|--tail) _tail="$2"; shift;;
+      -q|--query) _query="$2"; shift;;
+       -s|--sort) _sort="$2"; shift;;
+               *) _fdargs+=("$1");;
+    esac
+    shift
+  done
+
+  myprofile _fzf
+
+  [ ${#_fdargs[@]} -gt 0 ] || _fdargs=(. --type f)
+  _fdargs+=(--sort "$_sort")
+
+  eval "_find-monitored() {
+    fdl --header ${_fdargs[@]}
+  }"
+  _preview_monitored() {
+    local _lines
+    _lines="$(wc -l "$1" | cut -d' ' -f1)"
+    # ensure that last line will be printed even without line end marker
+    [ "$_lines" -ge "$_tail" ] || ((_lines+=1))
+    _fzf-preview-bat --style plain --number --line-range "$_lines:-$_tail" "$1"
+  }
+  export -f _find-monitored _preview_monitored
+  export _tail
+  
+  _find-monitored | \
+  _fzf-wrapper --ansi \
+               --bind "ctrl-r:reload(_find-monitored)" \
+               --bind "enter:execute(less {+7})+reload(_find-monitored)" \
+               --bind "focus:transform-preview-label(echo -n \"[ Last up to $_tail lines of {7} ]\")" \
+               --border none \
+               --color "label:reverse" \
+               --delimiter $'\u00a0' \
+               --exit-0 \
+               --header-lines 1 \
+               --help "Ctrl-r:Reload path list;Enter:Open selected path in pager" \
+               --list-label "[ Recent monitoring probe ]" \
+               --no-multi \
+               --no-sort \
+               --preview "_preview_monitored {7}" \
+               --preview-window "70%:wrap:follow" \
+               --query "$_query" \
+               --reverse \
+               --smart-case \
+               --with-nth '6,5,7'
 )
 
 if in-path plocate ; then \
