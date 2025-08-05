@@ -96,7 +96,7 @@ _fzf-wrapper() {
   #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
   # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
   # config including a match dependent scroll offset (s.a. fzf-rg()).
-  local -a _args
+  local -a _args _prompt
   while [ $# -gt 0 ]; do
     case "$1" in
                  --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+change-preview-window(+0)")
@@ -104,6 +104,7 @@ _fzf-wrapper() {
          --preview-init) _args+=(--preview "${2#*:}"
                                  --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
                          shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
+               --prompt) _prompt="$2"; shift;;
       *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
                       *) _args+=("$1");;
     esac
@@ -111,7 +112,9 @@ _fzf-wrapper() {
   done
 
 # fn-vars _args
-  fzf $(_fzf-query-history 2) \
+  fzf --bind "load:change-prompt:${_prompt:-> }" \
+      --prompt '> .. loading ..' \
+      $(_fzf-query-history 2) \
       "${_args[@]}"
 }
 
