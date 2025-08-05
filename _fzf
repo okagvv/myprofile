@@ -26,7 +26,7 @@ _fzf-query-history () {
 export BAT_PAGER="less -R"
 
 _fzf-preview-bat() {
-  bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
+  bat --color=always ${FZF_PREVIEW_COLUMNS:+--terminal-width $FZF_PREVIEW_COLUMNS} "$@"
 }
 
 _fzf-preview-path() {
