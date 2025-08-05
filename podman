@@ -3,7 +3,7 @@
 in-path podman || return 0
 
 _fzf-podman-query() {
-  fzf-preview-header "$1"
+  _fzf-preview-header "$1"
   shift
   $* | gojq --yaml-output
 }
@@ -14,11 +14,11 @@ fzf-images() {
   _default='_fzf-podman-query "Inspect {}" podman image inspect {}'
 
   podman images --format '{{ .Repository }}:{{ .Tag }}' | \
-  fzf --bind='alt-c:+change-preview(fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
+  fzf --bind='alt-c:+change-preview(_fzf-preview-header "Child images and layer hierarchy for {1}"; podman image tree --whatrequires {1})' \
       --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
       --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
       --bind="alt-i:+change-preview($_default)" \
-      --bind='alt-T:+change-preview(fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
+      --bind='alt-T:+change-preview(_fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
       --border none \
       --list-label " Podman images " \
       --multi \
@@ -36,7 +36,7 @@ fzf-container() {
   podman container  ls --all --format '{{ .Names }}' | \
   fzf --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman container diff --format json {})' \
       --bind="alt-i:+change-preview($_default)" \
-      --bind='alt-l:+change-preview(fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
+      --bind='alt-l:+change-preview(_fzf-preview-header "Log for container {}"; podman container logs --follow {})' \
       --border none \
       --list-label " Podman container " \
       --multi \
