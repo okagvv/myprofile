@@ -4,7 +4,7 @@ rpm-changelog() {
   if [ $# -gt 0 ] ; then
     rpm --query --verbose --changelog "$@" 2>&1 | less
   else
-    myfunusage "package .."
+    fn-usage "package .."
   fi
 }
 
@@ -12,15 +12,46 @@ rpm-conf() {
   if [ $# -gt 0 ] ; then
     rpm --query --list --configfiles --state --verbose "$@" 2>&1 | less
   else
-    myfunusage "package .."
+    fn-usage "package .."
   fi
 }
 
 rpm-docs() {
   if [ $# -gt 0 ] ; then
-    rpm --query --list --docfiles --verbose "$@" 2>&1 | less
+    rpm --query --list --docfiles --verbose "$@" | \
+    fzf
   else
-    myfunusage "package .."
+    fn-usage "package .."
+  fi
+}
+
+_rpm-history_preview_changes() {
+  echo "Upstream changelog for package \"$1\""
+  fzf_preview_hrule
+
+  local _docs _kind _log
+  _docs="$(rpm --query --docfiles "$1")"
+
+  if [ ${#_docs[@]} -gt 0 ] ; then
+    
+    for _kind in changelog release news changes ; do
+
+      _log="$(grep -i -E "/[^/]*$_kind[^/]*$" <<<"$_docs" | head -1)"
+
+      if [ -n "$_log" ] ; then
+
+        cat "$_log"
+        return 0
+        
+      fi    
+    done
+    
+    echo "No changelog file identified in package doc files."
+
+  else
+
+    echo "Package contains no doc files!"
+    
   fi
 }
 
@@ -29,7 +60,8 @@ _rpm-history_preview() {
   fzf_preview_hrule
   rpm -q $2 "$3"
 }
-export -f _rpm-history_preview
+
+export -f _rpm-history_preview _rpm-history_preview_changes
 
 rpm-history() {
   local _default
@@ -45,6 +77,7 @@ rpm-history() {
       --bind='alt-i:+change-preview(_rpm-history_preview "Info for" -i {6})' \
       --bind="alt-l:+change-preview($_default)" \
       --bind='alt-s:+change-preview(_rpm-history_preview "Scripts in" --scripts --triggers {6})' \
+      --bind='alt-u:+change-preview(_rpm-history_preview_changes {6})' \
       --bind='alt-v:+change-preview(_rpm-history_preview "Verify files of" "--verify --verbose" {6})' \
       --border-label " Package install history " \
       --list-border rounded \
@@ -52,7 +85,7 @@ rpm-history() {
       --multi \
       --no-sort \
       --preview "$_default" \
-      --preview-label " Select package information kind via alt-{c,d,f,i,l,s,v}. " \
+      --preview-label " Select package information kind via alt-{c,d,f,i,l,s,u,v}. " \
       --preview-window '60%,~2:wrap' \
       --query "$1" \
       --reverse | \
@@ -81,7 +114,7 @@ rpm-owner() {
     done
     
   else
-    myfunusage "file .."
+    fn-usage "file .."
   fi
 }
 
@@ -89,7 +122,7 @@ rpm-status() {
   if [ $# -gt 0 ] ; then
     rpm --query --list --state --verbose "$@" 2>&1 | less
   else
-    myfunusage "package .."
+    fn-usage "package .."
   fi
 }
 
@@ -97,7 +130,7 @@ rpm-verify() {
   if [ $# -gt 0 ] ; then
     rpm --verify --verbose "$@" 2>&1 | less
   else
-    myfunusage "package .."
+    fn-usage "package .."
   fi
 }
 
@@ -106,7 +139,7 @@ rpm-verify() {
 [[ "$(id -u)" == "0" ]] || return 0
 
 # .. is only applicable if dnf is installed and
-in_path dnf || return 0
+in-path dnf || return 0
 
 # .. system not booted via rpm-ostree
 rpm-ostree status --booted 2>/dev/null && return 0
@@ -115,7 +148,7 @@ rpm-freshen() {
   if [ $# -gt 0 ] ; then
     rpm --freshen --verbose --hash "$@" 2>&1 | less
   else
-    myfunusage "rpmfile"
+    fn-usage "rpmfile"
   fi
 }
 
@@ -127,7 +160,7 @@ dnf-list() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --qf='%10{repoid} %{buildtime} %{installtime} %-10{downloadsize}->%10{installsize} %{name}-%{evr}.%{arch}\n\t\t\t\t\t\t    %{summary}' "$*"
   else
-    myfunusage "package .."
+    fn-usage "package .."
   fi
 }
 
@@ -135,7 +168,7 @@ dnf-files() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --list "$*"
   else
-    myfunusage "package"
+    fn-usage "package"
   fi
 }
 
@@ -201,7 +234,7 @@ dnf-search() {
 
   else
 
-    myfunusage "pattern"
+    fn-usage "pattern"
 
   fi
 }
@@ -210,7 +243,7 @@ dnf-requires() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --requires --resolve "$*"
   else
-    myfunusage "package"
+    fn-usage "package"
   fi
 }	
 
@@ -218,7 +251,7 @@ dnf-recommends() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --recommends --resolve "$*"
   else
-    myfunusage "package"
+    fn-usage "package"
   fi
 }
 
@@ -226,7 +259,7 @@ dnf-suggests() {
   if [ $# -gt 0 ] ; then
     dnf-repoquery --suggests --resolve "$*"
   else
-    myfunusage "package"
+    fn-usage "package"
   fi
 }
 
@@ -234,9 +267,9 @@ dnf-testing() {
   if [ $# -gt 0 ] ; then
     dnf --enablerepo updates-testing "$@"
   else
-    myfunusage "dnf-args"
+    fn-usage "dnf-args"
   fi
 }
 
-myalias updateinfo 'dnf updateinfo --info'
+new-alias updateinfo 'dnf updateinfo --info'
 
