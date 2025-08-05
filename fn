@@ -62,9 +62,9 @@ fn-xtrace() {
   [ -n "$fn_xtrace" ] || return 0
 
   fn_trace=y
-  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped trace for $fn_xtrace() -===-"; fn_xtrace=; fn_trace=; fi' RETURN
+  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped xtrace for $fn_xtrace() -===-"; fn_xtrace=; fn_trace=; fi' RETURN
   trap 'set +x; fn_xtrace=; fn_trace=; trap - RETURN ERR' ERR
-  
+
   echo "-===- Start xtrace for $fn_xtrace() -===-"
   set -x
 }
