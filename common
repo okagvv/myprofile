@@ -5,10 +5,6 @@ in-path() {
   type -fp "$1" >/dev/null
 }
 
-is-fn() {
-  declare -F "$1" >/dev/null
-}
-
 is-root() {
   [[ "$(id -u)" == "0" ]]
 }
