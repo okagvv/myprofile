@@ -82,7 +82,7 @@ fzf-ffprobes() (
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview '_fzf-preview-file {}' \
+                           --preview '_fzf-preview-path {}' \
                            --preview-label " ffprobe output (alt-v: play via VLC) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
