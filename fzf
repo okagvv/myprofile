@@ -64,16 +64,15 @@ fzf-fn() (
 complete -A function fzf-fn
 
 fzf-apply() (
-  local _query _root _sort _find
-  _root="$(pwd)"
-  _sort=path
-
+  local _query _sort
+  local -a _fd
+  
   while [ $# -gt 0 ] ; do
-    case "$1" in
+    case "$1" in 
       -q|--query) _query="$2"; shift;;
-       -r|--root) _root="$2"; shift;;
-       -s|--sort) _sort="$2"; shift;;
-               *) break;;
+       -s|--sort) [[ "$2" =~ ^r?(date|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort argument: $2"; shift;;             
+              --) shift; break;;
+               *) _fd+=("$1");;
     esac
     shift
   done
@@ -82,36 +81,37 @@ fzf-apply() (
 
     myprofile _fzf
 
-    cd "$_root" || fn-abort "Change directory to \"$_root\" failed!"
-    export _root _sort
-
-    _find-apply() {
-      _fzf-find . f %P $_sort
-    }
+    [ ${#_fd[@]} -gt 0 ] || _fd=(. --type f)
+    
+    eval "_find-apply() {
+      fdl \$1 ${_fd[@]}
+    }"
     export -f _find-apply
-
-    _find-apply | \
-    _fzf-wrapper --bind "ctrl-a:toggle-all" \
-                 --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\"; echo)+reload(_find-apply)" \
-                 --border-label "[ Each ENTER calls \"$*\" for selected argument(s) ]" \
+    
+    _find-apply $_sort | \
+    _fzf-wrapper --ansi \
+                 --bind "ctrl-a:toggle-all" \
+                 --bind "enter:execute($* {+7} || true; read -s -p \"Press ENTER to return.\"; echo)+reload(_find-apply)" \
+                 --border-label "[ Each ENTER calls \"$*\" for selected path(s) ]" \
                  --color "label:reverse" \
+                 --delimiter $'\u00a0' \
                  --exit-0 \
                  --help "Ctrl-a:Toggle all selections;Enter:Apply command to selected paths" \
                  --multi \
                  --no-sort \
-                 --preview "_fzf-preview-path {}" \
+                 --preview "_fzf-preview-path {7}" \
                  --preview-window "70%,~2:wrap" \
                  --query "$_query" \
-                 --read0 \
                  --reverse \
-                 --smart-case
+                 --smart-case \
+                 --with-nth '6,5,7'
 
   else
 
-    fn-usage "[--query \"text\"] [--root dir] [--sort date|name|path|size] <cmd> [{<arg>}]
+    fn-usage "[--query \"text\"] [--sort r?(date|path|size)] [{<fd arg>}] -- <cmd> [{<arg>}]
 Sample:
-\$ $FUNCNAME rm -iv"
-
+\$ $FUNCNAME -- rm -iv
+\$ $FUNCNAME --sort rdate --type f --extension mpeg -- vlc"
   fi
 )
 
