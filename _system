@@ -16,7 +16,6 @@ _journal() {
 export -f _journal
 
 _fzf-journal() {
-  fn-xtrace
   [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
   [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
   _since+=" ago"
