@@ -23,7 +23,7 @@ cleanup-path() {
 broken-symlinks() {
   local _cmd
   _cmd="echo \"'@'\""
-  
+
   while [ $# -gt 0 ] ; do
     case "$1" in
       -h|--help) fn-usage "[--help] [--ls|--rm] [[--] path]"; return 0;;
@@ -35,7 +35,7 @@ broken-symlinks() {
     esac
     shift
   done
-  
+
   find "${1:-.}" -xtype l -print0 | xargs -0r -i@ $_cmd
 }
 
