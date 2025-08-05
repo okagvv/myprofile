@@ -103,14 +103,18 @@ $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
 export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history
 
 _fzf-wrapper() {
-  # args: help text for function specific bindings, key for initial preview, initial preview, preview window
-  # CAUTION: F1 binds ".."+preview-bottom" to fix help screen by repeated F1 press. Otherwise not
-  # help content might be incomplete if --preview-window uses [:+SCROLL[OFFSETS][/DENOM]] values.
+  # args: --help "help text for function specific bindings"
+  #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
+  # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
+  # config including a match dependent scroll offset (s.a. fzf-rg()).
   local -a _args
   while [ $# -gt 0 ]; do
     case "$1" in
-         --preview-init) _args+=(--bind "${2%%:*}:show-preview+change-preview(${2#*:})" --preview "${2#*:}"); shift;;
-                 --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+preview-bottom"); shift;;
+                 --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+change-preview-window(+0)")
+                         shift;;
+         --preview-init) _args+=(--preview "${2#*:}"
+                                 --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
+                         shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
       *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
                       *) _args+=("$1");;
     esac
@@ -304,7 +308,7 @@ if in-path rg ; then
                    --help "Alt-f:Show match in preview window;Enter:Load file into editor" \
                    --list-border none \
                    --no-multi \
-                   --preview-init "alt-f:_fzf-preview-bat --highlight-line {2} {1}" \
+                   --preview-init "alt-f:_fzf-preview-bat --highlight-line {2} {1}" "+change-preview-window(+{2})" \
                    --preview-window "up,60%,border-bottom,+{2}+3/3,~3:wrap" \
                    --smart-case
 
