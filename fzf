@@ -61,6 +61,7 @@ complete -A function fzf-fn
 
 fzf-apply() (
   local _find _query _root
+  _root=.
 
   while [ $# -gt 0 ] ; do
     case "$1" in
@@ -75,7 +76,8 @@ fzf-apply() (
 
     myprofile _fzf
 
-    _find="find-beyond-git ${_root:-.} -type f -printf %P\\0"
+    cd "$_root" || fn-abort "Change directory to \"$_root\" failed!"
+    _find="find-beyond-git . -type f -printf %P\\0"
 
     $_find |& \
     _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
@@ -91,7 +93,7 @@ fzf-apply() (
 
   else
 
-    fn-usage "<cmd> [--query \"text\"] [--root dir] [<args>]
+    fn-usage "[--query \"text\"] [--root dir] <cmd> [{<arg>}]
 Sample:
 \$ $FUNCNAME rm -iv"
 
