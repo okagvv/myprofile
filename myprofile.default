@@ -1,7 +1,7 @@
 common
 env
 editor
-diag
+fn
 interactive
 aliases
 git
