@@ -282,7 +282,7 @@ fzf-ps() (
   __ps | \
   _fzf-wrapper --bind "ctrl-r:reload(__ps)" \
                --bind "alt-d:change-preview(pidstat -d --human -p {2} 1)+change-preview-label([ IO stats ])" \
-               --bind "alt-e:change-preview(grep -zvE '^(BASH_FUNC|LS_COLORS=|PS1=)' </proc/{2}/environ | sort -z | tr '\0' '\n')" \
+               --bind "alt-e:change-preview(grep -zvE '^(BASH_FUNC|LS_COLORS=|PS1=)' 2>/dev/null </proc/{2}/environ | sort -z | tr '\0' '\n')+change-preview-label([ Process environment ])" \
                --bind "alt-r:change-preview(pidstat -r --human -p {2} 1)+change-preview-label([ Memory utilization ])" \
                --bind "alt-s:change-preview(pidstat -s -p {2} 1)+change-preview-label([ Stack utilization ])" \
                --bind "alt-u:change-preview(pidstat -u -I -p {2} 1)+change-preview-label([ CPU utilization ])" \
