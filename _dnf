@@ -63,11 +63,24 @@ _dnf-packages() {
 }
 
 _dnf-upgrades() {
+  __package() {
+    echo "${1%.*}-$2.${1##*.}"
+  }
   __bodhi() {
-    _bodhi-updates "${2%.*}-$3.${2##*.}"
+    _bodhi-updates "$(__package "$1" "$2")"
   }
   __dnf() {
-    sudo dnf $1 $_testing --quiet "${@: 4}" "${2%.*}-$3.${2##*.}"
+    sudo -A dnf $1 $_testing --quiet "${@: 4}" "$(__package "$2" "$3")"
+  }
+  __advisory() {
+    local _advisory _pkg
+    _pkg="$(__package "$1" "$2")"
+    _advisory="$(sudo -A dnf updateinfo --quiet list | sed -rn "s/^([^[:space:]]+).*[[:space:]]$_pkg.*/\1/p")"
+    if [ -n "$_advisory" ] ; then
+      sudo -A dnf updateinfo --quiet info "$_advisory" | bat --color=always --style plain --language yaml
+    else
+      echo "No advisory found."
+    fi
   }
   __upgrades() {
     {
@@ -76,13 +89,15 @@ _dnf-upgrades() {
     } | sed -rn '/(Obsoleting packages|No security updates needed)/Iq;p' | \
         column -t
   }
-  export -f __bodhi __dnf __upgrades
+  export -f __advisory __bodhi __dnf __package __upgrades
 
   FZF_DEFAULT_COMMAND=__upgrades \
-  _fzf-wrapper --bind "ctrl-a:toggle-all" \
+    _fzf-wrapper --bind "ctrl-a:toggle-all" \
+               --bind "alt-a:change-preview(__advisory {1} {2})" \
+               --bind "alt-A:execute(__advisory {1} {2} | less)" \
                --bind "alt-b:execute(__bodhi {1} {2})" \
                --bind "alt-d:execute(sudo dnf remove {+1})+reload(__upgrades)" \
-               --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-15s: %s\" Current \$(rpm -q {1}))" \
+               --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"%-15s: %s\" Current \$(rpm -q {1}))" \
                --bind 'alt-h:execute-silent(_fzf-browser "$(__dnf repoquery {1} {2} --queryformat "%{url}")")' \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind 'alt-x:toggle-all+become(echo {+1})' \
@@ -91,15 +106,16 @@ _dnf-upgrades() {
                --bind 'change:unbind(zero)' \
                --border none \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-d:Remove selected packages
-                       Alt-h:Open package URL in \$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one
+               --help "Alt-a:Show advisory (if available);Alt-A:Open advisor in pager;Alt-b:Search package on Bodhi
+                       Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in \$BROWSER
+                       Alt-i:Package info;Alt-w:What packages relate to selected one
                        Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \
                --multi \
                --no-sort \
                --preview-init "alt-c:__dnf changelog {1} {2}" \
                --preview-label " Press F1 for help " \
-               --preview-window "60%,~1:wrap" \
+               --preview-window "70%,~1:wrap" \
                --query "$1" \
                --reverse | \
   xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
