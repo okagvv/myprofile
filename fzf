@@ -253,3 +253,56 @@ fzf-rg() (
     fn-usage "<ripgrep args>"
   fi
 )
+
+fzf-data() (
+  # derived from https://github.com/denisidoro/dotfiles/blob/master/scripts/javascript/nav
+  if [[ "${1,,}" =~ \.(json|ya?ml)$ ]] ; then
+    
+    myprofile _fzf
+
+    #export fn_trace=y
+    export _data="$1"
+    export _jq="gojq --raw-output"
+    export _bat="bat --style plain --color always"
+
+    # CAUTION: "gojq .. --color-output" has no effect for --yaml-output, i.e. "bat" will be used for
+    # YAML and JSON.
+    if [[ "${_data,,}" =~ \.ya?ml$ ]] ; then
+      _jq+=" --yaml-input --yaml-output"
+      _bat+=" --language yaml"
+    else
+      _bat+=" --language json"
+    fi
+
+    _data-preview() {
+      local _i _q
+      _i="$1"
+
+      grep -q "^\." <<<"$_i" || _i=".$_i"
+      grep -q "^\. = "  <<<"$_i" && _q="." || _q="$(sed -r 's/(\.[^ ]+).*/\1/;s/\.([^\.\[\"]+)/."\1"/g' <<<"$_i")"
+
+      [ -z "$2" ] || _fzf-preview-header "$_q"
+      fn-trace "_i=\"$1\" -> \"$_i\"\n_q=\"$_q\""
+
+      $_jq "$_q" "$_data" | $_bat
+    }
+    export -f _data-preview
+
+    $_jq '[path(..)|map(if type=="number" then "[]" else tostring end)|join(".")|split(".[]")|join("[]")]|unique|map("."+.)|.[]' "$_data" | \
+    sed '/^---$/d' | \
+    _fzf-wrapper --ansi \
+                 --bind "alt-c:execute-silent(_data-preview {} | _fzf-copy)" \
+                 --bind "enter:execute(_data-preview {})" \
+                 --border-label " $1 " \
+                 --exit-0 \
+                 --help "Alt-c:Copy preview to clipboard;Alt-d:Preview selected key;Enter:Load selected key into pager" \
+                 --list-border none \
+                 --no-multi \
+                 --preview-init "alt-d:_data-preview {} header" \
+                 --preview-window "60%,~2:wrap" \
+                 --reverse
+
+  else
+    fn-usage "file.(json|yaml)"
+  fi
+)
