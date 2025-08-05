@@ -85,9 +85,20 @@ _rpm-list() {
 }
 
 _fzf-rpm() {
-  local _nvr
-  _nvr="{1}-{2}.{3}"
+  local _nvr _help
+  local -a _dnf_opt
 
+  _nvr="{1}-{2}.{3}"
+  _help="Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files
+         Alt-h:Open package URL in default browser;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog
+         Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify
+         Alt-w:What packages relate to selected one"
+
+  if is-fn _dnf-advisory ; then
+    _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1})")
+    _help+=";Alt-a:Show advisories"
+  fi
+  
   _rpm-list bydate | \
   _fzf-wrapper --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
                --bind "alt-D:change-prompt(..sort by date..> )+reload(_rpm-list bydate)" \
@@ -102,12 +113,10 @@ _fzf-rpm() {
                --bind "alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
                --bind "alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
                --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
+               "${_dnf_opt[@]}" \
                --border-label " Installed packages " \
                --header-lines 1 \
-               --help "Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files
-                       Alt-h:Open package URL in default browser;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog
-                       Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify
-                       Alt-w:What packages relate to selected one." \
+               --help "$_help" \
                --list-label " Matching packages " \
                --multi \
                --no-sort \

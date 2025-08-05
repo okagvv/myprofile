@@ -36,8 +36,8 @@ dnf-list() (
   # CAUTION: Utilizes _fzf-rpm (avoids latency caused by dnf wrapping rpm API for installed
   # packages). Only difference is use of dnf-what() instead of rpm-what(): "dnf repoquery --what*
   # --resolve" results are less prone to inconstent package capability notations.
-  myprofile _rpm
-  fn-export dnf-what dnf-repoquery
+  myprofile _rpm _dnf
+  fn-export dnf-what dnf-repoquery _dnf-advisory
   _fzf-rpm "$@"
 )
 
