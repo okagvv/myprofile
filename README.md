@@ -42,7 +42,7 @@ $ source myprofile/myprofile --install
 $HOME/.bash_profile:source $myprofile/myprofile
 ```
 
-### Defaults
+## Defaults
 
 The text file `myprofile.default` contains a list of profile scripts applied by `mvprofile` calls
 without arguments (i.e. during start of a login shell).  Scripts will be searched in `myprofile`
@@ -50,6 +50,19 @@ installation directory. They will be applied (via `source` ) in listed order. `m
 application squence after first error.
 
 List entries starting with a hashmark will be skipped silently.
+
+## fzf
+
+For all `fzf` calls following conventions apply
+
+- `F1` lists effective `fzf` key bindings in preview page.
+- Separate search history for each `fzf` calling function is stored in
+  `$HOME/.config/fzf/$FUNCNAME.history`.
+
+## Aliases
+
+Function `new_alias` creates an alias only for installed executables or (already) defined
+functions. Otherwise the alias creation is silently skipped.
 
 ## Scripting
 
