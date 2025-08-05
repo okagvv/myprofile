@@ -22,7 +22,7 @@ fi
 
 fzf-units() (
   # Iterate over systemd units with recent journal entries.
-  declare -g _all _priorange _prio _since _journal _prio_journal _properties _systemctl _header _sudo _user _grep _boot
+  declare -g _all _priorange _prio _since _journal _prio_journal _properties _systemctl _header _sudo _user _grep _boot _failed
   _boot="-0"
   _prio=debug
   _since=48
@@ -31,8 +31,9 @@ fzf-units() (
     case "$1" in
            -a|--all) _all=--all;;
           -b|--boot) _boot="$2"; shift;;
+        -f|--failed) _failed="--failed";;
           -g|--grep) _grep="--grep $2"; shift;;
-          -h|--help) fn-usage "[--help] [--boot id] [--grep regexp] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
+          -h|--help) fn-usage "[--help] [--boot id] [--grep regexp] [--all | --failed | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
       -p|--priority) _prio="$2"; shift;;
          -s|--since) _since="$2"; shift;;
           -u|--user) _user="$2"; _sudo="sudo -A -u $_user"; shift;;
