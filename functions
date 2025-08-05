@@ -67,6 +67,10 @@ history-cleanup() {
   true
 }
 
+l() {
+  /usr/bin/ls --format=long --classify --all --color=auto --time-style="+%F %T" "$@"
+}
+
 lm() {
   l --color=always "$@" |& m -p lm
 }

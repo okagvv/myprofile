@@ -42,13 +42,9 @@ if [ -n "$PS1" ] ; then
 
     eval "$(starship init "${SHELL##*/}")"
 
-  elif [ -d ~/.git ] ; then
-
-    export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\] (\$(git branch --show-current)\[\033[00m\]) \$ "
-
   else
 
-    export PS1="\$? \u@\h:\$(abbr-pwd) \$ "
+    export PS1="\$? \u@\h:\$(abbr-pwd)\[\033[31m\] (\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
 
   fi
 fi
