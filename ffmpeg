@@ -5,12 +5,23 @@ in_path ffmpeg || return 0
 myalias ffmpeg "ffmpeg -hide_banner"
 myalias ffprobe "ffprobe -hide_banner"
 
+_ffprobes_filter() {
+  find "$1" -type f -printf '%P\0' | xargs -r0 file -i | sed -rn 's~^(.+): +(audio|video)/.*$~\1~p'
+}
+
+_ffprobes_all() {
+  find "$1" -type f -printf '%P\n'
+}
+
 ffprobes() {
+  # CAUTION: For huge directory trees filtering for audio/video files will slow down loading fzf
+  # list input. Use of --all avoids this but may cause error messages in preview window for
+  # unsupported file formats.
   local _all _cmd
 
   while [[ "$1" =~ ^-+[[:alnum:]]+$ ]] ; do
     case "$1" in
-#      -a|--all) _all=y;;
+       -a|--all) _all=y;;
       -h|--help) myfunusage "[--help] <files> | [--all] [--play] <dir> [<query>]"; return 0;;
       -p|--play) _cmd="vlc";;
     esac
@@ -21,15 +32,15 @@ ffprobes() {
 
     local -a _selected
 
-    eval "_selected=($(find "$1" -type f -print0 | \
-                       xargs -r0 file -i | \
-                       sed -rn 's~^(.+): +(audio|video)/.*$~\1~p' | \
-                       fzf --border none \
+    eval "_selected=($($([ -n "$_all" ] && echo _ffprobes_all || echo _ffprobes_filter) "$1" | \
+                       sort | \
+                       fzf --bind 'ctrl-p:execute-silent(vlc {1})' \
+                           --border none \
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
-                           --preview 'echo {}; _fzf_preview_hrule; ffprobe -hide_banner {}' \
-                           --preview-label " ffprobe output " \
+                           --preview 'echo {}; fzf_preview_hrule; ffprobe -hide_banner {}' \
+                           --preview-label " ffprobe output (CTRL-P: play curr. item) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
                            --query "$2" | \
