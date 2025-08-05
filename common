@@ -21,6 +21,19 @@ cleanup-path() {
   export PATH=$(printf %s "$PATH" | awk -v RS=: -v ORS=: '!arr[$0]++' | sed -r 's/:://g;s/:$//;s/^://')
 }
 
+fn-export() {
+  if [ $# -gt 0 ] ; then
+    local _fn _re
+    for _re in "$@" ; do
+      for _fn in $(declare -F | cut -d' ' -f3 | grep -E "$_re") ; do
+        export -f "$_fn"
+      done
+    done
+  else
+    fn-usage "{<regexp>}"
+  fi
+}
+
 find-beyond-git() {
   if [ $# -gt 1 ] ; then
     find "$1" -name .git -prune -o "${@: 2}"
