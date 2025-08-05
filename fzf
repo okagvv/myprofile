@@ -75,7 +75,7 @@ fzf-apply() (
 
     myprofile _fzf
 
-    _find="find "${_root:-.}" -name .git -prune -o -print0"
+    _find="find-beyond-git ${_root:-.} -type f -printf %P\\0"
 
     $_find |& \
     _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload($_find)" \
