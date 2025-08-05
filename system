@@ -72,7 +72,7 @@ fzf-journal() (
   # Iterate over syslog identifiers of recent journal entries.
   # args: --priority: only units with journal entries below/equal during last 48 hours this prio are
   #         considered.
-  local _listprio _prio
+  local _listprio _prio _altp _altj
   _prio=debug
   while [ $# -gt 0 ] ; do
     case "$1" in
@@ -84,20 +84,22 @@ fzf-journal() (
   done
 
   _listprio="0..$_prio"
-  myprofile _fzf
+  _altj="_fzf-preview-header \"Journal entries for {1}\"; _fzf-journal --identifier={1}"
+  _altp="_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf-journal --identifier {1} --priority=$_listprio"
 
+  myprofile _fzf
   {
     echo "Identifier"
     journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot --since "48 hours ago" --priority=0..$_prio | \
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
     sort -u
   } | \
-  _fzf-wrapper --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio in reverse order.\"; _fzf-journal --identifier {1} --priority=$_listprio)" \
+  _fzf-wrapper --bind "$([[ "$_prio" == debug ]] && echo "alt-p:change-preview($_altp)" || echo "alt-j:change-preview($_altj)")" \
                --border-label " Journal entries per syslog identifier $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
                --help "Alt-j:Recent journal entries;Alt-p:Recent journal entries with priority $_listprio" \
                --no-sort \
-               --preview-init 'alt-j:_fzf-preview-header "Journal entries for {1}"; _fzf-journal --identifier={1}' \
+               --preview-init "$([[ "$_prio" == debug ]] && echo "alt-j:$_altj" || echo "alt-p:$_altp")" \
                --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
