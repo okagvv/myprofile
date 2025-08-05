@@ -6,7 +6,7 @@ if in-path rsync ; then
     local -a _opts
     _opts=(--archive --backup --safe-links --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
 
-    while [ $# -gt 1 ] ; do
+    while [ $# -gt 0 ] ; do
       case "$1" in
           -h|--help) fn-usage "[--dry-run] [--remove] <source-dir>/? <target-dir>"; return 0;;
        -d|--dry-run) _opts+=(--dry-run --verbose);;
