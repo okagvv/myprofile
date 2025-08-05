@@ -55,7 +55,7 @@ dnf-list() (
   # CAUTION: Utilizes _fzf-rpm (avoids latency caused by dnf wrapping rpm API for installed
   # packages). Only difference is use of dnf-what() instead of rpm-what(): "dnf repoquery --what*
   # --resolve" results are less prone to inconstent package capability notations.
-  myprofile _rpm 
+  myprofile _rpm
   fn-export dnf-what dnf-repoquery
   _fzf-rpm "$@"
 )
@@ -151,7 +151,9 @@ dnf-upgrades() (
                --bind 'zero:execute(echo "No pending updates found!")+abort' \
                --border none \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
+               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-h:Open package URL in \\\$BROWSER
+                       Alt-i:Package info;Alt-w:What packages relate to selected one;Ctrl-a:Toggle select all
+                       Enter:Upgrade selected packages" \
                --list-label " Select upgrades to install " \
                --multi \
                --no-sort \

@@ -104,7 +104,10 @@ _fzf-rpm() {
                --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
                --border-label " Installed packages " \
                --header-lines 1 \
-               --help "Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files;Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog;Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify;Alt-w:What packages relate to selected one." \
+               --help "Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files
+                       Alt-h:Open package URL in \\\$BROWSER;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog
+                       Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify
+                       Alt-w:What packages relate to selected one." \
                --list-label " Matching packages " \
                --multi \
                --no-sort \
