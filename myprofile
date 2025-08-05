@@ -4,22 +4,20 @@
 # Without arguments all script listed in "myprofile.default" will be sourced too.
 
 myprofile() {
-  local _src _script _verbose _conf
+  local _script _verbose _conf
   local -a _scripts
-
-  _src="$(realpath "${BASH_SOURCE[0]}")"
 
   while [ $# -gt 0 ] ; do
     case "$1" in
          -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--verbose] [{script}]]";
                     return 0;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
-                      ln -sfv "$_src" "/etc/profile.d/zz-$FUNCNAME.sh"
+                      ln -sfv "$MYPROFILE" "/etc/profile.d/zz-$FUNCNAME.sh"
                     else
                       touch ~/.bash_profile
-                      _script="$(sed "\~$_src~d" ~/.bash_profile)"
-                      echo -e "source $_src\n\n$_script" >~/.bash_profile
-                      grep --with-filename "$_src" ~/.bash_profile
+                      _script="$(sed "\~$MYPROFILE~d" ~/.bash_profile)"
+                      echo -e "source $MYPROFILE\n\n$_script" >~/.bash_profile
+                      grep --with-filename "$MYPROFILE" ~/.bash_profile
                     fi
                     return 0;;
       -v|--verbose) _verbose=echo;;
@@ -33,7 +31,7 @@ myprofile() {
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1" ]] ; then
 
     _conf="$HOME/.config/$FUNCNAME/default"
-    _scripts=($(grep -v -E "^[[:space:]]*[#_]" "$([ -s "$_conf" ] && echo "$_conf" || echo "${_src%/*}/$FUNCNAME.default")"))
+    _scripts=($(grep -v -E "^[[:space:]]*[#_]" "$([ -s "$_conf" ] && echo "$_conf" || echo "${MYPROFILE%/*}/$FUNCNAME.default")"))
 
   fi
 
@@ -41,7 +39,7 @@ myprofile() {
 
     [ -z "$_verbose" ] || echo "Source \"$_script\"."
 
-    if ! source "${_src%/*}/$_script" ; then
+    if ! source "${MYPROFILE%/*}/$_script" ; then
 
       echo "Load of myprofile script \"$_script\" has failed!" >&2
       return 1
@@ -51,5 +49,9 @@ myprofile() {
   done
 }
 export -f myprofile
+
+# CAUTION: During initial "source .../myprofile" it is assured that "$BASH_SOURCE[0]" points to this
+# script. For later myprofile() calls this is not guaranteed.
+export MYPROFILE="$(realpath "${BASH_SOURCE[0]}")"
 
 myprofile "$@"
