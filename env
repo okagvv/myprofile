@@ -24,15 +24,19 @@ export SYSTEMD_COLORS=0
 # /etc/tigrc is ubject of package updates. Use $TIGRC_USER to enable site sepecific adaption.
 export TIGRC_USER=/etc/tigrc.site
 
-if [ -d ~/.emacs.d ] ; then
+if in-path emacs && [ -d ~/.emacs.d ] ; then
 
   [ -z "$DISPLAY" ] || export ALTERNATE_EDITOR="emacs-gtk+x11"
   export EDITOR="emacsclient -n"
   export GIT_EDITOR="emacsclient"
 
-else
+elif in-path vim ; then
 
   export EDITOR=vim
+
+else
+
+  export EDITOR=vi
 
 fi
 
