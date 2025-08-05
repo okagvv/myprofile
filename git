@@ -20,6 +20,48 @@ complete -W "--all --remote" branches
 
 in-path delta && export DELTA_FEATURES=default
 
+git-root() {
+  local _root
+  _root="$(git rev-parse --show-toplevel 2>/dev/null)"
+  [ -n "$_root" ] && cd "$_root" || fn-error "Current directory \"$(pwd)\" is not in a Git worktree!"
+}
+
+git-changed() (
+  if [ $# -eq 1 ] ; then
+
+    if git-root ; then
+
+      myprofile _fzf
+
+      _changed() {
+        git log --since-as-filter="$1" --pretty="" --name-only
+      }
+      _changes() {
+        git log --since-as-filter="$1" --patch -- "$2"
+      }
+      _label() {
+        echo "[ commits changing \"$1\" ]"
+      }
+      export -f _changes _label
+
+      _changed "$1" | \
+      sort -u | \
+      _fzf-wrapper --bind "enter:execute(_changes \"$1\" {})" \
+                   --bind "focus:transform-preview-label(_label {})" \
+                   --border none \
+                   --color "label:reverse" \
+                   --exit-0 \
+                   --list-label "[ Files changed since \"$1\" ]" \
+                   --no-sort \
+                   --preview "_changes \"$1\" {} | bat --color always --style plain --language diff" \
+                   --preview-window "70%:wrap"
+    fi
+
+  else
+    fn-usage "<since date>"
+  fi
+)
+
 in-path tig || return 0
 
 # /etc/tigrc is ubject of package updates. Use $TIGRC_USER to enable site sepecific adaption.
@@ -34,30 +76,32 @@ git-search() (
       _all="--all"
       shift
     fi
-    
-    myprofile _fzf
 
-    { echo "Commit|Date|Author|Subject"
-      git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" --regexp-ignore-case $_all -G "$@"
-    } | column -t -s"|" -l 4 | \
-    _fzf-wrapper --accept-nth 1 \
-                 --bind "alt-g:change-preview(git grep --color=always --line-number --heading --full-name --ignore-case --context 2 --extended-regexp \"$@\" {1})" \
-                 --bind "alt-l:execute(tig log {1})" \
-                 --bind "alt-s:execute(tig show {1})" \
-                 --bind "enter:accept" \
-                 --border none \
-                 --exit-0 \
-                 --header-lines 1 \
-                 --list-label " Commits adding or (re)moving case-insensitive regexp \"$@\" " \
-                 --help "Alt-d:git diff;Alt-g:git grep;Alt-l:tig log;Alt-s:tig show" \
-                 --preview-label " Git diff/grep output " \
-                 --preview-init "alt-d:git diff --color=always --word-diff=color --abbrev {1}^ {1} -G \"$@\"" \
-                 --preview-window "60%:wrap" \
-                 --reverse
+    if git-root ; then
+
+      myprofile _fzf
+
+      { echo "Commit|Date|Author|Subject"
+        git log --pretty="%h|%ad|%an|%s" --date="format:%F %T" --regexp-ignore-case $_all -G "$@"
+      } | column -t -s"|" -l 4 | \
+      _fzf-wrapper --accept-nth 1 \
+                   --bind "alt-g:change-preview(git grep --color=always --line-number --heading --full-name --ignore-case --context 2 --extended-regexp \"$@\" {1})" \
+                   --bind "alt-l:execute(tig log {1})" \
+                   --bind "alt-s:execute(tig show {1})" \
+                   --bind "enter:accept" \
+                   --border none \
+                   --exit-0 \
+                   --header-lines 1 \
+                   --list-label " Commits adding or (re)moving case-insensitive regexp \"$@\" " \
+                   --help "Alt-d:git diff;Alt-g:git grep;Alt-l:tig log;Alt-s:tig show" \
+                   --preview-label " Git diff/grep output " \
+                   --preview-init "alt-d:git diff --color=always --word-diff=color --abbrev {1}^ {1} -G \"$@\"" \
+                   --preview-window "60%:wrap" \
+                   --reverse
+    fi
 
   else
     fn-usage "[--all] <regexp>"
   fi
 )
-
 complete -W "--all" git-search
