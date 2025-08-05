@@ -83,11 +83,11 @@ rpm-verify() {
 }
 
 # everything below
-# .. requires root permission or
+# .. requires root permission and
 [[ "$(id -u)" == "0" ]] || return 0
 
 # .. is only applicable if dnf is installed 
-type -fP dnf >/dev/null || return 0
+in_path dnf || return 0
 
 rpm-freshen() {
   if [ $# -gt 0 ] ; then

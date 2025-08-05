@@ -265,6 +265,10 @@ history_cleanup() {
   true
 }
 
+in_path() {
+  type -fp "$1" >/dev/null
+}
+
 lm() {
   l --color=always "$@" |& m -p lm
 }
