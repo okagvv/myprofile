@@ -71,16 +71,22 @@ _rpm-preview() {
   rpm --query $2 "$3"
 }
 
-export -f _rpm-preview _rpm-preview-docs _rpm-preview-what
+_rpm-preview-files() {
+  fzf-preview-header "$1 package \"$3\""
+  rpm --query $2 --verbose "$3" | \
+  column --table --table-columns-limit 6 --table-right 1,5 2>/dev/null
+}
+
+export -f _rpm-preview _rpm-preview-docs _rpm-preview-files _rpm-preview-what
 
 _fzf-rpm() {
   local _default _nvr
   _nvr="{-3}-{-2}.{-1}"
   _default="_rpm-preview \"Changelog of\" --changelog $_nvr"
 
-  fzf --bind="alt-c:change-preview(_rpm-preview \"Config files in\" --configfiles $_nvr)" \
-      --bind="alt-d:change-preview(_rpm-preview \"Doc files in\" --docfiles $_nvr)" \
-      --bind="alt-F:change-preview(_rpm-preview \"Files in\" -l $_nvr)" \
+  fzf --bind="alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
+      --bind="alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
+      --bind="alt-F:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
       --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
       --bind="alt-l:change-preview($_default)" \
       --bind='alt-P:change-preview(_rpm-preview-what {-3})' \
@@ -100,7 +106,7 @@ _fzf-rpm() {
       --preview-window '60%,~2:wrap' \
       --query "$2" \
       --reverse | \
-  xargs -r 
+  xargs -r
 }
 
 rpm-history() {
@@ -125,7 +131,7 @@ rpm-owner() {
   else
     _long=y
   fi
-  
+
   if [ $# -gt 0 ] ; then
 
     for _f in "$@" ; do
@@ -136,7 +142,7 @@ rpm-owner() {
       echo "${_long:+$__f: }$(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
 
     done
-    
+
   else
     fn-usage "file .."
   fi
