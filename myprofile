@@ -1,12 +1,7 @@
 #!/usr/bin/echo "myprofile must be *sourced* by bash sessions/scripts!"
 # -*- shell-script -*-
 #
-# Without arguments all script listed in "myprofile.default" will be sourced too.  myprofile() might
-# be called later to source updated a/o further scripts located in same directory.
-#
-# To load all myprofile scripts during initialization of interactive shell processes
-# - for all logins the symbolic link "/etc/profile.d/zz-myprofile.sh" or
-# - "~/.bash_profile" sources this script
+# Without arguments all script listed in "myprofile.default" will be sourced too.
 
 myprofile() {
   local _src _script _verbose
@@ -21,8 +16,9 @@ myprofile() {
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
                       ln -sfv "$_src" "/etc/profile.d/zz-$FUNCNAME.sh"
                     else
-                      sed -i "\~$_src~d" ~/.bash_profile
-                      echo -e "\nsource $_src" >>~/.bash_profile
+                      touch ~/.bash_profile
+                      _script="$(sed "\~$_src~d" ~/.bash_profile)"
+                      echo -e "source $_src\n\n$_script" >~/.bash_profile
                       grep --with-filename "$_src" ~/.bash_profile
                     fi
                     return 0;;
