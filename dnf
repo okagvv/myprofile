@@ -18,45 +18,10 @@ dnf-files() {
 
 dnf-history() (
   if [[ "$1" =~ ^-+h(elp)?$ ]] ; then
-
     fn-usage "[--help] [package ..]"
-
   else
-
-    myprofile _fzf
-
-    _history() {
-      sudo -A dnf history "$@"
-    }
-    _info() {
-      _history info "$1" | _fzf-preview-bat --style plain --language log
-    }
-    export -f _history _info
-
-    local _packages
-    [ $# -eq 0 ] || _packages="--contains-pkgs=$(IFS=,; echo "$*")"
-
-    _history list $_packages | \
-    tail -n +2 | \
-    awk  '{ printf "%s|%s %s|%s %s|%s\n",$1,$(NF-2),$(NF-1),$2,$3,$NF }' | \
-    column -t -s"|" -C name=No,right -C name=Timestamp -C name=Command -C name=Packages,right | \
-    _fzf-wrapper --bind "enter:execute(_info {1})" \
-                 --bind "alt-r:execute(_history redo {1})" \
-                 --bind "alt-R:execute(_history rollback {1})" \
-                 --bind "alt-u:execute(_history undo {1})" \
-                 --border none \
-                 --color "label:reverse" \
-                 --header-lines 1 \
-                 --help "Enter:Open transaction info in pager;Alt-r:Redo selected transaction;Alt-u:Undo selected transaction
-                         Alt-R:Rollback to selected transaction" \
-                 --list-label "[${_packages/*=/ } DNF transaction(s) ]" \
-                 --no-multi \
-                 --no-sort \
-                 --reverse \
-                 --preview "_info {1}" \
-                 --preview-label "[ DNF transaction info ]" \
-                 --preview-window "70%,~1:wrap"
-
+    myprofile _dnf
+    _dnf-history "$@"    
   fi
 )
 
@@ -125,7 +90,7 @@ dnf-search() (
 )
 
 dnf-upgrades() (
-  local _testing _scopes
+  declare -g _testing _scopes
   while [ $# -gt 0 ] ; do
     case "$1" in
            -b|--bugfix) _scopes+=" --bugfix";;
@@ -137,50 +102,9 @@ dnf-upgrades() (
     esac
     shift
   done
-  export _testing _scopes
-
-  __bodhi() {
-    _bodhi-updates "${2%.*}-$3.${2##*.}"
-  }
-  __dnf() {
-    sudo dnf $1 $_testing --quiet "${@: 4}" "${2%.*}-$3.${2##*.}"
-  }
-  __upgrades() {
-    {
-      echo "Package Version Repository"
-      sudo -A dnf check-upgrade $_testing $_scopes --quiet
-    } | sed -rn '/(Obsoleting packages|No security updates needed)/Iq;p' | \
-        column -t
-  }
-  export -f __bodhi __dnf __upgrades
 
   myprofile _dnf
-
-  FZF_DEFAULT_COMMAND=__upgrades \
-  _fzf-wrapper --bind "ctrl-a:toggle-all" \
-               --bind "alt-b:execute(__bodhi {1} {2})" \
-               --bind "alt-d:execute(sudo dnf remove {+1})+reload(__upgrades)" \
-               --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; printf \"\\n%-15s: %s\" Current \$(rpm -q {1}))" \
-               --bind 'alt-h:execute-silent(_fzf-browser "$(__dnf repoquery {1} {2} --queryformat "%{url}")")' \
-               --bind "alt-w:change-preview(_dnf-preview-what {1})" \
-               --bind 'alt-x:toggle-all+become(echo {+1})' \
-               --bind 'enter:become(echo {+1})' \
-               --bind 'zero:execute(echo "No pending updates found!")+abort' \
-               --bind 'change:unbind(zero)' \
-               --border none \
-               --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi;Alt-c:Package change log;Alt-d:Remove selected packages
-                       Alt-h:Open package URL in \$BROWSER;Alt-i:Package info;Alt-w:What packages relate to selected one
-                       Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
-               --list-label " Select${_scopes//--/} upgrades to install " \
-               --multi \
-               --no-sort \
-               --preview-init "alt-c:__dnf changelog {1} {2}" \
-               --preview-label " Press F1 for help " \
-               --preview-window "60%,~1:wrap" \
-               --query "$1" \
-               --reverse | \
-  xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
+  _dnf-upgrades
 )
 complete -W "--{bugfix,enhancement,help,security,testing}" dnf-upgrades
 
