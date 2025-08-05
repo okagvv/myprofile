@@ -1,0 +1,30 @@
+# -*- mode: Shell-script -*-
+
+if in-path emacs && ! is-root && [ -d ~/.emacs.d ] ; then
+
+  if [ -n "$DISPLAY" ] ; then
+
+    in-path emacs-gtk+x11 && export ALTERNATE_EDITOR="emacs-gtk+x11"
+    
+  fi
+  
+  export EDITOR="emacsclient -n"
+  export GIT_EDITOR="emacsclient"
+
+elif in-path gvim && ! is-root && [ -n "$DISPLAY" ] ; then
+
+  export EDITOR=gvim
+  
+elif in-path vim ; then
+
+  export EDITOR="vim"
+
+elif in-path nano && [ -s ~/.nanorc ] ; then
+
+  export EDITOR="nano"
+  
+else
+
+  export EDITOR="vi"
+
+fi
