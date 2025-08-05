@@ -84,7 +84,7 @@ fzf-apply() (
       find-beyond-git . -type f -readable -printf '%P\0' 2>/dev/null
     }
     export -f _find-apply find-beyond-git
-    
+
     _find-apply | \
     _fzf-wrapper --bind "enter:execute($* {+} || true; read -s -p \"Press ENTER to return.\")+reload(_find-apply)" \
                  --border-label " Each ENTER calls \"$*\" for selected argument(s). " \
@@ -204,26 +204,26 @@ fzf-ps() (
   local _ps
   _ps="ps aux --sort=-%cpu | column -t -l 11"
   eval "$_ps" | \
-  fzf --bind "ctrl-r:reload(eval \"$_ps\")" \
-      --bind "alt-i:show-preview+change-preview(echo {11..-1} | sed -r 's/ +-/\n-/g')" \
-      --bind "alt-p:toggle-preview" \
-      --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)" \
-      --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)" \
-      --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)" \
-      --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)" \
-      --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)" \
-      --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)" \
-      --border-label " Output of \"$_ps\". CTRL-R reloads process list. " \
-      $(_fzf-query-history) \
-      --header-lines 1 \
-      --hscroll-off=800 \
-      --list-border none \
-      --multi \
-      --no-sort \
-      --preview "echo {11..-1} | sed -r 's/ +-/\n-/g'" \
-      --preview-window "50%,~3:hidden:wrap:follow" \
-      --query "$1" \
-      --reverse
+  _fzf-wrapper --bind "ctrl-r:reload(eval \"$_ps\")" \
+               --bind "alt-d:show-preview+change-preview(pidstat -d --human -p {2} 1)" \
+               --bind "alt-r:show-preview+change-preview(pidstat -r --human -p {2} 1)" \
+               --bind "alt-s:show-preview+change-preview(pidstat -s -p {2} 1)" \
+               --bind "alt-u:show-preview+change-preview(pidstat -u -I -p {2} 1)" \
+               --bind "alt-v:show-preview+change-preview(pidstat -v -p {2} 1)" \
+               --bind "alt-w:show-preview+change-preview(pidstat -w -p {2} 1)" \
+               --border-label " Output of \"$_ps\". " \
+               --header-lines 1 \
+               --help "Ctrl-r:Reload;Alt-i:Show full command-line;Alt-d:IO stats;Alt-r:Memory utilization
+                       Alt-s:Stack utilization;Alt-u:CPU utilization;Alt-v:Kernel table values
+                       Alt-w:Task switching activity" \
+               --hscroll-off=800 \
+               --list-border none \
+               --multi \
+               --no-sort \
+               --preview-init "alt-i:echo {11..-1} | sed -r 's/ +-/\n-/g'" \
+               --preview-window "50%,~3:hidden:wrap:follow" \
+               --query "$1" \
+               --reverse
 )
 
 in-path rg && \
@@ -257,7 +257,7 @@ fzf-rg() (
 fzf-data() (
   # derived from https://github.com/denisidoro/dotfiles/blob/master/scripts/javascript/nav
   if [[ "${1,,}" =~ \.(json|ya?ml)$ ]] ; then
-    
+
     myprofile _fzf
 
     #export fn_trace=y
