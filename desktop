@@ -1,0 +1,27 @@
+# -*- mode:shell-script; -*-
+# Window manager related stuff
+
+[ -n "$XDG_SESSION_DESKTOP" ] || return 0
+
+toggle-deco() {
+  if [ $# -eq 1 ] ; then
+
+    local _winid    
+    _winid="$(xdotool search -name "$1")"
+
+    if [[ "$_winid" =~ ^[[:digit:]]+$ ]] ; then
+
+      toggle-decorations "$_winid"
+
+    else
+
+      fn-error "Failed to detect a unique window ID for window title pattern \"$1\"!"
+
+    fi
+    
+  else
+
+    fn-usage " <window-title>"
+
+  fi
+}
