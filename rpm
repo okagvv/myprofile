@@ -27,20 +27,16 @@ rpm-docs() (
   fi
 )
 
-rpm-history() (
-  myprofile _rpm
-  LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}\n' 2>&1 | \
-  sort --reverse | \
-  sed -r 's/^[[:digit:]]+ ([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\1 \2/' | \
-  column --table --separator "*" | \
-  _fzf-rpm "Package install history" "$(sed -r 's/[[:space:]]+/ \| /g' <<<"$*")"
-)
-
-rpm-info() (
-  myprofile _rpm
-  rpm -qa --query --all --queryformat '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' "$@" | \
-  sort | \
-  _fzf-rpm "Installed packages"
+rpm-list() (
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [pattern]"; exit 0;;
+              *) break;;
+    esac
+  done
+  
+  myprofile _rpm  
+  _fzf-rpm "$@"
 )
 
 rpm-owner() {
