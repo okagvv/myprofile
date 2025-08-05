@@ -20,8 +20,9 @@ myprofile() {
     -i|--install) if [[ "$(id -u)" == "0" ]] ; then
                     ln -sfv "$_src" /etc/profile.d/zz-myprofile.sh
                   else
-                    sed -i '~$_src~d' ~/.bash_profile
+                    sed -i "\~$_src~d" ~/.bash_profile
                     echo -e "\nsource $_src" >>~/.bash_profile
+                    grep --with-filename $_src ~/.bash_profile
                   fi
                   return 0;;
     -v|--verbose) _verbose=echo; shift;;
