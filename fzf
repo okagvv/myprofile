@@ -91,11 +91,7 @@ $(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
   ) | column -t -s: -o": " | sed 's/^- *://'
 }
 
-_fzf-help-bind() {
-  echo "f1:show-preview+change-preview(_fzf-help \"$1\")"
-}
-
-export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-help-bind _fzf-query-history
+export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history
 
 _fzf-wrapper() {
   # args: help text for function specific bindings, key for initial preview, initial preview, preview window
