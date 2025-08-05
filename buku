@@ -110,7 +110,7 @@ if in-path sqlite3 ; then
       myprofile _fzf
 
       _label-text() {
-        printf " %s fetched from \"places.sqlite\". Use \"ALT-{b,h}\" to (re)load bookmarks/history from active browser session. " "${1^}"
+        printf " %s fetched from \"places.sqlite\". Press F1 for supported key bindings. " "${1^}"
       }
       export -f mozplaces _label-text
 
@@ -127,10 +127,11 @@ if in-path sqlite3 ; then
                    --bind "alt-b:reload(mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
                    --bind "alt-h:reload(mozplaces history $@)+transform-border-label(_label-text history)" \
                    --bind "enter:execute-silent(_fzf-browser {2})" \
-                   --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
+                   --bind 'result:unbind(f4)+unbind(f5)' \
                    --color "label:reverse" \
                    --delimiter "|" \
                    --exit-0 \
+                   --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Enter:Open selected entry in \$BROWSER" \
                    --list-border none \
                    --no-multi \
                    --preview "echo {2}" \
