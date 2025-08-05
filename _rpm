@@ -74,12 +74,19 @@ _rpm-preview-files() {
 }
 
 _rpm-list() {
+  local _sort
+  case "$1" in
+       bydate) _sort="--reverse --key=4";;
+    byversion) _sort="--key=2 --key=1 --key=3";;
+            *) _sort="--key=1 --key=2 --key=3";;
+  esac
+  
   { echo "Name*Version*Architecture*Installed at"
     # CAUTION: "rpm --query --all --last --queryformat .." is not applicable here: creates redundant
     # output in --last *and* --querformat notations. Separate columns for version and release are
     # pointless too because there are packages defining only one of them.
     LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}*%{INSTALLTIME:date}\n' | \
-    sort --field-separator="*" $([ "$1" == bydate ] && echo "--reverse --key=4" || echo "--key=1 --key=2 --key=3") | \
+    sort --field-separator="*" $_sort | \
     sed -r 's/\*([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\*\1 \2/'
   } | column --table --separator "*"
 }
@@ -91,8 +98,8 @@ _fzf-rpm() {
   _nvr="{1}-{2}.{3}"
   _help="Alt-c:Config files;Alt-D:Sort by install date;Alt-d:Doc files;Alt-f:Package files
          Alt-h:Open package URL in default browser;Alt-i:Package info;Alt-L:License files;Alt-l:Changelog
-         Alt-n:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify
-         Alt-w:What packages relate to selected one"
+         Alt-N:Sort by name;Alt-r:Readme;Alt-s:Scripts;Alt-u:Upstream changelog;Alt-v:Verify
+         Alt-V:Sort by version;Alt-w:What packages relate to selected one"
 
   if is-fn _dnf-advisory ; then
     _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1})")
@@ -108,10 +115,11 @@ _fzf-rpm() {
                --bind "alt-l:change-preview(_rpm-preview \"Changelog of\" --changelog $_nvr log)" \
                --bind "alt-L:change-preview(_rpm-preview-files \"License for\" --licensefiles $_nvr)" \
                --bind "alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
-               --bind "alt-n:change-prompt(.. sort by name ..> )+reload(_rpm-list byname)" \
+               --bind "alt-N:change-prompt(.. sort by name ..> )+reload(_rpm-list byname)" \
                --bind "alt-s:change-preview(_rpm-preview \"Scripts in\" \"--filetriggers --scripts --triggers\" $_nvr bash)" \
                --bind "alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
                --bind "alt-v:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr txt)" \
+               --bind "alt-V:change-prompt(.. sort by version ..> )+reload(_rpm-list byversion)" \
                --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
                "${_dnf_opt[@]}" \
                --border-label " Installed packages " \
