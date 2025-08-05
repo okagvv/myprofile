@@ -187,4 +187,4 @@ if in-path podman ; then
 
 fi
 
-fn-export "^(_fzf|fn)-[[:alnum:]-]+$" in-path "^is-(fn|root)$" rpm-owner ffprobes strip_esc fdl
+fn-export "$MYPROFILE/"{common,fn} "^_fzf-[[:alnum:]-]+$" rpm-owner ffprobes

@@ -75,11 +75,17 @@ fn-logger() {
 
 fn-export() {
   if [ $# -gt 0 ] ; then
-    local _fn _re
-    for _re in "$@" ; do
-      for _fn in $(declare -F | cut -d' ' -f3 | grep -E "$_re") ; do
-        export -f "$_fn"
-      done
+    local _fn _scope
+    for _scope in "$@" ; do
+      if [ -f "$_scope" ] ; then
+        for _fn in $(sed -rn 's/^([[:alpha:]_][[:alnum:]_-]+) *\(\).*$/\1/p' "$_scope") ; do
+          export -f "$_fn"
+        done
+      else
+        for _fn in $(declare -F | cut -d' ' -f3 | grep -E "$_scope") ; do
+          export -f "$_fn"
+        done
+      fi
     done
   else
     fn-usage "{<regexp>}"
