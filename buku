@@ -71,28 +71,35 @@ complete -F _complete-fzf-buku fzf-buku
 
 if in-path sqlite3 ; then
   mozplaces() {
-    # s.a. https://en.wikiversity.org/wiki/Firefox/Browsing_history_database
-    # history returns empty list unless "Remember browsing and download history" is enabled in FF settings
+    # s.a. https://en.wikiversity.org/wiki/Firefox/Browsing_history_database history returns empty
+    # list (even for active browser session) unless "Remember browsing and download history" is
+    # enabled in FF settings
     local _places _query
     case "$1" in
-        h|history) _query="SELECT datetime(moz_historyvisits.visit_date/1000000,'unixepoch'), moz_places.url, moz_places.title
-                           FROM moz_places, moz_historyvisits
-                           WHERE moz_places.id = moz_historyvisits.place_id
-                           ORDER BY visit_date";;
-      b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch'), b.title, h.url
-                           FROM moz_places h
+        h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch'), p.url, p.title
+                           FROM moz_places p, moz_historyvisits h
+                           WHERE p.id = h.place_id
+                           ORDER BY h.visit_date";;
+      b|bookmarks) _query="SELECT datetime(b.dateAdded/1000000,'unixepoch'), p.url, b.title
+                           FROM moz_places p
                            JOIN moz_bookmarks b
-                           ON h.id = b.fk";;
+                           ON p.id = b.fk";;
                 *) fn-usage "bookmarks|history"; return 1;;
     esac
     
-    for _places in ~/.mozilla/firefox/*/places.sqlite ; do
+    for _places in ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
 
-      # copy may be locked DB to avoid potential corruption (s.a. https://www.sqlite.org/c3ref/open.html)
-      cp -f "$_places" /tmp/places.sqlite
+      if [ -s "$_places" ] ; then
 
-      sqlite3 /tmp/places.sqlite "$_query"
+        echo "Examine \"$_places\"."
+        
+        # use a copy to avoid potential DB corruption (s.a. https://www.sqlite.org/c3ref/open.html)
+        cp -f "$_places" /tmp/places.sqlite
 
+        sqlite3 /tmp/places.sqlite "$_query"
+
+      fi
+      
     done
 
     rm -f /tmp/places.sqlite
