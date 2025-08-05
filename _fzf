@@ -33,6 +33,8 @@ _fzf-preview-path() {
     _mime="$(file --brief --mime "$1")"
     _size="$(du -sh "$1" | cut -f1)"
 
+    is-fn rpm-owner || myprofile rpm
+
     cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
 Type: $_mime
 $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
@@ -41,13 +43,13 @@ EOF
 
     if [[ -r "$1" && -s "$1" ]] ; then
       case "$_mime" in
-        *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
-        *pdf*) if in-path pdfinfo ; then
-                 _fzf-preview-header
-                 pdfinfo -isodates "$1"
-               fi;;
-        *rpm*) _fzf-preview-header; rpm -qip "$1";;
-        *text*) _fzf-preview-bat "$1";;
+             *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
+                       *pdf*) if in-path pdfinfo ; then
+                                _fzf-preview-header
+                                pdfinfo -isodates "$1"
+                              fi;;
+                       *rpm*) _fzf-preview-header; rpm -qip "$1";;
+                      *text*) _fzf-preview-bat "$1";;
         *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
       esac
     fi
@@ -116,4 +118,3 @@ _fzf-wrapper() {
   fzf $(_fzf-query-history 2) \
       "${_args[@]}"
 }
-
