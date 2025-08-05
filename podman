@@ -18,12 +18,12 @@ fzf-images() {
       --bind='alt-d:+change-preview(_fzf-podman-query "Diff for {}" podman image diff --format json {})' \
       --bind='alt-h:+change-preview(_fzf-podman-query "History of {}" podman image history --format json {})' \
       --bind="alt-i:+change-preview($_default)" \
-      --bind='alt-t:+change-preview(fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
+      --bind='alt-T:+change-preview(fzf-preview-header "Layer hierarchy for {1}"; podman image tree {1})' \
       --border none \
       --list-label " Podman images " \
       --multi \
       --preview "$_default" \
-      --preview-label " Use alt-{c,d,h,i,t} to change information scope. " \
+      --preview-label " Use alt-{c,d,h,i,T} to change information scope. " \
       --preview-window '60%:~2:wrap' \
       --query "$1" | \
   xargs -r
