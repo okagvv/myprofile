@@ -29,13 +29,13 @@ _fzf_comprun () {
   esac
 }
 
-fzf-preview-hrule() {
+fzf-preview-header() {
   [ -z "$1" ] || echo "$1"
   printf "%*s" $FZF_PREVIEW_COLUMNS | sed 's/ /┈/g'
   echo
 }
 # must be exported for "fzf --preview .." executed in sub shell
-export -f fzf-preview-hrule
+export -f fzf-preview-header
 
 fzf-fn() {
   local _re _defs
@@ -152,9 +152,7 @@ if in-path rg ; then
           --smart-case
 
     else
-
       fn-usage "<ripgrep args>"
-
     fi
   }
 
@@ -182,11 +180,9 @@ fzf-apply() {
     done
 
   else
-
     fn-usage "<cmd> [<args>]
 Sample:
 \$ $FUNCNAME rm -iv"
-
   fi
 }
 
@@ -200,7 +196,7 @@ fzf-units() {
       --list-label " Systemd unit(s) " \
       --multi \
       --no-sort \
-      --preview "systemctl status {1} --lines 100; fzf-preview-hrule; echo; systemctl cat {1}" \
+      --preview "systemctl status {1} --lines 100; fzf-preview-header; echo; systemctl cat {1}" \
       --preview-label " Unit status, recent journal entries and spec " \
       --query "$1" \
       --reverse
