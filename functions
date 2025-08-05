@@ -123,7 +123,6 @@ m() {
 
   TERM=xterm less --hilite-search \
                   --ignore-case \
-                  --mouse \
                   --no-histdups \
                   --no-init \
                   --no-vbell \
@@ -227,7 +226,20 @@ uriencode() {
   gojq -nr --arg v "$1" '$v|@uri';
 }
 
-[[ "$(id -u)" == "0" ]] || return 0
+xtrace() {
+  # Enable xtrace until return from current block. Apply as eval "$(xtrace)".
+  echo "set -x; trap 'set +x; trap - RETURN' RETURN"
+}
+
+if [[ ! "$(id -u)" == "0" ]] ; then
+
+  journalctl() { /usr/bin/journalctl --user "$@"; }
+  systemctl() { /usr/bin/systemctl --user "$@"; }
+  export -f journalctl systemctl
+  
+  return 0
+
+fi
 
 # ------------ functions requiring root permission ------------
 

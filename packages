@@ -3,6 +3,7 @@
 _rpm-inspect-scope() {
   rpm --query --$1 "$2" | \
   fzf --border none \
+      $(fzf-query-history 2) \
       --list-label " ${1^} in package \"$2\" " \
       --multi \
       --preview 'fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
@@ -78,6 +79,7 @@ _fzf-rpm() {
       --bind='alt-u:+change-preview(_rpm-preview-docs changelog {-1})' \
       --bind='alt-v:+change-preview(_rpm-preview "Verify files of" "--verify --verbose" {-1})' \
       --border-label " $1 " \
+      $(fzf-query-history) \
       --list-border rounded \
       --list-label " Matching packages " \
       --multi \
@@ -103,21 +105,30 @@ rpm-info() {
 }
 
 rpm-owner() {
+  local _f __f _long
+
+  if [[ "$1" =~ ^-+s(hort)?$ ]] ; then
+    shift
+  else
+    _long=y
+  fi
+  
   if [ $# -gt 0 ] ; then
 
-    local _f __f
     for _f in "$@" ; do
 
       [[ -e "$_f" || "$_f" = /* ]] && __f="$_f" || __f="$(/usr/bin/which "$_f" 2>/dev/null)"
       [[ -z "$__f" ]] && __f="$_f"
 
-      echo "$__f: $(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
+      echo "${_long:+$__f: }$(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
 
     done
+    
   else
     fn-usage "file .."
   fi
 }
+export -f rpm-owner
 
 rpm-status() {
   if [ $# -gt 0 ] ; then
@@ -153,6 +164,8 @@ rpm-freshen() {
   fi
 }
 
+new-alias updateinfo 'dnf updateinfo --info'
+
 dnf-repoquery() {
   dnf repoquery --cacheonly --quiet "$@"
 }
@@ -182,6 +195,7 @@ dnf-history() {
   column -t -s"|" -C name=No,right -C name=Timestamp -C name=Scope | \
   fzf --bind "enter:become(echo dnf history info,redo,rollback,undo {1})" \
       --border-label " DNF history " \
+      $(fzf-query-history) \
       --no-sort \
       --reverse \
       --header-lines 1 \
@@ -198,8 +212,10 @@ _fzf-dnf-packages() {
   # CAUTION: "dnf repoquery --list" may not work with --cacheonly!?
   fzf --bind "alt-i:+change-preview($default)" \
       --bind "alt-f:+change-preview(fzf-preview-header \"Files in package {1}\"; dnf repoquery --quiet --list {1})" \
+      --bind 'enter:become(echo {+1})' \
       --border-label " $1 " \
       --header-lines 1 \
+      $(fzf-query-history 2) \
       --list-label " $2 " \
       --multi \
       --no-sort \
@@ -220,13 +236,13 @@ _dnf-packages() {
 dnf-install() {
   _dnf-packages | \
   _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$1" | \
-  xargs -ro sudo dnf install
+  xargs --no-run-if-empty --open-tty echo sudo dnf install
 }
 
 dnf-remove() {
   _dnf-packages --installed | \
   _fzf-dnf-packages "Remove packages via DNF" "Installed packages" "$1" | \
-  xargs -ro sudo dnf remove
+  xargs --no-run-if-empty --open-tty sudo dnf remove
 }
 
 dnf-search() {
@@ -237,11 +253,23 @@ dnf-search() {
     sort | \
     uniq | \
     _fzf-dnf-packages "Search package matching \"$@\"" "Matching packages" | \
-    xargs -ro sudo dnf install
+    xargs --no-run-if-empty --open-tty sudo dnf install
 
   else
     fn-usage "<pattern>"
   fi
+}
+
+dnf-upgrades() {
+  sudo dnf list updates --quiet | \
+  fzf --border none \
+      --header-lines 1 \
+      $(fzf-query-history) \
+      --multi \
+      --preview 'name={1}; sudo dnf changelog --quiet ${name%.*}-{2}.${name##*.}'
+      --query "$1" \
+      --reverse | \
+  xargs --no-run-if-empty --open-tty sudo dnf upgrade
 }
 
 dnf-requires() {
@@ -275,5 +303,3 @@ dnf-testing() {
     fn-usage "<dnf-args>"
   fi
 }
-
-new-alias updateinfo 'dnf updateinfo --info'
