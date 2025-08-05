@@ -41,7 +41,7 @@ _rpm-preview-docs() {
 
       if [[ -n "$_log" && -s "$_log" ]] ; then
 
-        _fzf-preview-bat "$_log"
+        _fzf-preview-bat --style plain "$_log"
         return 0
 
       fi
@@ -90,7 +90,7 @@ _fzf-rpm() {
 
   _rpm-list bydate | \
   _fzf-wrapper --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
-               --bind "alt-D:change-prompt(.. sort by date ..> )+reload(_rpm-list bydate)" \
+               --bind "alt-D:change-prompt(..sort by date..> )+reload(_rpm-list bydate)" \
                --bind "alt-d:change-preview(_rpm-preview-files \"Doc files in\" --docfiles $_nvr)" \
                --bind "alt-f:change-preview(_rpm-preview-files \"Files in\" -l $_nvr)" \
                --bind "alt-h:execute-silent(_rpm-package-url {1})" \
