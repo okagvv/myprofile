@@ -30,22 +30,22 @@ fdl() {
   #   And even this sorting is partly broken.
 
   local _header _sort
-  local -a _fd _sortcmd
+  local -a _fdargs _sortcmd
   while [ $# -gt 0 ] ; do
     case "$1" in
         -h|--help) fn-usage "[--help] [--header] [--sort r?(date|path|size)] [{fd-argument}]"; return 0;;
         -s|--sort) [[ "$2" =~ ^r?(date|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"; shift;;
       -H|--header) _header=y;;
-                *) _fd+=("$1");;
+                *) _fdargs+=("$1");;
     esac
     shift
   done
 
-  if [[ ${#_fd[@]} -gt 0 && ! "${_fd[0]}" == "." && -d "${_fd[0]}" ]] ; then
-    _fd=(. "${_fd[@]}")
+  if [[ ${#_fdargs[@]} -gt 0 && ! "${_fdargs[0]}" == "." && -d "${_fdargs[0]}" ]] ; then
+    _fdargs=(. "${_fdargs[@]}")
     [ -n "$_sort" ] || _sort=date
   fi
-  
+
   case "$_sort" in
     date|rdate) _sortcmd=(sort -t"|" -k6d${_sort/date/});;
          rpath) _sortcmd=(tac);;
@@ -53,7 +53,7 @@ fdl() {
              *) _sortcmd=(cat);;
   esac
 
-  fd "${_fd[@]}" --exclude .git --color=always --list-details | \
+  fd "${_fdargs[@]}" --exclude .git --color=always --list-details | \
   sed -r 's~^([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[0-9]+,) ([0-9]+)~\1\2~;
           s~^([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ][^\x1B]+) +([/\.\x1B])~\1|\2|\3|\4|\5|\6|\7~;
           s~(|\x1B\[[0-9\;]m)\./~\1~' | \
@@ -64,12 +64,20 @@ fdl() {
 complete -o bashdefault -o default -o nosort -F _fd fdl
 
 find-last() {
-  find ${1:-.} -type f -printf "%M~%TF %TT~%u:%g~%s~%P\n" | \
-  sed -r 's/(:[0-9]{2})\.[0-9]+~/\1~/' | \
-  column -t -s~ -o'  ' | \
-  sort -k2dr -k3dr
+  local _tail
+  local -a _fdlargs
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+      -h|--help) fn-usage "[--help] [--tail n] [{fd-argument}]"; return 0;;
+      -T|--tail) _tail="$2"; shift;;
+              *) _fdlargs+=("$1");;
+    esac
+    shift
+  done
+
+  fdl "${_fdlargs[@]}" --sort date | tail -${_tail:-10}
 }
-complete -A directory find-last
+complete -o bashdefault -o default -o nosort -F _fd find-last
 
 if in-path keepassxc-cli ; then
 
