@@ -34,13 +34,13 @@ ffprobes() {
 
     eval "_selected=($($([ -n "$_all" ] && echo _ffprobes_all || echo _ffprobes_filter) "$1" | \
                        sort | \
-                       fzf --bind 'ctrl-p:execute-silent(vlc {1})' \
+                       fzf --bind 'alt-p:execute-silent(vlc {1})' \
                            --border none \
                            --list-label " Audio and video files in \"$(realpath "$1")/\" " \
                            --multi \
                            --no-sort \
                            --preview 'echo {}; fzf_preview_hrule; ffprobe -hide_banner {}' \
-                           --preview-label " ffprobe output (CTRL-P: play curr. item) " \
+                           --preview-label " ffprobe output (alt-p: play curr. item) " \
                            --preview-window '60%,~2:wrap' \
                            --print0 \
                            --query "$2" | \
