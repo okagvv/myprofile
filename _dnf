@@ -40,8 +40,8 @@ _fzf-dnf-packages() {
                --bind "enter:become(echo {+1})" \
                --border-label " $1 " \
                --header-lines 1 \
-               --help "Alt-b:Search package on Bodhi via \$BROWSER;Alt-i:Package info;Alt-f:Files in package
-                       Alt-h:Open package URL via \$BROWSER;Alt-w:What packages relate to selected one
+               --help "Alt-b:Search package on Bodhi in default browser;Alt-i:Package info;Alt-f:Files in package
+                       Alt-h:Open package URL in default browser;Alt-w:What packages relate to selected one
                        Ctrl-a:Toggle select all;Enter:$1" \
                --list-label " $2 " \
                --multi \
@@ -108,7 +108,7 @@ _dnf-upgrades() {
                --border none \
                --header-lines 1 \
                --help "Alt-a:Show advisory (if available);Alt-A:Open advisory in pager;Alt-b:Search package on Bodhi
-                       Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in \$BROWSER
+                       Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in default browser
                        Alt-i:Package info;Alt-w:What packages relate to selected one
                        Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \

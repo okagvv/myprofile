@@ -171,8 +171,10 @@ _fzf-browser() {
   if [ -n "$1" ] ; then
     if [ -n "$BROWSER" ] ; then
       "$BROWSER" "$@"
+    elif in-path xdg-open ; then
+      xdg-open "$@"
     else
-      fn-logger err "Failed to open URL: \$BROWSER is not defined!"
+      fn-logger err "Failed to open URL: \$BROWSER is not defined and xdg-open is not installed!"
     fi
   fi
 }
