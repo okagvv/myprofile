@@ -30,14 +30,44 @@ find-last() {
 }
 mycomplete -A directory find-last
 
+
+script=
 fn-usage() {
-  echo -e "Usage: ${FUNCNAME[1]} $1"
+  echo -e "\e[34mUsage: ${script:-${FUNCNAME[1]}} $1\e[0m"
   return 2
 }
 
 fn-error() {
-  echo -e "${FUNCNAME[1]}: $1" >&2
+  echo -e "\e[32m${script:-${FUNCNAME[1]}}: $1\e[0m" >&2
   return 1
+}
+
+fn-abort() {
+  if [ -n "$PS1" ] ; then
+
+    fn-error "$1"
+    exit 1
+
+  else
+
+    # work-around to abort (nested) functions
+    local _origin="${script:-${FUNCNAME[1]}}"
+    eval "_fn-abort() { unset $_origin; : \"\${$_origin:?\$1}\"; }"
+    _fn-abort "$1"
+
+  fi
+}
+
+fn_xtrace=
+fn-xtrace() {
+  # Enable xtrace until return from calling function.
+  fn_xtrace="${FUNCNAME[1]}"
+  [ -n "$fn_xtrace" ] || return 0
+
+  trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN; echo "-===- Stopped trace for $fn_xtrace() -===-"; fn_xtrace=; fi' RETURN
+
+  echo "-===- Start xtrace for $fn_xtrace() -===-"
+  set -x
 }
 
 myjournalctl() {
@@ -45,25 +75,15 @@ myjournalctl() {
 }
 
 if in-path keepassxc-cli ; then
-  
+
   mypassgen() {
     #CAUTION: Vault (root) token must not contain dots!
     keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
                            --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
   }
-  
+
 fi
 
 uriencode() {
   gojq -nr --arg v "$1" '$v|@uri';
-}
-
-xtrace_fn=
-xtrace() {
-  # Enable xtrace until return from calling function. 
-  xtrace_fn="${FUNCNAME[1]}"
-  [ -n "$xtrace_fn" ] || return 0
-  echo "-===- Start trace of $xtrace_fn() -===-"
-  trap 'if [[ "$FUNCNAME" == "$xtrace_fn" ]] ; then set +x; trap - RETURN; xtrace_fn=; echo "-===- Stopped trace of $xtrace_fn() -===-"; fi' RETURN
-  set -x
 }
