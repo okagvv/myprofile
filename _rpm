@@ -49,10 +49,15 @@ _rpm-preview-docs() {
 }
 
 _rpm-preview-what() {
-  local _what
+  local _what _found
   _fzf-preview-header "What packages relate to \"$1\""
-  for _what in enhances recommends requires suggests supplements ; do
-    echo -e "What $_what:\n$(rpm --query --what$_what "$1" | sed '/^no package /q;s/^/- /')\n"
+  # for _what in enhances recommends requires suggests supplements ; do
+  for _what in requires  ; do
+
+    _found="$(rpm -q --requires "$1" | cut -f1 -d' ' | sort -u | xargs rpm -q --whatprovides | sed "/^no package provides /d;/^$1$/d;s/^/  - /" | sort -u)"
+
+    echo -e "${_what^}:\n${_found:- - Nothing found.}\n"
+
   done | bat --color always --style plain --language yaml
 }
 
