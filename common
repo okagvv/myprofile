@@ -71,6 +71,10 @@ if in-path keepassxc-cli ; then
 
 fi
 
+strip_esc() {
+  sed 's/\x1B\[[0-9;]*[a-zA-Z]//g'
+}
+
 uriencode() {
   gojq -nr --arg v "$1" '$v|@uri';
 }
