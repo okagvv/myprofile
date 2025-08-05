@@ -2,7 +2,8 @@
 
 in_path ffmpeg || return 0
 
-alias ffprobe='\ffprobe -hide_banner'
+myalias ffmpeg "ffmpeg -hide_banner"
+myalias ffprobe "ffprobe -hide_banner"
 
 ffprobes() {
   local _all _cmd
