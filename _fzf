@@ -125,11 +125,13 @@ _fzf-wrapper() {
 }
 
 _fzf-editor() {
-  case "$EDITOR" in
-    *vi*|*nano*) $EDITOR "$1" ${2:++$2};;
-        *emacs*) $EDITOR ${2:++$2} "$1";;
-              *) $EDITOR "$1";;
-  esac
+  if [[ -f "$1" && -r "$1" ]] ; then
+    case "$EDITOR" in
+      *vi*|*nano*) $EDITOR "$1" ${2:++$2};;
+          *emacs*) $EDITOR ${2:++$2} "$1";;
+                *) $EDITOR "$1";;
+    esac
+  fi
 }
 
 _fzf-journal() {
