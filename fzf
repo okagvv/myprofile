@@ -2,20 +2,6 @@
 
 in-path fzf || return 0
 
-FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --no-mouse --info=inline --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-preview-wrap,f4:change-preview-window(70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f7:preview-half-page-up,f8:preview-half-page-down,f9:preview-top,f10:preview-bottom' --history-size 100 --highlight-line --info-command='echo \$FZF_POS/\$FZF_INFO' --exact --ignore-case"
-export FZF_HISTORY_DIR="$HOME/.config/fzf"
-[ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
-
-if is-root ; then
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:0,bg:#ffdfdf,hl:33,fg+:0,bg+:#ffcdcd,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
-
-else
-
-  export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=light,fg:240,bg:230,hl:33,fg+:241,bg+:221,hl+:33,info:33,prompt:33,pointer:166,marker:166,spinner:33,query:31"
-
-fi
-
 _fzf_comprun () {
   # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
   local cmd=$1
@@ -29,104 +15,7 @@ _fzf_comprun () {
   esac
 }
 
-_fzf-query-history () {
-  echo "--history $FZF_HISTORY_DIR/${FUNCNAME[${1:--1}]}.history"
-}
-
-_fzf-preview-bat() {
-  bat --color=always --terminal-width $FZF_PREVIEW_COLUMNS "$@"
-}
-
-_fzf-preview-path() {
-  _fzf-preview-header "Path \"$1\""
-
-  if [ -e "$1" ] ; then
-
-    local _mime _size
-    _mime="$(file --brief --mime "$1")"
-    _size="$(du -sh "$1" | cut -f1)"
-
-    cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
-Type: $_mime
-$(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
-RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
-EOF
-
-    if [[ -r "$1" && -s "$1" ]] ; then
-      case "$_mime" in
-        *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
-        *rpm*) _fzf-preview-header; rpm -qip "$1";;
-        *text*) _fzf-preview-bat "$1";;
-        *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
-      esac
-    fi
-
-  else
-
-    fn-error "Path \"$1\" does not exist!"
-
-  fi
-}
-
-_fzf-preview-header() {
-  [ -z "$1" ] || echo "$1"
-  printf "%*s" ${FZF_PREVIEW_COLUMNS:-${#1}} | sed 's/ /┈/g'
-  echo
-}
-
-_fzf-help() {
-  _fzf-preview-header "fzf key bindings"
-  ( echo "
-ESC:Cancel.
-Tab:Toggle selection for current match.
-F1:This help.
-F2:Toggle horizontal scroll to match.
-F3:Toggle line wrap for preview.
-F4:Step through preconfigured preview widths.
-F5:Toggle preview.
-F7:Preview half page up.
-F8:Preview half page down.
-F9:Preview top.
-F10:Preview bottom.
-Alt-Left:Preview page up.
-Alt-Right:Preview page down.
-Alt-Up:Preview line up.
-Alt-Down:Preview line down.
-Ctrl-p:Search history up.
-Ctrl-n:Search history down.
-Home:First match.
-End:Last match.
-$(if [ -n "$1" ] ; then echo -; sed -r 's/;/.\n/g' <<<"$1;" | sort -V; fi)"
-  ) | column -t -s: -o": " | sed 's/^- *://'
-}
-
-export -f _fzf-preview-header _fzf-preview-bat _fzf-preview-path _fzf-help _fzf-query-history
-
-_fzf-wrapper() {
-  # args: --help "help text for function specific bindings"
-  #       --preview-init "key for default preview":"default preview command" ["add. actions for default preview binding"]
-  # CAUTION: F1 binding requires "+change-preview-window(+0)" to compensate for a preview window
-  # config including a match dependent scroll offset (s.a. fzf-rg()).
-  local -a _args
-  while [ $# -gt 0 ]; do
-    case "$1" in
-                 --help) _args+=(--bind "f1:show-preview+change-preview(_fzf-help \"$2\")+change-preview-window(+0)")
-                         shift;;
-         --preview-init) _args+=(--preview "${2#*:}"
-                                 --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
-                         shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
-      *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;
-                      *) _args+=("$1");;
-    esac
-    shift
-  done
-
-# fn-vars _args
-  fzf $(_fzf-query-history 2) \
-      "${_args[@]}"
-}
-
-fzf-fn() {
+fzf-fn() (
   local _re _defs
   local -a _fns
 
@@ -149,6 +38,8 @@ fzf-fn() {
       _defs="$(mktemp --suffix=.fundef)"
       declare -f ${_fns[@]} >"$_defs"
 
+      myprofile _fzf
+
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
       _fzf-wrapper --bind "enter:become(echo declare -f {1})" \
@@ -165,10 +56,10 @@ fzf-fn() {
   fi
 
   [ ${#_fns[@]} -gt 0 ] || fn-usage "<function>|all|~regexp"
-}
+)
 complete -A function fzf-fn
 
-fzf-apply() {
+fzf-apply() (
   local _find _query _root
 
   while [ $# -gt 0 ] ; do
@@ -181,6 +72,8 @@ fzf-apply() {
   done
 
   if [ $# -gt 0 ] ; then
+
+    myprofile _fzf
 
     _find="find "${_root:-.}" -name .git -prune -o -print0"
 
@@ -203,11 +96,13 @@ Sample:
 \$ $FUNCNAME rm -iv"
 
   fi
-}
+)
 
 in-path locate && \
-fzf-locate() {
+fzf-locate() (
   if [ $# -gt 0 ] ; then
+
+    myprofile _fzf
 
     plocate "$@" | \
     _fzf-wrapper --border none \
@@ -224,7 +119,7 @@ fzf-locate() {
   else
     fn-usage "<locate args>"
   fi
-}
+)
 
 in-path man && \
 fzf-man() (
@@ -234,6 +129,8 @@ fzf-man() (
     man --warnings="!font" $(tr -d '()' <<<"$2") "$1"
   }
   export -f _fzf-man
+
+  myprofile _fzf
 
   man -k "${1:-.}" | \
   sort | \
@@ -252,8 +149,11 @@ fzf-man() (
   xargs -r man # '
 )
 
-fzf-ps() {
-  # TODO: Select via option from several ps columns sets.
+fzf-ps() (
+  # TODO: - Select via option from several ps columns sets.
+  #       - Apply _fzf-wrapper().
+  myprofile _fzf
+
   local _ps
   _ps="ps aux --sort=-%cpu | column -t -l 11"
   eval "$_ps" | \
@@ -277,10 +177,10 @@ fzf-ps() {
       --preview-window "50%,~3:hidden:wrap:follow" \
       --query "$1" \
       --reverse
-}
+)
 
 in-path rg && \
-fzf-rg() {
+fzf-rg() (
   # inspired by https://github.com/junegunn/fzf/blob/master/ADVANCED.md#ripgrep-integration
 
   if [ $# -gt 0 ] ; then
@@ -288,6 +188,8 @@ fzf-rg() {
     local _editor_args
     # It is assumed that $EDITOR is set to "vim" or "emacsclient".
     [[ "$EDITOR" == vim ]] && _editor_args="{1} +{2}" || _editor_args="+{2} {1}"
+
+    myprofile _fzf
 
     rg --color=always --hidden --line-number --no-heading --smart-case "$*" | \
     _fzf-wrapper --ansi \
@@ -307,4 +209,4 @@ fzf-rg() {
   else
     fn-usage "<ripgrep args>"
   fi
-}
+)

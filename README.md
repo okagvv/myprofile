@@ -51,7 +51,10 @@ installation directory. They will be applied (via `source` ) in listed order. `m
 application squence after first error. If the file `~/.config/myprofile/default` exists then it will
 be used instead of `myprofile.default`.
 
-List entries starting with a hashmark will be skipped silently.
+Some list entries will be skipped silently
+- commented-out via leading hashmark
+- profile scripts names with leading underscore are intended for sourcing on demand by profile
+  functions
 
 ## Coding conventions
 
