@@ -34,7 +34,7 @@ else
 
 fi
 
-if type -fP starship >/dev/null && [ -e ~/.config/starship.toml ] ; then
+if in_path starship && [ -e ~/.config/starship.toml ] ; then
   
   eval "$(starship init "$(basename $SHELL)")"
   
