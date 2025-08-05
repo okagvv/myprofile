@@ -21,15 +21,17 @@ if ! is-root ; then
 fi
 
 fzf-units() (
-  local _all _priorange _prio _since _journal _prio_journal _properties _systemctl _header _sudo _user _grep
+  local _all _priorange _prio _since _journal _prio_journal _properties _systemctl _header _sudo _user _grep _boot
+  _boot="-0"
   _prio=debug
   _since=48
   _user="$(whoami)"
   while [ $# -gt 0 ] ; do
     case "$1" in
            -a|--all) _all=--all;;
+          -b|--boot) _boot="$2"; shift;;
           -g|--grep) _grep="--grep $2"; shift;;
-          -h|--help) fn-usage "[--help] [--grep regexp] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
+          -h|--help) fn-usage "[--help] [--boot id] [--grep regexp] [--all | --priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
       -p|--priority) _prio="$2"; shift;;
          -s|--since) _since="$2"; shift;;
           -u|--user) _user="$2"; _sudo="sudo -A -u $_user"; shift;;
@@ -41,10 +43,10 @@ fzf-units() (
   [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
   [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
   # validate journalctl parameters
-  $_sudo journalctl --boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
+  $_sudo journalctl --boot $_boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
 
   _header="Journal entries for unit {1}"
-  _journal="_fzf-journal ${_sudo:+$_user} --unit {1} --since \"$_since ago\" $_grep"
+  _journal="_fzf-journal ${_sudo:+$_user} --unit {1} --boot $_boot --since \"$_since ago\" $_grep"
   _prio_journal="$_journal --priority=$_priorange"
   _systemctl="$_sudo systemctl"
   _properties="$_systemctl show {1} | sort | bat --color always --number --language ini"
@@ -54,7 +56,7 @@ fzf-units() (
   if [[ -z "$_all" && -n "$_prio" ]] ; then
     echo Unit
     $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
-                      --boot --since "$_since ago" --priority="$_priorange" $_grep | \
+                      --boot $_boot --since "$_since ago" --priority="$_priorange" $_grep | \
     sed --silent --regexp-extended 's/^.*UNIT=(.+)$/\1/p' | \
     sort --unique
   else
@@ -89,12 +91,14 @@ fzf-units() (
 
 fzf-journal() (
   # Iterate over syslog identifiers of recent journal entries.
-  local _priorange _prio _since _altp _altj _journal _prio_journal _header _sudo _user _grep
+  local _priorange _prio _since _altp _altj _journal _prio_journal _header _sudo _user _grep _boot
+  _boot="-0"
   _prio=debug
   _since=48
   while [ $# -gt 0 ] ; do
     case "$1" in
-          -h|--help) fn-usage "[--help] [--grep regexp] [--priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
+          -b|--boot) _boot="$2"; shift;;
+          -h|--help) fn-usage "[--help] [--boot id] [--grep regexp] [--priority 0..7|emerg|alert|crit|err|warning|notice|info|debug] [--since \"n (m|h)\"] [--user name] [fzf query]"; return 0;;
           -g|--grep) _grep="--grep $2"; shift;;
       -p|--priority) _prio="$2"; shift;;
          -s|--since) _since="$2"; shift;;
@@ -107,17 +111,17 @@ fzf-journal() (
   [[ "$_prio" =~ \.\. ]] && _priorange="$_prio" || _priorange="0..$_prio"
   [[ "$_since" =~ ^[[:digit:]]+$ ]] && _since+=" hours"
   # validate journalctl parameters
-  $_sudo journalctl --boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
+  $_sudo journalctl --boot $_boot --lines 1 --since "$_since ago" --priority="$_priorange" >/dev/null || exit 1
 
   _header="Journal entries for {1}"
-  _journal="_fzf-journal $_user --identifier={1} --since \"$_since ago\" $_grep"
+  _journal="_fzf-journal $_user --boot $_boot --identifier={1} --since \"$_since ago\" $_grep"
   _prio_journal="$_journal --priority=$_priorange"
   _altj="_fzf-preview-header \"$_header\"; $_journal"
   _altp="_fzf-preview-header \"$_header with priority $_priorange\"; $_prio_journal"
 
   myprofile _fzf
   { echo "Identifier"
-    $_sudo journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot --since "$_since ago" --priority="$_priorange" $_grep | \
+    $_sudo journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot $_boot --since "$_since ago" --priority="$_priorange" $_grep | \
     sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
     sort -u
   } | \
