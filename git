@@ -1,0 +1,16 @@
+# -*- mode: Shell-script -*-
+
+in-path git || return 0
+
+new-alias remotes 'git remote -v | cut -f1 -d"(" | uniq | column -t'
+
+[ -d ~git ] && new-alias origin 'cd "$(git remote get-url --push origin)"'
+
+in-path delta && export DELTA_FEATURES=default
+
+in-path tig || return 0
+
+# /etc/tigrc is ubject of package updates. Use $TIGRC_USER to enable site sepecific adaption.
+export TIGRC_USER=/etc/tigrc.site
+
+new-alias tig TERM=xterm tig

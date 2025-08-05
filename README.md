@@ -19,7 +19,7 @@ For `rpm-ostree` based distributions these tools must be layered.
 First clone the project repository into path readable for all afected users
 
 ``` shell
-$ git clone https://github.com/okagvv/myprofile.git
+$ git clone git@codeberg.org:okagvv/myprofile.git
 ```
 
 The selected worktree path is referenced below as `$myprofile`.
@@ -33,7 +33,7 @@ $ sudo source myprofile/myprofile --install
 '/etc/profile.d/zz-myprofile.sh' -> '$myprofile/myprofile'
 ```
 
-### For single user
+### For single non-root user
 
 Insert `source` of `myprofile` script in current users `bash` profile script:
 
@@ -56,13 +56,13 @@ List entries starting with a hashmark will be skipped silently.
 
 For all `fzf` calls following conventions apply
 
-- `F1` lists effective `fzf` key bindings in preview page.
+- `F1` lists effective `fzf` key bindings in a preview page.
 - Separate search history for each `fzf` calling function is stored in
   `$HOME/.config/fzf/$FUNCNAME.history`.
 
 ## Aliases
 
-Function `new_alias` creates an alias only for installed executables or (already) defined
+Function `new_alias` creates an alias only for installed executables or already defined
 functions. Otherwise the alias creation is silently skipped.
 
 ## Scripting

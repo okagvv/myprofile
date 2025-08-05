@@ -3,6 +3,7 @@ env
 diag
 interactive
 aliases
+git
 fzf
 rpm
 dnf
