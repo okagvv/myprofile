@@ -68,8 +68,8 @@ _fzf-preview-header() {
 }
 
 _fzf-help() {
-  local _help _w _h
-  _help="$({ echo "
+  local _help _w _h _scroll
+  _help="$({ echo "$(if [ -n "$1" ] ; then tr ';' '\n'  <<<"$2" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; echo -; fi)
 ESC:Cancel.
 Tab:Toggle selection for current match.
 F1:This help.
@@ -89,17 +89,16 @@ Alt-Down:Preview line down.
 Ctrl-p:Search history up.
 Ctrl-n:Search history down.
 Home:First match.
-End:Last match.
-$(if [ -n "$1" ] ; then echo -; tr ';' '\n'  <<<"$2" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; fi)"
+End:Last match."
   } | column -t -s: -o": " | sed 's/^- *://')"
 
   eval "$(wc -l -L <<<"$_help" | sed -rn 's/^[[:space:]]+([[:digit:]]+)[[:space:]]+([[:digit:]]+)/_h=\1;_w=\2/p')"
-  ((_h+=8))
   ((_w+=8))
-  [ "$FZF_LINES" -gt "$_h" ] || _h="$FZF_LINES"
+  ((_h+=8))
   [ "$FZF_COLUMNS" -gt "$_w" ] || _w="$FZF_COLUMNS"
+  [ "$FZF_LINES" -gt "$_h" ] || { _h="$FZF_LINES"; _scroll="--scrolltext"; }
   
-  whiptail --ok-button Close --fullbuttons --title "$1 key bindings" --msgbox "$_help" "$_h" "$_w"
+  whiptail $_scroll --ok-button Close --fullbuttons --title "$1 key bindings" --msgbox "$_help" "$_h" "$_w"
 }
 
 _fzf-wrapper() {
