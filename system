@@ -9,9 +9,20 @@ new-alias jtodaywarn 'myjournalctl --priority=emerg..notice --since today --page
 new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
 new-alias sysmounted 'systemctl --type mount'
 
-fzf-units() {
-  # Iterate over systemd units. With --priority only units with journal entries below/equal this prio logged today are considered.
-  local _all _hours _journal _listprio _prio _since
+if ! is-root ; then
+
+  journalctl() { /usr/bin/journalctl --user "$@"; }
+  systemctl() { /usr/bin/systemctl --user "$@"; }
+  export -f journalctl systemctl
+
+fi
+
+fzf-units() (
+  # Iterate over systemd units. Default are all active all system (if called by root user) or user units.
+  # args: --priority: only units with journal entries below/equal this prio are considered
+  #       --all: consider all installed units
+  #       --since: consider journal entries since specified hours
+  local _all _hours _listprio _prio
   _hours=24
   while [ $# -gt 0 ] ; do
     case "$1" in
@@ -24,22 +35,27 @@ fzf-units() {
     shift
   done
 
-  _since="--boot --since \"$_hours hours ago\""
-  _journal="journalctl --no-hostname $_since --catalog --line 1000 --reverse --pager-end --unit={1}"
   _listprio="0..${_prio:-debug}"
-  
+
+  _journal() {
+    journalctl --no-hostname --boot --since "$_hours hours ago" --catalog --line 1000 --reverse --pager-end --unit "$@"
+  }
+  export -f _journal
+  export _hours
+
   if [[ -z "$_all" && -n "$_prio" ]] ; then
     echo Unit
-    journalctl --output=export --output-fields=_SYSTEMD_UNIT $_since --priority=0..$_prio | \
-    sed --silent --regexp-extended 's/^_SYSTEMD_UNIT=(.+)$/\1/p' | \
-    sort --unique 
+    journalctl --output=export --output-fields=$(is-root && echo _SYSTEMD_UNIT || echo _SYSTEMD_USER_UNIT) \
+               --boot --since "$_hours hours ago" --priority=0..$_prio | \
+    sed --silent --regexp-extended 's/^_SYSTEMD_(USER_)?UNIT=(.+)$/\2/p' | \
+    sort --unique
   else
     systemctl --plain $_all | \
     sed '/^$/,$d'
   fi | \
   _fzf-wrapper --bind 'alt-f:change-preview(_fzf-preview-header "Unit files for {1}"; systemctl cat -- {1})' \
-               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} since $_hours hours in reverse order.\"; $_journal)" \
-               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio since $_hours hours in reverse order.\"; $_journal --priority=$_listprio)" \
+               --bind "alt-j:change-preview(_fzf-preview-header \"Journal entries for {1} since $_hours hours in reverse order.\"; _journal {1})" \
+               --bind "alt-p:change-preview(_fzf-preview-header \"Journal entries for {1} with priority $_listprio since $_hours hours in reverse order.\"; _journal {1} --priority=$_listprio)" \
                --bind "enter:become(echo systemctl status,restart,stop {+1})" \
                --border-label " Systemd Units $([ -z "$_prio" ] || echo -n "with recent journal entry priorities 0/emerg..$_prio ")" \
                --header-lines 1 \
@@ -50,12 +66,14 @@ fzf-units() {
                --preview-window "70%,~2:wrap" \
                --query "$1" \
                --reverse
-}
+)
 
 myjournalctl() {
   journalctl --no-hostname --output=with-unit "$@"
 }
 export -f myjournalctl
+
+is-root || return 0
 
 new-alias avcrecent 'sudo ausearch -ts recent -m avc'
 new-alias avctoday 'sudo ausearch -ts today -m avc'
@@ -65,16 +83,6 @@ new-alias boot_times 'sudo systemd-analyze plot | display -'
 new-alias dstat 'sudo dstat --time --load --vmstat --net --swap --io'
 new-alias iotop 'sudo iotop -a -c -o -P'
 new-alias myiostat 'sudo iostat -xmt 1'
-
-if [[ ! "$(id -u)" == "0" ]] ; then
-
-  journalctl() { /usr/bin/journalctl --user "$@"; }
-  systemctl() { /usr/bin/systemctl --user "$@"; }
-  export -f journalctl systemctl
-
-  return 0
-  
-fi
 
 juser() {
   if [ $# -gt 0 ] ; then
