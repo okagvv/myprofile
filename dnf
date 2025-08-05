@@ -154,25 +154,38 @@ dnf-upgrades() (
   xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
 )
 
-for _query in conflicts depends enhances obsoletes provides recommends requires requires-pre suggests supplements ; do
+dnf-what() {
+  local _installed _query _rpm
 
-  eval "dnf-$_query() {
-          if [ \$# -gt 0 ] ; then
-            dnf-repoquery --$_query --resolve \"\$*\"
-          else
-            fn-usage \"<package>\"
-          fi
-        }"
+  if [[ "$1" =~ ^-+i(nstalled)?$ ]] ; then
 
-  [[ "$_query" == "requires-pre" ]] && continue
+    _installed="--installed"
+    shift
 
-  eval "dnf-what$_query() {
-          if [ \$# -gt 0 ] ; then
-            dnf-repoquery --what$_query --qf \"%{NAME}\" \"\$*\"
-          else
-            fn-usage \"<package>\"
-          fi
-        }"
+  fi
 
-done
-unset -v _query
+  if [ $# -eq 1 ] ; then
+
+    _rpm="$(dnf-repoquery --qf "%{NAME}" ${_installed:---available} "$1")"
+
+    if [ -z "$_rpm" ] ; then
+
+      fn-error "Package \"$1\" is $([ -n "$_installed" ] && echo "not installed" || echo "unknown")!"
+      return 1
+
+    fi
+
+    for _query in requires depends enhances provides recommends suggests supplements obsoletes conflicts requires-pre; do
+
+      { echo -e "=${_query^}:\n$(dnf-repoquery --$_query $_installed --resolve "$_rpm")\n"
+        [[ "$_query" == "requires-pre" ]] || echo -e "\n=What $_query:\n$(dnf-repoquery --qf "%{NAME}" $_installed --what$_query "$_rpm")\n\n"
+      } | sed -r 's/^no package .+$//;s/^([^=][^ ]+)/  - \1/;s/^=//' | cat --squeeze-blank
+
+    done
+
+  else
+
+    fn-usage "[--installed] package"
+
+  fi
+}
