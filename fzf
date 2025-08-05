@@ -38,24 +38,33 @@ _fzf-preview-bat() {
 }
 
 _fzf-preview-path() {
-  local _mime _size
-  _mime="$(file --brief --mime "$1")"
-  _size="$(du -sh "$1" | cut -f1)"
-
   _fzf-preview-header "Path \"$1\""
-  cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
+
+  if [ -e "$1" ] ; then
+    
+    local _mime _size
+    _mime="$(file --brief --mime "$1")"
+    _size="$(du -sh "$1" | cut -f1)"
+
+    cat <<EOF | tr -s " " | column -t -d -s":" -l2 -o":" -C right
 Type: $_mime
 $(stat --printf "Size: %s ($_size)\nPermisson: %a (%A)\nContext: %C\nAccessed: %x\nModified: %y\nChanged: %z\nCreated: %w\n" "$1")
 RPM: $(rpm-owner --short "$1" | sed -r 's/^.*(is not owned by any package).*$/\1/')
 EOF
 
-  if [[ -r "$1" && -s "$1" ]] ; then
-    case "$_mime" in
-      *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
-      *rpm*) _fzf-preview-header; rpm -qip "$1";;
-      *text*) _fzf-preview-bat "$1";;
-      *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
-    esac
+    if [[ -r "$1" && -s "$1" ]] ; then
+      case "$_mime" in
+        *audio*|*video*) _fzf-preview-header; ffprobes --yaml "$1";;
+        *rpm*) _fzf-preview-header; rpm -qip "$1";;
+        *text*) _fzf-preview-bat "$1";;
+        *zip*|*java-archive*) _fzf-preview-header; unzip -l "$1";;
+      esac
+    fi
+
+  else
+
+    fn-error "Path \"$1\" does not exist!"
+    
   fi
 }
 
