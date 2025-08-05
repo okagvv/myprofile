@@ -8,9 +8,10 @@ complete -A alias a
 
 e() {
   # list current shell environment excluding
+  # - $LS_COLORS (very long generated value, must be reformated for visual inspection)
   # - $PS1 (shell prompt may embed escape sequences distorting output)
   # - $BASH_FUNC* (intermediate bash variables)
-  printenv -0 | grep -zvE "^(BASH_FUNC|PS1=)" | sort -z | tr '\000' '\n' | m -p "shell environment"
+  printenv -0 | grep -zvE "^(BASH_FUNC|LS_COLORS=|PS1=)" | sort -z | tr '\000' '\n' | m -p "shell environment"
 }
 
 h() {
