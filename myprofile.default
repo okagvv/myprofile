@@ -5,7 +5,8 @@ functions
 interactive
 aliases
 fzf
-packages
+rpm
+dnf
 podman
 #k8s
 ffmpeg

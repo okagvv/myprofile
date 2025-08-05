@@ -1,0 +1,167 @@
+# -*- shell-script -*-
+
+_rpm-inspect-scope() {
+  rpm --query --$1 "$2" | \
+  fzf --border none \
+      $(fzf-query-history 2) \
+      --list-label " ${1^} in package \"$2\" " \
+      --multi \
+      --preview 'fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
+      --preview-window '60%:~2:wrap' | \
+  xargs -r
+}
+
+rpm-changelog() {
+  [ $# -eq 1 ] && _rpm-inspect-scope changelog "$1" || fn-usage "<package>"
+}
+
+rpm-conf() {
+  [ $# -eq 1 ] && _rpm-inspect-scope configfiles "$1" || fn-usage "<package>"
+}
+
+rpm-docs() {
+  [ $# -eq 1 ] && _rpm-inspect-scope docfiles "$1" || fn-usage "<package>"
+}
+
+_rpm-preview-docs() {
+  fzf-preview-header "${1^} doc file for package \"$2\""
+
+  local -a _patterns
+  case "$1" in
+    changelog) _patterns=(changelog release news changes announce);;
+            *) _patterns=(readme);;
+  esac
+
+  local _docs _pattern _log
+  _docs="$(rpm --query --docfiles "$2")"
+
+  if [ ${#_docs[@]} -gt 0 ] ; then
+
+    for _pattern in "${_patterns[@]}" ; do
+
+      _log="$(grep -i -E "/[^/]*$_pattern[^/]*$" <<<"$_docs" | head -1)"
+
+      if [ -n "$_log" ] ; then
+
+        fzf-preview-bat "$_log"
+        return 0
+
+      fi
+    done
+
+    echo "No ${1^} file identified in package doc files."
+
+  else
+
+    echo "Package contains no doc files!"
+
+  fi
+}
+
+_rpm-preview-what() {
+  local _what
+  fzf-preview-header "What packages relate to \"$1\""
+  for _what in enhances recommends requires suggests supplements ; do
+    echo -e "What $_what:\n$(rpm --query --what$_what "$1" | sed '/^no package /q;s/^/- /')\n"
+  done
+}
+
+_rpm-preview() {
+  fzf-preview-header "$1 package \"$3\""
+  rpm --query $2 "$3"
+}
+
+export -f _rpm-preview _rpm-preview-docs _rpm-preview-what
+
+_fzf-rpm() {
+  local _default _nvr
+  _nvr="{-3}-{-2}.{-1}"
+  _default="_rpm-preview \"Changelog of\" --changelog $_nvr"
+
+  fzf --bind="alt-c:change-preview(_rpm-preview \"Config files in\" --configfiles $_nvr)" \
+      --bind="alt-d:change-preview(_rpm-preview \"Doc files in\" --docfiles $_nvr)" \
+      --bind="alt-F:change-preview(_rpm-preview \"Files in\" -l $_nvr)" \
+      --bind="alt-i:change-preview(_rpm-preview \"Info for\" -i $_nvr)" \
+      --bind="alt-l:change-preview($_default)" \
+      --bind='alt-P:change-preview(_rpm-preview-what {-3})' \
+      --bind="alt-r:change-preview(_rpm-preview-docs readme $_nvr)" \
+      --bind="alt-S:change-preview(_rpm-preview \"Scripts in\" \"--scripts --triggers\" $_nvr)" \
+      --bind="alt-u:change-preview(_rpm-preview-docs changelog $_nvr)" \
+      --bind="alt-V:change-preview(_rpm-preview \"Verify files of\" \"--verify --verbose\" $_nvr)" \
+      --border-label " $1 " \
+      $(fzf-query-history) \
+      --list-border rounded \
+      --list-label " Matching packages " \
+      --multi \
+      --no-sort \
+      --preview "$_default" \
+      --preview-label " Use alt-{c,d,F,i,l,P,r,S,u,V} to change information scope. " \
+      --preview-window '60%,~2:wrap' \
+      --query "$2" \
+      --reverse | \
+  awk '{ printf "%s ", $NF } END { printf "\n" }'
+}
+
+rpm-history() {
+  LC_TIME=POSIX rpm --query --all --queryformat '%{INSTALLTIME} %{INSTALLTIME:date}*%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}\n' 2>&1 | \
+  sort --reverse | \
+  cut --characters=12- | \
+  column --table --separator "*" | \
+  _fzf-rpm "Package install history" "$1"
+}
+
+rpm-info() {
+  rpm -qa --query --all --queryformat '%{NAME} %{VERSION}-%{RELEASE} %{ARCH}\n' "$@" | \
+  sort | \
+  _fzf-rpm "Installed packages"
+}
+
+rpm-owner() {
+  local _f __f _long
+
+  if [[ "$1" =~ ^-+s(hort)?$ ]] ; then
+    shift
+  else
+    _long=y
+  fi
+  
+  if [ $# -gt 0 ] ; then
+
+    for _f in "$@" ; do
+
+      [[ -e "$_f" || "$_f" = /* ]] && __f="$_f" || __f="$(/usr/bin/which "$_f" 2>/dev/null)"
+      [[ -z "$__f" ]] && __f="$_f"
+
+      echo "${_long:+$__f: }$(rpm --query --file --qf '%{NAME}-%{VERSION}.%{ARCH}\n' "$__f" 2>/dev/null)"
+
+    done
+    
+  else
+    fn-usage "file .."
+  fi
+}
+export -f rpm-owner
+
+rpm-status() {
+  if [ $# -gt 0 ] ; then
+    rpm --query --list --state --verbose "$@" 2>&1 | m
+  else
+    fn-usage "package .."
+  fi
+}
+
+rpm-verify() {
+  if [ $# -gt 0 ] ; then
+    rpm --verify --verbose "$@" 2>&1 | m
+  else
+    fn-usage "package .."
+  fi
+}
+
+rpm-freshen() {
+  if [ $# -gt 0 ] ; then
+    sudo rpm --freshen --verbose --hash "$@" 2>&1 | m
+  else
+    fn-usage "rpmfile"
+  fi
+}
