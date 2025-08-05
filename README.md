@@ -43,23 +43,33 @@ $ source myprofile/myprofile --install
 $HOME/.bash_profile:source $myprofile/myprofile
 ```
 
-## Defaults
+## Usage
 
-The text file `myprofile.default` contains a list of profile scripts applied by `mvprofile` calls
-without arguments (i.e. during start of a login shell).  Scripts will be searched in `myprofile`
-installation directory. They will be applied (via `source` ) in listed order. `myprofile` stops
-application squence after first error. If the file `~/.config/myprofile/default` exists then it will
-be used instead of `myprofile.default`.
+``` shell
+$ myprofile -h
+myprofile [--help | --install | [--verbose] [{script}]]
+```
+
+## Scripts
+
+`~/.config/myprofile/`, `/etc/myprofile/` and `$MYPROFILE/`
+
+### Defaults
+
+If called without arguments (e.g. during start of a login shell) a text file named `default` will be
+searched in paths `~/.config/myprofile/`, `/etc/myprofile/` and `myprofile` worktree. The 1st found
+file will be expected to contain the list of profile scripts to load. List entries are filenames
+only or absolute paths.  Filenames will be searched in above listed search path. They will be
+applied (via `source`) in listed order. `myprofile` stops application sequence after first error.
 
 Some list entries will be skipped silently
 - commented-out via leading hashmark
 - profile scripts names with leading underscore are intended for sourcing on demand by profile
   functions
 
-## Coding conventions
+### Coding conventions
 
-
-## fzf
+### fzf
 
 For all `fzf` calls following conventions apply
 
@@ -75,9 +85,9 @@ For all `fzf` calls following conventions apply
 Function `new_alias` creates an alias only for installed executables or already defined
 functions. Otherwise the alias creation is silently skipped.
 
-## Scripting
-
 ## Customization
 
 - `$BROWSER`
+
+## Scripting
 
