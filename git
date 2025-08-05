@@ -69,6 +69,24 @@ export TIGRC_USER=/etc/tigrc.site
 
 new-alias tig TERM=xterm tig
 
+git-files() {
+  if [ $# -gt 0 ] ; then
+
+    local _i
+    local -a _files
+    _files=("$@")
+    for ((_i = 0 ; _i < $#; _i++ )) ; do
+      [[ "${_files[$_i]}" =~ [\*/] ]] && continue
+      _files[$_i]="*${_files[$_i]}*"
+    done
+    
+    tig --all -- "${_files[@]}"
+
+  else
+    fn-usage "{(file|file-path|file-pattern]} .."
+  fi
+}
+
 git-search() (
   if [ $# -gt 0 ] ; then
     local _all
