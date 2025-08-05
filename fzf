@@ -261,14 +261,26 @@ if in-path man ; then
 fi
 
 fzf-ps() (
-  # TODO: - Select via option from several ps columns sets.
-  #       - Apply _fzf-wrapper().
+  local _ps
+  _ps="ps fax"
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+       -c|--cpu) _ps="ps ax --sort=-%cpu";;
+      -h|--help) fn-usage "[--help] [--cpu | --mem]"; exit 0;;
+       -m|--mem) _ps="ps ax --sort=-%mem";;
+              *) fn-abort "Unsupported argument: $1";;
+    esac
+    shift
+  done
+  eval "__ps() {
+    $_ps -o user,pid,ppid,%cpu,%mem,vsz,rss,tty,stat,start,time,command | column -t -l 12
+  }"
+  export -f __ps
+
   myprofile _fzf
 
-  local _ps
-  _ps="ps aux --sort=-%cpu"
-  eval "$_ps | column -t -l 11" | \
-  _fzf-wrapper --bind "ctrl-r:reload(eval \"$_ps\")" \
+  __ps | \
+  _fzf-wrapper --bind "ctrl-r:reload(__ps)" \
                --bind "alt-d:change-preview(pidstat -d --human -p {2} 1)+change-preview-label([ IO stats ])" \
                --bind "alt-e:change-preview(grep -zvE '^(BASH_FUNC|LS_COLORS=|PS1=)' </proc/{2}/environ | sort -z | tr '\0' '\n')" \
                --bind "alt-r:change-preview(pidstat -r --human -p {2} 1)+change-preview-label([ Memory utilization ])" \
@@ -286,7 +298,7 @@ fzf-ps() (
                --list-border none \
                --multi \
                --no-sort \
-               --preview-init "alt-i:echo {11..-1} | sed -r 's/ +-/\n-/g'" \
+               --preview-init "alt-i:echo {12..-1} | sed -r 's/^[ \|_]+ //;s/ +-/\n-/g'" \
                --preview-window "50%,~3:hidden:wrap:follow" \
                --query "$1" \
                --reverse
