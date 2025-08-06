@@ -39,6 +39,25 @@ broken-symlinks() {
   find "${1:-.}" -xtype l -print0 | xargs -0r -i@ $_cmd
 }
 
+confirmed() {
+  echo -en "$1"
+  if read -p " Are you sure? (Y/*) " -s -t "${2:-7}" -n 1 -r ; then
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]] ; then
+      return
+    else
+      fn-error "Aborted b/o user request."
+    fi
+  elif [ $? -ge 128 ] ; then
+    echo
+    fn-error "Aborted b/o timeout."
+  else
+    echo
+    fn-error "Aborted b/o read error."
+  fi
+  false
+}
+
 fdl() {
   # - fd with colored detailed list output ignoring Git worktree repos.
   # - "sed | column" is required to align fd output and to create columns suitable for feeding to

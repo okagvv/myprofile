@@ -20,16 +20,15 @@ complete -W "--all --remote" branches
 
 in-path delta && export DELTA_FEATURES=default
 
-git-root() {
-  local _root
-  _root="$(git rev-parse --show-toplevel 2>/dev/null)"
-  [ -n "$_root" ] && cd "$_root" || fn-error "Current directory \"$(pwd)\" is not in a Git worktree!"
+is-worktree() {
+  git -C "${1:-.}" rev-parse --is-inside-work-tree >/dev/null 2>/dev/null
 }
+complete -A directory is-worktree
 
 git-changed() (
   if [[ $# -ge 1 && $# -le 2 ]] ; then
 
-    if git-root ; then
+    if is-worktree ; then
 
       local _ref
       _ref="${2:-HEAD}"
@@ -99,7 +98,7 @@ git-search() (
       shift
     fi
 
-    if git-root ; then
+    if is-worktree ; then
 
       myprofile _fzf
 
