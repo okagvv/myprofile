@@ -53,11 +53,11 @@ fn-vars() {
 }
 
 fn-abort() {
-  if [ -n "$PS1" ] ; then
+  if [ -z "$PS1" ] ; then
 
     # abort scripts or subshell functions
     fn-error "$1"
-    exit 1
+    exit "${2:1}"
 
   else
 
