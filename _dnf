@@ -70,19 +70,20 @@ _dnf-packages() {
 }
 
 _dnf-cached-advisory() {
-  local _cache _list _id _adv
-  _cache=/tmp/advisories
+  local _cache _list _id _adv _pkg
+  _cache="/tmp/advisories"
   _list="$_cache/$2"
+  _pkg="$(sed -r 's/([\.\^\+])/\\\1/g' <<<"$1")"
 
-  if [ ! -s "$_list" ] ; then
-    [ -d "$_cache" ] || mkdir "$_cache" 
+  if [[ ! -s "$_list" || "$(path-age "$_list")" -gt 600 ]] ; then
+    [ -d "$_cache" ] || mkdir "$_cache"
     sudo -A dnf advisory list --quiet --$2 $3 >"$_list"
   fi
 
-  for _id in $(sed -rn "s/^([^[:space:]]+).*[[:space:]]$1.*/\1/p" "$_list") ; do
+  for _id in $(sed -rn "s/^([^[:space:]]+).*[[:space:]]$_pkg.*/\1/p" "$_list") ; do
 
     _adv="$_cache/$_id"
-    
+
     [ -s "$_adv" ] || sudo -A dnf advisory info --quiet --$2 $3 "$_id" >"$_adv"
 
     if [ -s "$_adv" ] ; then
