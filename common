@@ -128,6 +128,15 @@ if in-path keepassxc-cli ; then
 
 fi
 
+path-age() {
+  local _mod
+  if _mod=$(stat --format=%Y -- "$1" 2>/dev/null) ; then
+    echo -n "$(($(date +%s) - $_mod))"
+  else
+    false
+  fi
+}
+
 sort-keep-header() {
   # derived from https://linuxconfig.org/bash-function-to-sort-docker-ps-output
   local _header
