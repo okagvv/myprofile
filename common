@@ -107,14 +107,15 @@ find-last() {
   local -a _fdlargs
   while [ $# -gt 0 ] ; do
     case "$1" in
-      -h|--help) fn-usage "[--help] [--tail n] [{fd-argument}]"; return 0;;
+      -h|--help) fn-usage "[--help] [--home] [--tail n] [{fd-argument}]"; return 0;;
+      -O|--home) _fdlargs+=(--hidden --no-ignore-vcs --type file --exclude .cache/ --exclude "*[#~]");;
       -T|--tail) _tail="$2"; shift;;
               *) _fdlargs+=("$1");;
     esac
     shift
   done
 
-  fdl "${_fdlargs[@]}" --sort date | tail -${_tail:-10}
+  fdl "${_fdlargs[@]}" --sort date | tail -${_tail:-27}
 }
 complete -o bashdefault -o default -o nosort -F _fd find-last
 
