@@ -102,8 +102,8 @@ fzf-ffprobes() (
     } | \
     _fzf-wrapper --ansi \
                  --accept-nth 7 \
-                 --bind "alt-a:clear-selection" \
-                 --bind "alt-v:execute(vlc-enqueue {+7})+clear-selection" \
+                 --bind "alt-a:clear-multi" \
+                 --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
                  --bind "enter:$([ -n "$_play" ] && echo "execute(_vlc-enqueue {+7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
