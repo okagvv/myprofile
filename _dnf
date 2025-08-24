@@ -113,7 +113,7 @@ _dnf-upgrades() {
     {
       echo "Package Version Repository"
       sudo -A dnf check-upgrade $_testing $_scopes --quiet | \
-      sort -k2 -k1
+      sort -k2b -k1d
     } | sed -rn '/(Obsoleting packages|No security updates needed)/Iq;p' | \
         column -t
   }
