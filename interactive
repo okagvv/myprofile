@@ -23,7 +23,9 @@ h() {
     _cnt="42"
   fi
   [ $# -gt 0 ] && _color=auto || _color=never
-  history | grep --color=never -E "${1:-.*}" | tail -$_cnt | grep --colour=$_color -E "${1:-.*}"
+  history | grep --color=never --extended-regexp -- "${1:-.*}" | \
+  tail -$_cnt | \
+  grep --colour=$_color --extended-regexp -- "${1:-.*}"
 }
 
 history-cleanup() {
