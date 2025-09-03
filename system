@@ -56,7 +56,7 @@ fzf-units() (
   done
 
   myprofile _system
-  _fzf-units
+  _fzf-units "$@"
 )
 
 fzf-journal() (
@@ -79,7 +79,7 @@ fzf-journal() (
   done
 
   myprofile _system
-  _fzf-journal
+  _fzf-journal "$@"
 )
 
 myjournalctl() {
