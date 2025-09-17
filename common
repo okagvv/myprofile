@@ -119,6 +119,20 @@ find-last() {
 }
 complete -o bashdefault -o default -o nosort -F _fd find-last
 
+last-elapsed() {
+  local _end _elapsed
+  local -a _start
+  _end="$(date +%s)"
+  
+  # CAUTION: "history 1" returns wrong start time if $HISTCONTROL contains
+  # - "{erase,ignore}dups" a/o "ignoreboth" for command lines repeated multiple times in a row
+  # - "ignorespace" for command lines with leading space
+  _start=($(HISTTIMEFORMAT='%s '; history 1))
+  
+  ((_elapsed=_end-_start[1]))
+  [ "$_elapsed" -eq 0 ] || TZ=UTC date "+%T " --date "@$_elapsed"
+}
+
 if in-path keepassxc-cli ; then
 
   mypassgen() {
