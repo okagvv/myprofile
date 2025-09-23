@@ -102,8 +102,9 @@ _fzf-rpm() {
          Alt-V:Sort by version;Alt-w:What packages relate to selected one"
 
   if is-fn _dnf-advisory ; then
-    _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1})")
-    _help+=";Alt-a:Show advisories"
+    _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1})"
+              --bind "alt-b:execute(_bodhi-updates {1}-{2}.{3})")
+    _help+=";Alt-a:Show advisories;Alt-b:Search package on Bodhi in default browser"
   fi
   
   _rpm-list bydate | \
