@@ -97,6 +97,9 @@ _dnf-cached-advisory() {
 }
 
 _dnf-upgrades() {
+  local -a _pattern
+  _pattern=($@)
+  
   __package() {
     echo "${1%.*}-$2.${1##*.}"
   }
@@ -112,7 +115,7 @@ _dnf-upgrades() {
   __upgrades() {
     {
       echo "Package Version Repository"
-      sudo -A dnf check-upgrade $_testing $_scopes --quiet | \
+      sudo -A dnf check-upgrade $_testing $_scopes --quiet ${_pattern[@]} | \
       sort -k2b -k1d
     } | sed -rn '/(Obsoleting packages|No security updates needed)/Iq;p' | \
         column -t

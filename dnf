@@ -95,16 +95,17 @@ dnf-upgrades() (
     case "$1" in
            -b|--bugfix) _scopes+=" --bugfix";;
       -e|--enhancement) _scopes+=" --enhancement";;
-             -h|--help) fn-usage "[--bugfix] [--enhancement] [--help] [--security] [--testing] [pattern]"; return 0;;
+             -h|--help) fn-usage "[--bugfix] [--enhancement] [--help] [--security] [--testing|--testing-only] [pattern]"; return 0;;
          -s|--security) _scopes+=" --security";;
           -t|--testing) _testing="--enablerepo *updates-testing";;
+     -T|--testing-only) _testing="--disable-repo=* --enablerepo *updates-testing";;
                      *) break;;
     esac
     shift
   done
 
   myprofile _dnf
-  _dnf-upgrades
+  _dnf-upgrades "$@"
 )
 complete -W "--{bugfix,enhancement,help,security,testing}" dnf-upgrades
 
