@@ -98,6 +98,9 @@ fn-xtrace() {
   fn_xtrace="${FUNCNAME[1]}"
   [ -n "$fn_xtrace" ] || return 0
 
+  # ensure $PS4 has  value (for security reasons shells running as root do not inherit $PS4)
+  export PS4="+ \${FUNCNAME[0]} \$LINENO: "
+
   fn_trace=y
   trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped xtrace for $fn_xtrace() -===-" >&2; fn_xtrace=; fn_trace=; fi' RETURN
   trap 'set +x; fn_xtrace=; fn_trace=; trap - RETURN ERR' ERR
