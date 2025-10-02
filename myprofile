@@ -2,11 +2,11 @@
 # -*- shell-script -*-
 
 myprofile() {
-  local _default _dir _script _self _src _verbose
+  local _default _dir _script _self _src _verbose _opt
   local -a _scripts _search
 
   _self="$MYPROFILE/$FUNCNAME"
-  
+
   while [ $# -gt 0 ] ; do
     case "$1" in
          -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}]]";
@@ -29,7 +29,7 @@ myprofile() {
     shift
   done
 
-  _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME" "$MYPROFILE")
+  _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME.d" "$MYPROFILE")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
     for _dir in ${_search[@]} ; do
@@ -43,6 +43,13 @@ myprofile() {
 
   for _script in ${_scripts[@]} ; do
 
+    if [[ "$_script" =~ \? ]] ; then
+      _script="${_script//\?/}"
+      _opt=y
+    else
+      _opt=
+    fi
+
     if [[ "$_script" =~ ^/ && -s "$_script" ]] ; then
       _src="$_script"
     else
@@ -52,18 +59,18 @@ myprofile() {
       done
     fi
 
-    if [ ! -s "$_src" ] ; then
+    if [ -s "$_src" ] ; then
+      [ -z "$_verbose" ] || echo "Source \"$_src\"."
+      if ! source "$_src" ; then
+        echo "Load of myprofile script \"$_src\" has failed!" >&2
+        return 1
+      fi
+    elif [ -n "$_opt" ] ; then
+      [ -z "$_verbose" ] || echo "Skip missing optional script \"$_script\"."
+    else
       echo "Missing myprofile script \"$_script\"!" >&2
       return 1
     fi
-
-    [ -z "$_verbose" ] || echo "Source \"$_src\"."
-
-    if ! source "$_src" ; then
-      echo "Load of myprofile script \"$_src\" has failed!" >&2
-      return 1
-    fi
-
   done
 }
 export -f myprofile
