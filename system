@@ -33,6 +33,18 @@ if ! is-root ; then
 
 fi
 
+if in-path firewall-cmd ; then
+  
+  firewall-zones() {
+    # CAUTION: "firewall-cmd --list-all" may not include all active zones!
+    local _zone
+    for _zone in $(firewall-cmd --get-active-zones | sed -rn 's/^([[:alnum:]]+).*$/\1/p') ; do
+      firewall-cmd --info-zone=$_zone
+    done
+  }
+  
+fi
+
 fzf-units() (
   # Iterate over systemd units with recent journal entries.
   declare -g _all _priorange _prio _since _journal _prio_journal _properties _systemctl _header _sudo _user _grep _boot _failed
