@@ -29,7 +29,7 @@ myprofile() {
     shift
   done
 
-  _search=("$HOME/.config/$FUNCNAME" "/etc/$FUNCNAME.d" "$MYPROFILE")
+  _search=("$HOME/.config/$FUNCNAME" "/usr/local/etc/$FUNCNAME.d" "/etc/$FUNCNAME.d" "$MYPROFILE")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
     for _dir in ${_search[@]} ; do
