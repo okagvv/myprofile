@@ -266,9 +266,9 @@ fzf-ps() (
   while [ $# -gt 0 ] ; do
     case "$1" in
        -c|--cpu) _ps="ps ax --sort=-%cpu";;
-      -h|--help) fn-usage "[--help] [--cpu | --mem]"; exit 0;;
+      -h|--help) fn-usage "[--help] [--cpu | --mem] [pattern]"; exit 0;;
        -m|--mem) _ps="ps ax --sort=-%mem";;
-              *) fn-abort "Unsupported argument: $1";;
+              *) break;;
     esac
     shift
   done
@@ -301,7 +301,7 @@ fzf-ps() (
                --no-sort \
                --preview-init "alt-i:echo {13..-1} | sed -r 's/^[ \|_]+ //;s/ +-/\n-/g'" \
                --preview-window "50%,~3:hidden:wrap:follow" \
-               --query "$1" \
+               --query "$@" \
                --reverse
 )
 
