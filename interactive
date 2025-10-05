@@ -144,6 +144,20 @@ new-alias() {
   fi
 }
 
+if in-path rg && [ -z "$RIPGREP_CONFIG_PATH" ] ; then
+
+  rg() {
+    /usr/bin/rg --color=always \
+                --hidden \
+                --line-number \
+                --no-heading \
+                --smart-case \
+                --ignore-file="$MYPROFILE/etc/ripgrep.ignore" \
+                "$@"
+  }
+
+fi
+
 ssh-loadkey() {
   local _key
   [[ "$1" =~ / ]] && _key="$1" || _key="$HOME/.ssh/$1"
