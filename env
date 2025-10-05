@@ -1,11 +1,8 @@
 # -*- mode: Shell-script -*-
 
-if [[ -d $HOME/.local/bin && ! $PATH == ?(*:)$HOME/.local/bin?(:*) ]] ; then
-
-  export PATH+=":$HOME/.local/bin"
-
-fi
-
+PATH+="/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+[ -d "$HOME/.local/bin" ] && PATH+=":$HOME/.local/bin"
+[ -d "$HOME/bin" ] && PATH+=":$HOME/bin"
 cleanup-path
 
 export HISTCONTROL="ignorespace"
