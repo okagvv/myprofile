@@ -20,9 +20,18 @@ export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
 export TIME_STYLE="+%F %T"
 
-in-path bat   && export BAT_CONFIG_PATH="/etc/bat.conf"
-in-path rg    && export RIPGREP_CONFIG_PATH="/etc/ripgrep/config"
+in-path bat   && export BAT_CONFIG_PATH="$MYPROFILE/etc/bat.conf"
+in-path rg    && export RIPGREP_CONFIG_PATH="$MYPROFILE/etc/ripgrep.conf"
 in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
+
+if in-path rg ; then
+
+  [ -d "$HOME/.config" ] && RIPGREP_CONFIG_PATH="$HOME/.config/ripgrep.conf" || RIPGREP_CONFIG_PATH="$HOME/.ripgrep.conf"
+  cat >"$RIPGREP_CONFIG_PATH" <<EOF
+$(cat "$MYPROFILE/etc/ripgrep.conf" | sed -r "s~\\\$MYPROFILE~/usr/local/share/myprofile~")
+EOF
+  
+fi
 
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
 [ -n "$XDG_SESSION_TYPE" ] || export XDG_SESSION_TYPE="$(loginctl show-session "$XDG_SESSION_ID" --value --property=Type 2>/dev/null || true)"

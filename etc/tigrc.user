@@ -1,0 +1,9 @@
+set vertical-split = false
+
+# On Fedora the Git contribution script "diff-highlight" is not in $PATH. Fixed by
+# sym link /usr/local/bin/diff-highlight pointing to this script.
+set diff-highlight = true
+
+bind generic  <C-x>  :toggle vertical-split
+bind main     P      ?git push %(remote)
+bind refs     F      ?git fetch --verbose %(remote)

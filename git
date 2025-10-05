@@ -67,8 +67,8 @@ git-changed() (
 
 in-path tig || return 0
 
-# /etc/tigrc is ubject of package updates. Use $TIGRC_USER to enable site sepecific adaption.
-export TIGRC_USER=/etc/tigrc.site
+# /etc/tigrc is subject of package updates. Use $TIGRC_USER to enable site specific adaption.
+export TIGRC_USER="$MYPROFILE/etc/tigrc.user"
 
 new-alias tig TERM=xterm tig
 
