@@ -130,7 +130,7 @@ last-elapsed() {
   _start=($(HISTTIMEFORMAT='%s '; history 1))
   
   ((_elapsed=_end-_start[1]))
-  [ "$_elapsed" -eq 0 ] || TZ=UTC date "+%T " --date "@$_elapsed"
+  [ "$_elapsed" -eq 0 ] || TZ=UTC date "+%-H:%-M:%-S " --date "@$_elapsed"
 }
 
 if in-path keepassxc-cli ; then
