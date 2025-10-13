@@ -137,3 +137,7 @@ set-dns() {
   esac
 }
 complete -W "{router,pihole,curr}" set-dns
+
+thermal-watch() {
+  watch -d -n1 -t "sensors | grep -i -E '(fan|°C)'; grep . /sys/devices/system/cpu/cpu*/thermal_throttle/*_max_time_ms | grep -v :0"
+}
