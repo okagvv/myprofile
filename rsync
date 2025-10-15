@@ -8,7 +8,7 @@ if in-path rsync ; then
 
     while [ $# -gt 0 ] ; do
       case "$1" in
-          -h|--help) fn-usage "[--dry-run] [--remove] <source-dir>/? <target-dir>"; return 0;;
+          -h|--help) fn-usage "[--dry-run] [--remove] {<source-dir>/?|file} <target-dir>"; return 0;;
        -d|--dry-run) _opts+=(--dry-run --verbose);;
         -r|--remove) _opts+=(--delete-delay);;
                   *) break;;
@@ -16,7 +16,7 @@ if in-path rsync ; then
       shift
     done
 
-    if [[ $# -ge 2 && -d "${@: -2:1}" && -d "${@: -1}" ]] ; then
+    if [[ $# -ge 2 && -e "${@: -2:1}" && -d "${@: -1}" ]] ; then
 
       local _dir
       for _dir in "${@: -2}" ; do
