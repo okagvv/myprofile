@@ -136,6 +136,7 @@ _fzf-wrapper() {
                                  --bind "${2%%:*}:show-preview+change-preview(${2#*:})$([[ "$3" =~ ^\+ ]] && echo "$3")")
                          shift $([[ "$3" =~ ^\+ ]] && echo 2 || echo 1);;
                --prompt) _prompt="$2"; shift;;
+                --query) _args+=("$1" "$2"); shift;;
                --script) script="$2"; shift;;
                  --sudo) _sudo=y;;
       *:change-preview*) _args+=("${1%%:*}:show-preview+${1#*:}");;

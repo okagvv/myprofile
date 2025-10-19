@@ -301,7 +301,7 @@ fzf-ps() (
                --no-sort \
                --preview-init "alt-i:echo {13..-1} | sed -r 's/^[ \|_]+ //;s/ +-/\n-/g'" \
                --preview-window "50%,~3:hidden:wrap:follow" \
-               --query "$@" \
+               --query "$*" \
                --reverse
 )
 
