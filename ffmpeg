@@ -93,8 +93,17 @@ fzf-ffprobes() (
       done <<<"$(_ffprobes-all)"
     }
 
-    export -f vlc-enqueue
-
+    _thumbnail() {
+      killall display 2>/dev/null
+      ffmpegthumbnailer -s 512 -c png -i "$1" -o - 2>/dev/null | display -immutable -quiet -title "$1" -geometry "-0-0" - &
+    }
+    
+    _ffprobes-preview() {
+      _fzf-preview-path "$1"
+    }
+    
+    export -f vlc-enqueue _ffprobes-preview _thumbnail
+    
     cd "$1"
     myprofile _fzf
 
@@ -104,17 +113,18 @@ fzf-ffprobes() (
                  --accept-nth 7 \
                  --bind "alt-a:clear-multi" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
+                 --bind "alt-y:execute-silent(_thumbnail {7})" \
                  --bind "enter:$([ -n "$_play" ] && echo "execute(_vlc-enqueue {+7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-v:Play current/selected file(s) via VLC" \
+                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-y:Show thumbnail;Alt-v:Play current/selected file(s) via VLC" \
                  --list-label "[ Audio and video files in \"$(realpath "$1")/\" ]" \
                  --multi \
                  --no-sort \
-                 --preview-init "alt-i:_fzf-preview-path {7}" \
+                 --preview-init "alt-i:_ffprobes-preview {7}" \
                  --preview-label "[ File stats and ffprobe output ]" \
                  --preview-window "60%,~2:wrap" \
                  --query "$2" \
