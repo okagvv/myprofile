@@ -1,6 +1,6 @@
 # -*- mode: Shell-script -*-
 
-PATH+="/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
+PATH+=":/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
 [ -d "$HOME/.local/bin" ] && PATH+=":$HOME/.local/bin"
 [ -d "$HOME/bin" ] && PATH+=":$HOME/bin"
 cleanup-path
