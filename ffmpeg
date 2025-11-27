@@ -93,17 +93,35 @@ fzf-ffprobes() (
       done <<<"$(_ffprobes-all)"
     }
 
-    _thumbnail() {
-      killall display 2>/dev/null
-      ffmpegthumbnailer -s 512 -c png -i "$1" -o - 2>/dev/null | display -immutable -quiet -title "$1" -geometry "-0-0" - &
+    _disable_thumbnails() {
+      rm -f "$THUMBNAIL"
+      pidof --quiet sxiv && killall sxiv || true
     }
     
+    _thumbnail() {
+      if [[ "$(file -bi "$1")" =~ ^video ]] ; then
+        
+        ffmpegthumbnailer -s 512 -c png -i "$1" -o "$THUMBNAIL" 2>/dev/null
+        if ! pidof --quiet sxiv ; then
+          if [ -s "$THUMBNAIL" ] ; then
+            # TODO: determine coordinates for lower right corner of parent window
+            sxiv -b -p -q -g 512x288-1920-0 "$THUMBNAIL" &
+            sleep 0.1
+          fi
+        fi
+      fi
+
+      true
+    }
+
     _ffprobes-preview() {
       _fzf-preview-path "$1"
+      [ ! -s "$THUMBNAIL" ] || _thumbnail "$1"
     }
-    
-    export -f vlc-enqueue _ffprobes-preview _thumbnail
-    
+
+    export -f vlc-enqueue _ffprobes-preview _thumbnail _disable_thumbnails
+    export THUMBNAIL="/tmp/.ffprobes-thumb.png"
+
     cd "$1"
     myprofile _fzf
 
@@ -114,13 +132,14 @@ fzf-ffprobes() (
                  --bind "alt-a:clear-multi" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
                  --bind "alt-y:execute-silent(_thumbnail {7})" \
+                 --bind "alt-x:execute-silent(_disable_thumbnails)" \
                  --bind "enter:$([ -n "$_play" ] && echo "execute(_vlc-enqueue {+7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-y:Show thumbnail;Alt-v:Play current/selected file(s) via VLC" \
+                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-{y,Y}:{En,Dis}able thumbnail viewer;Alt-v:Play current/selected file(s) via VLC" \
                  --list-label "[ Audio and video files in \"$(realpath "$1")/\" ]" \
                  --multi \
                  --no-sort \
@@ -132,6 +151,8 @@ fzf-ffprobes() (
                  --reverse \
                  --with-nth 6,5,7 | \
     xargs -r0 ls
+
+    _disable_thumbnails
 
   else
 
