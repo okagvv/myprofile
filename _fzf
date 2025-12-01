@@ -186,7 +186,8 @@ _fzf-editor() {
 _fzf-browser() {
   if [ -n "$1" ] ; then
     if [ -n "$BROWSER" ] ; then
-      "$BROWSER" "$@"
+      # do not quote $BROWSER (may contain command-line incl. arguments)
+      $BROWSER "$@"
     elif in-path xdg-open ; then
       xdg-open "$@" 2>/dev/null
     else
