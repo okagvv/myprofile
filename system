@@ -1,13 +1,14 @@
 # -*- shell-script -*-
 
-new-alias failed 'systemctl list-units --failed'
-new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
-new-alias sysmounted 'systemctl --type mount'
 new-alias boot_blame sudo 'systemd-analyze blame'
 new-alias boot_times sudo 'systemd-analyze plot | display -'
 new-alias dstat sudo 'dstat --time --load --vmstat --net --swap --io'
-new-alias iotop sudo 'iotop -a -c -o -P'
+new-alias failed 'systemctl list-units --failed'
 new-alias iostat sudo 'iostat -xmt 1'
+new-alias iotop sudo 'iotop -a -c -o -P'
+new-alias list_deps 'systemctl list-dependencies "$(systemctl get-default)"'
+new-alias sysmounted 'systemctl --type mount'
+new-alias timers 'systemctl list-timers'
 
 if in-path ausearch ; then
 
