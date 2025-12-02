@@ -156,7 +156,7 @@ _dnf-upgrades() {
                --query "$1" \
                --reverse \
                --sudo | \
-  xargs --no-run-if-empty --open-tty sudo dnf upgrade $_testing
+  xargs --no-run-if-empty --open-tty sudo dnf upgrade --skip-unavailable $_testing
 }
 
 _dnf-history() {
