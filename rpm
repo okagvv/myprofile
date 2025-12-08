@@ -28,12 +28,17 @@ rpm-docs() (
 )
 
 rpm-list() (
+  FZF_RPM_QUERY=
+  FZF_RPM_LABEL=
   while [ $# -gt 0 ] ; do
     case "$1" in
-      -h|--help) fn-usage "[--help] [fzf query]"; exit 0;;
-              *) break;;
+       -h|--help) fn-usage "[--help] [--query rpm-query] [fzf pattern]"; exit 0;;
+      -q|--query) FZF_RPM_QUERY="$2"; FZF_RPM_LABEL="Installed packaged matching rpm query \"$2\""; shift;;
+               *) break;;
     esac
+    shift
   done
+  export FZF_RPM_QUERY FZF_RPM_LABEL
 
   myprofile _rpm
   _fzf-rpm "$@"

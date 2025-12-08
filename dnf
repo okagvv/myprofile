@@ -26,12 +26,18 @@ dnf-history() (
 )
 
 dnf-list() (
+  FZF_RPM_QUERY=
+  FZF_RPM_LABEL=
   while [ $# -gt 0 ] ; do
     case "$1" in
-      -h|--help) fn-usage "[--help] [fzf query]"; exit 0;;
-              *) break;;
+              -h|--help) fn-usage "[--help] [--testing-only] [fzf query]"; exit 0;;
+      -t|--testing-only) FZF_RPM_QUERY="$(sudo -A dnf repoquery --installed-from-repo=updates-testing --queryformat="%{name} " 2>/dev/null)"
+                         FZF_RPM_LABEL="Packages installed from \"updates-testing\" repo";;
+                      *) break;;
     esac
+    shift
   done
+  export FZF_RPM_QUERY FZF_RPM_LABEL
 
   # CAUTION: Utilizes _fzf-rpm (avoids latency caused by dnf wrapping rpm API for installed
   # packages). Only difference is use of dnf-what() instead of rpm-what(): "dnf repoquery --what*

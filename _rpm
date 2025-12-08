@@ -85,7 +85,7 @@ _rpm-list() {
     # CAUTION: "rpm --query --all --last --queryformat .." is not applicable here: creates redundant
     # output in --last *and* --querformat notations. Separate columns for version and release are
     # pointless too because there are packages defining only one of them.
-    LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}*%{INSTALLTIME:date}\n' | \
+    LC_TIME=en_DK.UTF-8 TZ=UTC rpm --query --all --queryformat '%{NAME}*%{VERSION}-%{RELEASE}*%{ARCH}*%{INSTALLTIME:date}\n' $FZF_RPM_QUERY | \
     sort --field-separator="*" $_sort | \
     sed -r 's/\*([[:digit:]-]{10})T([[:digit:]:]{8}) UTC/\*\1 \2/'
   } | column --table --separator "*"
@@ -123,7 +123,7 @@ _fzf-rpm() {
                --bind "alt-V:change-prompt(.. sort by version ..> )+reload(_rpm-list byversion)" \
                --bind "alt-w:change-preview(_rpm-preview-what $_nvr)" \
                "${_dnf_opt[@]}" \
-               --border-label " Installed packages " \
+               --border-label " ${FZF_RPM_LABEL:-Installed packages} " \
                --header-lines 1 \
                --help "$_help" \
                --list-label " Matching packages " \
