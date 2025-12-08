@@ -314,7 +314,7 @@ fzf-rg() (
     myprofile _fzf
 
     _rg() {
-      rg --color=always --hidden --line-number --no-heading --smart-case "$*"
+      rg --no-config --color=always --hidden --line-number --no-heading --smart-case "$*"
     }
     export -f _rg
 

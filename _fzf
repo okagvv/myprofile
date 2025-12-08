@@ -35,7 +35,7 @@ _fzf-preview-bat() {
 }
 
 _fzf-bat-highlight-args() {
-  rg --ignore-case --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
+  rg --no-config --ignore-case --line-number --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
 }
 
 _fzf-mime() {
