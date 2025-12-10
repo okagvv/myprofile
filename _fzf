@@ -8,7 +8,7 @@ export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
 _fzf-defaults() {
-  FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:preview-top,f10:preview-bottom,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
+  FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,alt-home:preview-top,alt-end:preview-bottom,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:toggle-raw,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case"
 
   if is-root || [ -n "$1" ] ; then
 
@@ -95,8 +95,7 @@ F5:Toggle preview.
 F6:Toggle jump mode.
 F7:Toggle line wrap.
 F8:Toggle line wrap for preview.
-F9:Preview top.
-F10:Preview bottom.
+F9:Toggle raw mode.
 F12:Toggle header.
 Home:First match.
 End:Last match.
@@ -105,6 +104,8 @@ Alt-Left:Preview page up.
 Alt-Right:Preview page down.
 Alt-Up:Preview line up.
 Alt-Down:Preview line down.
+Alt-Home:Preview top.
+Alt-End:Preview bottom.
 Shift-Left:Preview half page up.
 Shift-Right:Preview half page down.
 Ctrl-p:Search history up.
