@@ -99,7 +99,7 @@ _dnf-cached-advisory() {
 _dnf-upgrades() {
   local -a _pattern
   _pattern=($@)
-  
+
   __package() {
     echo "${1%.*}-$2.${1##*.}"
   }
@@ -114,9 +114,10 @@ _dnf-upgrades() {
   }
   __upgrades() {
     {
-      echo "Package Version Repository"
-      sudo -A dnf check-upgrade $_testing $_scopes --quiet ${_pattern[@]} | \
-      sort -k2b -k1d
+      echo "Package Version Repository Build"
+      sudo -A dnf repoquery --upgrades $_testing $_scopes --quiet --queryformat="%{name}.%{arch} %{evr} %{repoid} %{buildtime}\n" ${_pattern[@]} | \
+      perl -MDate::Format -pe 's/(\d+)$/time2str("%Y-%m-%d",$1)/e' | \
+      sort -k${1:-2b} -k1d
     } | sed -rn '/(Obsoleting packages|No security updates needed)/Iq;p' | \
         column -t
   }
@@ -133,9 +134,12 @@ _dnf-upgrades() {
                --bind "alt-a:change-preview(__advisory {1} {2})" \
                --bind "alt-A:execute(__advisory {1} {2} | less)" \
                --bind "alt-b:execute(__bodhi {1} {2})" \
+               --bind "alt-B:reload(__upgrades 4dr)" \
                --bind "alt-d:execute(sudo dnf remove {+1})+reload(__upgrades)" \
                --bind "alt-i:change-preview(__dnf repoquery {1} {2} --info; __current {1})" \
                --bind 'alt-h:execute-silent(_fzf-browser "$(__dnf repoquery {1} {2} --queryformat "%{url}")")' \
+               --bind "alt-R:reload(__upgrades 3d)" \
+               --bind "alt-V:reload(__upgrades 2b)" \
                --bind "alt-w:change-preview(_dnf-preview-what {1})" \
                --bind 'alt-x:toggle-all+become(echo {+1})' \
                --bind 'enter:become(echo {+1})' \
@@ -146,6 +150,7 @@ _dnf-upgrades() {
                --help "Alt-a:Show advisory (if available);Alt-A:Open advisory in pager;Alt-b:Search package on Bodhi
                        Alt-c:Package change log;Alt-d:Remove selected packages;Alt-h:Open package URL in default browser
                        Alt-i:Package info;Alt-w:What packages relate to selected one
+                       Alt-B:Sort by build date;Alt-R:Sort by repository;Alt-V: Sort by version ID
                        Alt-x:Apply all upgrades except selected ones;Ctrl-a:Toggle select all;Enter:Upgrade selected packages" \
                --list-label " Select${_scopes//--/} upgrades to install " \
                --multi \
