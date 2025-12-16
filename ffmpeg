@@ -105,8 +105,10 @@ fzf-ffprobes() (
         if ! pidof --quiet sxiv ; then
           if [ -s "$THUMBNAIL" ] ; then
             # TODO: determine coordinates for lower right corner of parent window
-            sxiv -b -p -q -g 512x288-1920-0 "$THUMBNAIL" &
-            sleep 0.1
+            sxiv -b -p -q -g 512x288-0-0 "$THUMBNAIL" &
+            sleep 0.2
+            local _wid="$(wmctrl -lx | sed -rn 's/^([^ ]+) +[[:digit:]]+ +sxiv\..+$/\1/p')"
+            wmctrl -i -r "$_wid" -b add,above
           fi
         fi
       fi
@@ -137,7 +139,7 @@ fzf-ffprobes() (
                  --bind "alt-D:execute(rm -vfi {+7})+reload(_ffprobes_load)" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
                  --bind "alt-y:execute-silent(_thumbnail {7})" \
-                 --bind "alt-x:execute-silent(_disable_thumbnails)" \
+                 --bind "alt-Y:execute-silent(_disable_thumbnails)" \
                  --bind "enter:$([ -n "$_play" ] && echo "execute(_vlc-enqueue {+7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
