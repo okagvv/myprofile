@@ -100,32 +100,33 @@ fzf-ffprobes() (
 
     _thumbnail() {
       if [[ "$(file -bi "$1")" =~ ^video ]] ; then
-
-        ffmpegthumbnailer -s 512 -c png -i "$1" -o "$THUMBNAIL" 2>/dev/null
+        local _t
+        ((_t=$RANDOM/328))
+        ffmpegthumbnailer -s 512 -c png -i "$1" -t "$_t%" -o "$THUMBNAIL" 2>/dev/null
         if ! pidof --quiet sxiv ; then
           if [ -s "$THUMBNAIL" ] ; then
             # TODO: determine coordinates for lower right corner of parent window
             sxiv -b -p -q -g 512x288-0-0 "$THUMBNAIL" &
             sleep 0.2
-            local _wid="$(wmctrl -lx | sed -rn 's/^([^ ]+) +[[:digit:]]+ +sxiv\..+$/\1/p')"
-            wmctrl -i -r "$_wid" -b add,above
+            wmctrl -i -r "$(win-id "sxiv\.")" -b add,above
+            sleep 0.2
+            wmctrl -i -a $(win-id ".*terminal.*")
           fi
         fi
       fi
-
       true
     }
 
     _ffprobes-preview() {
       _fzf-preview-path "$1"
-      [ ! -s "$THUMBNAIL" ] || _thumbnail "$1"
+      [ ! -f "$THUMBNAIL" ] || _thumbnail "$1"
     }
 
     _ffprobes_load () {
       [ -n "$_all" ] && _ffprobes-all || _ffprobes-filter
     }
 
-    export -f vlc-enqueue _ffprobes_load _ffprobes-all _ffprobes-filter _ffprobes-preview _thumbnail _disable_thumbnails
+    export -f vlc-enqueue win-id _ffprobes_load _ffprobes-all _ffprobes-filter _ffprobes-preview _thumbnail _disable_thumbnails
     export _all _sort _play
     export THUMBNAIL="/tmp/.ffprobes-thumb.png"
 
@@ -138,15 +139,15 @@ fzf-ffprobes() (
                  --bind "alt-a:clear-multi" \
                  --bind "alt-D:execute(rm -vfi {+7})+reload(_ffprobes_load)" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
-                 --bind "alt-y:execute-silent(_thumbnail {7})" \
-                 --bind "alt-Y:execute-silent(_disable_thumbnails)" \
+                 --bind "alt-<:execute-silent(_thumbnail {7})" \
+                 --bind "alt->:execute-silent(_disable_thumbnails)" \
                  --bind "enter:$([ -n "$_play" ] && echo "execute(vlc-enqueue {+7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-{y,Y}:{En,Dis}able thumbnail viewer
+                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-{<,>}:{En,Dis}able thumbnail viewer
                          Alt-D:Remove selected files;Alt-v:Play current/selected file(s) via VLC" \
                  --list-label "[ Audio and video files in \"$(realpath "$1")/\" ]" \
                  --multi \
