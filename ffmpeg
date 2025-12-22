@@ -100,17 +100,17 @@ fzf-ffprobes() (
 
     _thumbnail() {
       if [[ "$(file -bi "$1")" =~ ^video ]] ; then
-        local _t
+        local _t _w
         ((_t=$RANDOM/328))
         ffmpegthumbnailer -s 512 -c png -i "$1" -t "$_t%" -o "$THUMBNAIL" 2>/dev/null
         if ! pidof --quiet sxiv ; then
           if [ -s "$THUMBNAIL" ] ; then
-            # TODO: determine coordinates for lower right corner of parent window
-            sxiv -b -p -q -g 512x288-0-0 "$THUMBNAIL" &
+            _w="$(win-id ".*terminal.*")"
+            sxiv -b -p -q -g "512x288$(xwininfo -id "$_w" | sed -rn 's/^ *Corners: +[^ ]+ +[^ ]+ +([^ ]+) .+$/\1/p')" "$THUMBNAIL" &
             sleep 0.2
             wmctrl -i -r "$(win-id "sxiv\.")" -b add,above
             sleep 0.2
-            wmctrl -i -a $(win-id ".*terminal.*")
+            wmctrl -i -a "$_w"
           fi
         fi
       fi
