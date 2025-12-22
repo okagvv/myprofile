@@ -27,5 +27,5 @@ toggle-deco() {
 }
 
 win-id() {
-  wmctrl -lx | sed -rn "s/^(0x[[:xdigit:]]+) +[[:digit:]]+ +$1.+$/\1/p" | head -1
+  wmctrl -lx | sed -rn "s/^(0x[[:xdigit:]]+) +-?[[:digit:]]+ +$1.+$/\1/p" | head -1
 }
