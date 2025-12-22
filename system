@@ -99,6 +99,17 @@ myjournalctl() {
   journalctl --no-hostname --output=with-unit "$@"
 }
 
+thermal-watch() {
+  watch -d -n1 -t "sensors | grep -i -E '^([^ ].*°C|fan)';
+                   echo -n 'fan_speed_rpm: '; cat /sys/class/hwmon/hwmon1/device/fan_speed_rpm 2>/dev/null || echo n.a.;
+                   grep . /sys/devices/system/cpu/cpu*/thermal_throttle/core_*_max_time_ms |
+                   sed -r 's~^/sys/devices/system/cpu/(cpu[0-9]+)/thermal_throttle/~\1\t~'"
+}
+
+pressure-watch() {
+  watch -d -n1 -t "grep . /proc/pressure/* | tr : '\t'"
+}
+
 is-root || return 0
 
 juser() {
@@ -139,9 +150,3 @@ set-dns() {
 }
 complete -W "{router,pihole,curr}" set-dns
 
-thermal-watch() {
-  watch -d -n1 -t "sensors | grep -i -E '^([^ ].*°C|fan)';
-                   echo -n 'fan_speed_rpm: '; cat /sys/class/hwmon/hwmon1/device/fan_speed_rpm 2>/dev/null || echo n.a.;
-                   grep . /sys/devices/system/cpu/cpu*/thermal_throttle/core_*_max_time_ms |
-                   sed -r 's~^/sys/devices/system/cpu/(cpu[0-9]+)/thermal_throttle/~\1\t~'"
-}
