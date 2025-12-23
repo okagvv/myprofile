@@ -6,7 +6,7 @@
 toggle-deco() {
   if [ $# -eq 1 ] ; then
 
-    local _winid    
+    local _winid
     _winid="$(xdotool search -name "$1")"
 
     if [[ "$_winid" =~ ^[[:digit:]]+$ ]] ; then
@@ -18,7 +18,7 @@ toggle-deco() {
       fn-error "Failed to detect a unique window ID for window title pattern \"$1\"!"
 
     fi
-    
+
   else
 
     fn-usage " <window-title>"
@@ -28,4 +28,8 @@ toggle-deco() {
 
 win-id() {
   wmctrl -lx | sed -rn "s/^(0x[[:xdigit:]]+) +-?[[:digit:]]+ +$1.+$/\1/p" | head -1
+}
+
+win-prop() {
+  xprop -id "$([[ "$1" =~ ^(0x[[:xdigit:]]+|[[:digit:]]+)$ ]] && echo "$1" || win-id "$1")" -notype "${@:2}"
 }
