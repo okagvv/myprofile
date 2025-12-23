@@ -28,20 +28,20 @@ The selected worktree path is referenced below as `$myprofile`.
 
 ### For all users
 
-Register `myprofile` script for application during setup of `bash` login shells:
+Register `setup` script for application during setup of `bash` login shells:
 
 ``` shell
-$ sudo source myprofile/myprofile --install
+$ sudo source myprofile/setup --install
 '/etc/profile.d/zz-myprofile.sh' -> '$myprofile/myprofile'
 ```
 
 ### For single non-root user
 
-Insert `source` of `myprofile` script in current users `bash` profile script:
+Insert `source` of `setup` script in current users `bash` profile script:
 
 ``` shell
-$ source myprofile/myprofile --install
-$HOME/.bash_profile:source $myprofile/myprofile
+$ source myprofile/setup --install
+$HOME/.bash_profile:source $myprofile/setup
 ```
 
 ## Usage
