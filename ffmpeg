@@ -52,6 +52,8 @@ ffprobes() {
 if in-path vlc ; then
 
   vlc-enqueue() {
+    # CAUTION: Raise of VLC instance may not work in case interface options "Start VLC with only a
+    # systray icon" is set a/o "When to raise interface" is not set to "audio/video".
     local _winid
     _winid="$(xdotool search --name 'VLC media player')"
     [ -z "$_winid" ] || xdotool windowactivate "$_winid"
@@ -101,7 +103,7 @@ fzf-ffprobes() (
     _thumbnail() {
       if [[ "$(file -bi "$1")" =~ ^video ]] ; then
         local _t _w
-        ((_t=$RANDOM/328))
+        ((_t=1+$RANDOM/328))
         ffmpegthumbnailer -s 512 -c png -i "$1" -t "$_t%" -o "$THUMBNAIL" 2>/dev/null
         if ! pidof --quiet sxiv ; then
           if [ -s "$THUMBNAIL" ] ; then
@@ -119,7 +121,7 @@ fzf-ffprobes() (
 
     _ffprobes-preview() {
       _fzf-preview-path "$1"
-      [ ! -f "$THUMBNAIL" ] || _thumbnail "$1"
+      [ -e "$THUMBNAIL" ] && _thumbnail "$1"
     }
 
     _ffprobes_load () {
