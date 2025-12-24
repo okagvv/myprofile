@@ -1,15 +1,15 @@
-#!/usr/bin/echo "myprofile must be *sourced* by bash sessions/scripts!"
+#!/usr/bin/echo "${BASH_SOURCE[0]} must be *sourced* by bash sessions/scripts!"
 # -*- shell-script -*-
 
 myprofile() {
-  local _default _dir _script _self _src _verbose _opt
+  local _default _dir _script _self _src _verbose _opt _fn _lno
   local -a _scripts _search
 
   _self="$MYPROFILE/${BASH_SOURCE[0]##*/}"
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}]]";
+         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}] | function [{arg}]]";
                     return 0;;
       -d|--default) _default=y;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
@@ -29,6 +29,16 @@ myprofile() {
     shift
   done
 
+  if [[ ${#_scripts[@]} -gt 0 && "$(type -t "${_scripts[0]}")" == function ]] ; then
+    shopt -s extdebug
+    read -r _fn _lno _script <<<"$(declare -F "${_scripts[0]}")"
+    shopt -u extdebug
+    if [ -s "$_script" ] ; then
+      source "$_script" && "${_scripts[@]}"
+      return $?
+    fi
+  fi
+  
   _search=("$HOME/.config/$FUNCNAME" "/usr/local/etc/$FUNCNAME.d" "/etc/$FUNCNAME.d" "$MYPROFILE")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
