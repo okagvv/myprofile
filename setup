@@ -9,7 +9,7 @@ myprofile() {
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}] | function [{arg}]]";
+         -h|--help) echo "Usage: $FUNCNAME [--help | --install | --fn-loc [pattern] | [--default] [--verbose] [{script}] | function [{arg}]]";
                     return 0;;
       -d|--default) _default=y;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
@@ -20,6 +20,14 @@ myprofile() {
                       echo -e "source $_self\n\n$_script" >~/.bash_profile
                       grep --with-filename "$_self" ~/.bash_profile
                     fi
+                    return 0;;
+       -f|--fn-loc) _search=("$(declare -F | cut -d" " -f3 | grep -E "${2:-.}" | sort)")
+                    shopt -s extdebug
+                    for _fn in ${_search[@]} ; do
+                      read -r _fn _lno _script <<<"$(declare -F "$_fn")"
+                      [[ "$_script" =~ ^$MYPROFILE/ ]] && echo "$_fn(): $_script:$_lno"
+                    done | column -t
+                    shopt -u extdebug                    
                     return 0;;
       -v|--verbose) _verbose=echo;;
                 -*) echo "$FUNCNAME: Unsupported option: $1" >&2;
