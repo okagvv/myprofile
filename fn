@@ -4,6 +4,27 @@ is-fn() {
   declare -F "$1" >/dev/null
 }
 
+fn-temp() {
+  local _tmp
+  _tmp="${TMPDIR:-/tmp}/${FUNCNAME[1]}"
+  if [[ "$1" =~ ^-+c(leanup)?$ ]] ; then
+    rm -rf "$_tmp"
+  else
+    [ -d "$_tmp" ] || mkdir -p "$_tmp"
+    mktemp --tmpdir="$_tmp" --suffix=".$1" "${FUNCNAME[1]}.XXXXX"
+  fi
+}
+
+fn-loc() {
+  if [ $# -gt 0 ] ; then
+    shopt -s extdebug
+    declare -F "$@" | sed -r 's~(^.+) ([[:digit:]]+) (.+)$~'"$([ $# -gt 1 ] && echo '\1:\3:\2' || echo '\3:\2')"'~;s~//~/~g'
+    shopt -u extdebug
+  else
+    eval "fn-loc $(declare -F | cut -d' ' -f3 | tr '\n' ' ')"
+  fi
+}
+
 script=
 
 fn-parent() {
