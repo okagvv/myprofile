@@ -19,7 +19,7 @@ _fzf_comprun () {
 }
 
 fzf-fn() (
-  local _re _defs
+  local _re _defs _loc
   local -a _fns
 
   if [[ $# -eq 1 ]] ; then
@@ -32,29 +32,38 @@ fzf-fn() (
 
     _fns=($(declare -F | sed -rn 's/^declare -fx? ([[:print:]]+)$/\1/;/'"$_re"'/p'))
 
-    if [ ${#_fns[@]} -eq 1 ] ; then
+    if [ "${#_fns[@]}" -eq 1 ] ; then
 
-      declare -f ${_fns[0]}
+      declare -f "${_fns[0]}" | sed "1{s~$~ # $(fn-loc "${_fns[0]}")~}"
 
     elif [ ${#_fns[@]} -gt 1 ] ; then
 
-      _defs="$(mktemp --suffix=.fndef)"
-      declare -f ${_fns[@]} >"$_defs"
+      _defs="$(fn-temp fndef)"
+      declare -f "${_fns[@]}" >"$_defs"
+      _loc="$(fn-temp loc)"
+      fn-loc "${_fns[@]}" >"$_loc"
 
+      _fn-definition() {
+        awk "/^$1 \(\)/,/^\}/" "$_defs" | tee "$_defs.curr"
+      }
+      export -f _fn-definition
+      export _defs
+      
       myprofile _fzf
 
       echo ${_fns[@]} | \
       tr ' ' '\n' | \
       _fzf-wrapper --bind "alt-e:execute(_fzf-editor $_defs.curr)" \
-                   --bind "enter:become(echo declare -f {1})" \
-                   --help 'Alt-e:Send current function definition to \$EDITOR;Alt-f:Show definition of selected function' \
+                   --bind "enter:become(_fn-definition {1})" \
+                   --bind "focus:transform-preview-label(sed -rn 's~^{1}:(.*)~ Function defined at \1 ~p' $_loc)" \
+                   --help "Alt-e:Send current function definition to \$EDITOR;Enter:Return defintion of selected function" \
                    --list-label " Bash function(s) " \
                    --no-sort \
-                   --preview-init "alt-f:awk '/^{1} \(\)/,/^\}/' $_defs | tee $_defs.curr | bat --color always --number --language bash" \
-                   --preview-label " Function definition " \
+                   --reverse \
+                   --preview "_fn-definition {1} | bat --color always --number --language bash" \
                    --preview-window "70%,+{2}+2/2,~2:wrap" || true
 
-      rm -f "$_defs"
+      fn-temp --cleanup
 
     fi
   fi

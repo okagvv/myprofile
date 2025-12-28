@@ -48,7 +48,7 @@ $HOME/.bash_profile:source $myprofile/setup
 
 ``` shell
 $ myprofile -h
-myprofile [--help | --install | [--verbose] [{script}]]
+myprofile [--help | --install | [--default] [--verbose] [{script}] | function [{arg}]]
 ```
 
 ## Scripts
