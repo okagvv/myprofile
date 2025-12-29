@@ -8,3 +8,7 @@ bind generic  <C-x>  :toggle vertical-split
 bind main     P      ?git push %(remote)
 bind refs     F      ?git fetch --verbose %(remote)
 bind tree     C      ?git checkout %(commit) -- %(file)
+
+color main-remote  green default standout
+color main-tracked green default
+
