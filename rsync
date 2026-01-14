@@ -1,10 +1,10 @@
 # -*- shell-script -*-
 
 if in-path rsync ; then
-  
+
   rsyncp() {
     local -a _opts
-    _opts=(--archive --backup --safe-links --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
+    _opts=(--archive --relative --backup --safe-links --hard-links --human-readable --stats --itemize-changes --progress --whole-file)
 
     while [ $# -gt 0 ] ; do
       case "$1" in
@@ -49,9 +49,9 @@ sync-timestamps() {
       esac
       shift
     done
-  
+
   if [[ -z "$_help" && $# -eq 2 && -d "$1" && -d "$2" ]] ; then
-    
+
     find "$1" -type f -printf '%P\0' | \
     grep --null-data --extended-regexp "${_filter:-.*}" | \
     xargs --null --no-run-if-empty --replace=@@ ${_dry:---verbose} touch --no-create --reference="$1/@@" "$2/@@"
@@ -60,6 +60,6 @@ sync-timestamps() {
 
     fn-usage "[--dry-run] [--filter regexp] [--help] <src-dir> <target-dir>"
     return ${_help:-1}
-    
+
   fi
 }
