@@ -140,6 +140,7 @@ fzf-ffprobes() (
                  --accept-nth 7 \
                  --bind "alt-a:clear-multi" \
                  --bind "alt-D:execute(rm -vfi {+7})+reload(_ffprobes_load)" \
+                 --bind "alt-m:execute-silent(mpv {+7})+clear-multi" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
                  --bind "alt-<:execute-silent(_thumbnail {7})" \
                  --bind "alt->:execute-silent(_disable_thumbnails)" \
