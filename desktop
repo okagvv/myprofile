@@ -33,3 +33,18 @@ win-id() {
 win-prop() {
   xprop -id "$([[ "$1" =~ ^(0x[[:xdigit:]]+|[[:digit:]]+)$ ]] && echo "$1" || win-id "$1")" -notype "${@:2}"
 }
+
+mymount() {
+  local _cmd
+  [[ "$1" =~ ^-+u(nmount)?$ ]] && _cmd="unmount" || _cmd="mount"
+
+  if [ $# -gt 0 ] ; then
+
+    udisksctl "$_cmd" -b "/dev/${@: -1}"
+
+  else
+
+    fn-usage " [--unmount] devname"
+
+  fi
+}
