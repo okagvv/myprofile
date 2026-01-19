@@ -2,6 +2,8 @@
 
 in-path ffmpeg || return 0
 
+myprofile interactive
+
 {
   local _ff
   for _ff in ff{mpeg,play,probe} ; do
