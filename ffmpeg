@@ -142,7 +142,7 @@ fzf-ffprobes() (
                  --accept-nth 7 \
                  --bind "alt-a:clear-multi" \
                  --bind "alt-D:execute(rm -vfi {+7})+reload(_ffprobes_load)" \
-                 --bind "alt-m:execute-silent(mpv {+7})+clear-multi" \
+                 --bind "alt-s:execute-silent(smplayer {+7})+clear-multi" \
                  --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
                  --bind "alt-<:execute-silent(_thumbnail {7})" \
                  --bind "alt->:execute-silent(_disable_thumbnails)" \
@@ -152,8 +152,8 @@ fzf-ffprobes() (
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
-                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-{<,>}:{En,Dis}able thumbnail viewer
-                         Alt-D:Remove selected files;Alt-v:Play current/selected file(s) via VLC" \
+                 --help "Alt-a:Clear selection;Alt-i:File info;Alt-{<,>}:{En,Dis}able thumbnail viewer;Alt-D:Remove selected files
+                         Alt-s:Play current/selected file(s) via smplayer;Alt-v:Play current/selected file(s) via VLC" \
                  --list-label "[ Audio and video files in \"$(realpath "$1")/\" ]" \
                  --multi \
                  --no-sort \
