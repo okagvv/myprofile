@@ -2,7 +2,7 @@
 # bash functions preferably used in interactive shells
 
 a() {
-  alias "$@" | m -p "bash aliases"
+  alias "$@" | m -P "bash aliases"
 }
 complete -A alias a
 
@@ -11,7 +11,7 @@ e() {
   # - $LS_COLORS (very long generated value, must be reformated for visual inspection)
   # - $PS1 (shell prompt may embed escape sequences distorting output)
   # - $BASH_FUNC* (intermediate bash variables)
-  printenv -0 | grep -zvE "^(BASH_FUNC|LS_COLORS=|PS1=)" | sort -z | tr '\000' '\n' | m -p "shell environment"
+  printenv -0 | grep -zvE "^(BASH_FUNC|LS_COLORS=|PS1=)" | sort -z | tr '\000' '\n' | m -P "shell environment"
 }
 
 h() {
@@ -78,23 +78,28 @@ l() {
 }
 
 lm() {
-  l --color=always "$@" |& m -p lm
+  l --color=always "$@" |& m -P lm
 }
 
 lmt() {
-  l --color=always --sort=time "$@" |& m -p lmt
+  l --color=always --sort=time "$@" |& m -P lmt
 }
 
 m() {
   local _prompt
+  local -a _pattern
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-           -h|--help) fn-usage "[-p|--prompt \"text\"]"; return 0;;
-      -[pP]|--prompt) _prompt="$2 "; shift 2;;
-                   *) break;;
+        -h|--help) fn-usage "[-P|--prompt \"text\"] <less-args> [-p|--pattern regexp]"; return 0;;
+      -P|--prompt) _prompt="$2 "; shift 2;;
+                *) break;;
     esac
   done
+
+  if [[ $# -gt 2 && "${@: -2:1}" =~ ^-+p(attern)?$ ]] ; then
+    set -- --pattern "${@: -1}" "${@:1:$(($#-2))}"
+  fi
 
   TERM=xterm less --hilite-search \
                   --ignore-case \
