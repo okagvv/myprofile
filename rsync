@@ -8,7 +8,12 @@ if in-path rsync ; then
 
     while [ $# -gt 0 ] ; do
       case "$1" in
-           -h|--help) fn-usage "[--dry-run] [--move | --sync] {<source-dir>/?|file} <target-dir>"; return 0;;
+        -b|--bwlimit) if [[ "$2" =~ ^([[:digit:]]+)M?$ ]] ; then
+                        _opts+=(--bwlimit=${BASH_REMATCH[1]}M); shift
+                      else
+                        _opts+=(--bwlimit=40M)
+                      fi;;
+           -h|--help) fn-usage "[--bwlimit [n]M] [--dry-run] [--move | --sync] {<source-dir>/?|file} <target-dir>"; return 0;;
         -d|--dry-run) _opts+=(--dry-run --verbose);;
            -m|--move) _opts+=(--remove-source-files);;
            -s|--sync) _opts+=(--delete-delay);;
