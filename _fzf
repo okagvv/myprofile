@@ -111,6 +111,7 @@ Shift-Right:Preview half page down.
 Ctrl-p:Search history up.
 Ctrl-n:Search history down.$([[ "$XDG_SESSION_TYPE" = tty ]] || echo "
 Ctrl-c:Copy current entry to clipboard.
+Ctrl-q:Replace query by clipboard content.
 Ctrl-v:Insert clipboard content in query.")"
   } | column -t -s: -o": " | sed 's/^- *://')"
 
@@ -149,8 +150,10 @@ _fzf-wrapper() {
   # ctrl-v bindings found at https://github.com/junegunn/fzf/issues/3376
   case "$XDG_SESSION_TYPE" in
         x11) _args+=(--bind 'ctrl-v:transform(echo "put($(xclip -o -selection clipboard))")'
+                     --bind 'ctrl-q:transform-query(echo "$(xclip -o -selection clipboard)")'
                      --bind "ctrl-c:execute-silent(echo {} | _fzf-copy)");;
-    wayland) _args+=(--bind 'ctrl-v:transform(echo "put($(wl-paste))")');;
+    wayland) _args+=(--bind 'ctrl-v:transform(echo "put($(wl-paste))")'
+                     --bind 'ctrl-q:transform-query(echo "$(wl-paste)")');;
   esac
 
   _fzf-defaults "$_sudo"
