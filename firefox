@@ -99,7 +99,7 @@ fzf-mozplaces() (
                  --bind "alt-h:reload(_mozplaces history $@)+transform-border-label(_label-text history)" \
                  --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
-                 --bind 'result:unbind(f4)+unbind(f5)' \
+                 --bind 'load:unbind(f4)+unbind(f5)' \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \

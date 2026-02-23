@@ -44,7 +44,7 @@ fzf-buku() (
   } | column -t -s"|" -R1 -l3 | \
   _fzf-wrapper --border-label " Bookmarks fetched from ~/.local/share/buku/bookmarks.db " \
                --bind "enter:execute-silent(_fzf_browser {1})" \
-               --bind 'result:unbind(f1)+unbind(f4)+unbind(f5)' \
+               --bind 'load:unbind(f1)+unbind(f4)+unbind(f5)' \
                --color "label:reverse" \
                --header-lines 1 \
                --list-border none \
