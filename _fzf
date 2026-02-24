@@ -8,7 +8,7 @@ export FZF_HISTORY_DIR="$HOME/.config/fzf"
 [ -d $FZF_HISTORY_DIR ] || mkdir -p $FZF_HISTORY_DIR
 
 _fzf-defaults() {
-  FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,alt-home:preview-top,alt-end:preview-bottom,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:toggle-raw,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case --ellipsis='»'"
+  FZF_DEFAULT_OPTS="--border rounded --border-label-pos 3 --list-border rounded --list-label-pos 3 --preview-label-pos 3 --bind 'esc:cancel,alt-up:preview-up,alt-down:preview-down,alt-left:preview-page-up,alt-right:preview-page-down,home:first,end:last,alt-home:preview-top,alt-end:preview-bottom,f2:toggle-hscroll,f3:toggle-sort,f4:change-preview-window(80%|70%|60%|50%|40%)+refresh-preview,f5:toggle-preview,f6:jump,f7:toggle-wrap,f8:toggle-preview-wrap,f9:toggle-raw,f12:toggle-header,shift-up:toggle+up,shift-down:toggle+down,shift-left:preview-half-page-up,shift-right:preview-half-page-down,ctrl-up:up-match,ctrl-down:down-match,ctrl-left:up-selected,ctrl-right:down-selected' --history-size 100 --info=inline --info-command='echo \$FZF_POS/\$FZF_INFO' --highlight-line --no-mouse --exact --ignore-case --ellipsis='»'"
 
   if is-root || [ -n "$1" ] ; then
 
@@ -108,6 +108,10 @@ Alt-Home:Preview top.
 Alt-End:Preview bottom.
 Shift-Left:Preview half page up.
 Shift-Right:Preview half page down.
+Ctrl-Left:Up selected.
+Ctrl-Right:Down selected.
+Ctrl-Up:Up matching.
+Ctrl-Down:Down matching.
 Ctrl-p:Search history up.
 Ctrl-n:Search history down.$([[ "$XDG_SESSION_TYPE" = tty ]] || echo "
 Ctrl-c:Copy current entry to clipboard.
