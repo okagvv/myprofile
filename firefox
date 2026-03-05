@@ -48,7 +48,7 @@ mozplaces() (
   shift
   if [ $# -gt 0 ] ; then
     printf -v _pattern "%s|" "$@"
-    _pattern="(${_pattern%|})"
+    _pattern="(${_pattern%|}|¦Title$)"
     _color=auto
   else
     _pattern=".*"
@@ -81,25 +81,27 @@ fzf-mozplaces() (
       printf " %s fetched from \"places.sqlite\". Press F1 for supported key bindings. " "${1^}"
     }
     _mozplaces() {
-      mozplaces $@ | column -t -s "¦" -o $'\u00a0 ' -l 4
+      mozplaces "$@" | column -t -s "¦" -o $'\u00a0 ' -l 4
     }
     export -f mozplaces _mozplaces _label-text
 
-    local _scope
-    _scope="$1"
-    case "$_scope" in
-      b*) _scope=bookmarks;;
-      h*) _scope=history;;
+    scope="$1"
+    case "$scope" in
+      b*) scope=bookmarks;;
+      h*) scope=history;;
     esac
     shift
 
-    _mozplaces "$_scope" $@ | \
+    args="$@"
+    export args scope
+
+    _mozplaces "$scope" $args | \
     _fzf-wrapper --border-label "$(_label-text "$_scope")" \
-                 --bind "alt-b:reload(_mozplaces bookmarks $@)+transform-border-label(_label-text bookmarks)" \
-                 --bind "alt-h:reload(_mozplaces history $@)+transform-border-label(_label-text history)" \
+                 --bind "alt-b:reload(_mozplaces bookmarks $args)+transform-border-label(_label-text bookmarks)" \
+                 --bind "alt-h:reload(_mozplaces history $args)+transform-border-label(_label-text history)" \
                  --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
-                 --bind 'load:unbind(f4)+unbind(f5)' \
+                 --bind 'start:unbind(f4)+unbind(f5)' \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
