@@ -39,13 +39,18 @@ mozplaces() (
                          JOIN folder fp ON bm.parent = fp.id
                          WHERE bm.type = 1  -- type 1 = bookmark
                          ORDER BY added, folder, title";;
-              *) fn-usage "bookmarks|history [pattern ..]"; return 1;;
+              *) fn-usage "bookmarks|history [.../places.sqlite] [pattern ..]"; return 1;;
   esac
 
   # function internal exit trap works for subshell functions only
   trap 'rm -f /tmp/places.sqlite*' EXIT
 
   shift
+  if [[ "${1##*/}" == "places.sqlite" && -s "$1" ]] ; then
+    _places="$1"
+    shift
+  fi
+
   if [ $# -gt 0 ] ; then
     printf -v _pattern "%s|" "$@"
     _pattern="(${_pattern%|}|¦Title$)"
@@ -55,7 +60,7 @@ mozplaces() (
     _color=never
   fi
 
-  for _places in ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
+  for _places in $_places ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
 
     if [ -s "$_places" ] ; then
 
@@ -122,6 +127,6 @@ fzf-mozplaces() (
                  --no-wrap
 
   else
-    fn-usage "bookmarks|history [pattern ..]"
+    fn-usage "bookmarks|history [.../places.sqlite] [pattern ..]"
   fi
 )
