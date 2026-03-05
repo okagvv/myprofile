@@ -8,7 +8,7 @@ mozplaces() (
   #   download history" is enabled in FF settings
   # - column "folder" returned for bookmarks only contains bookmark tags too (with folder path
   #   "/Tags/...")
-  local _color _query _pattern _places
+  local _color _query _pattern _places _tmp
   case "$1" in
       h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch','localtime') AS Visited, p.url AS URL, p.title AS Title
                          FROM moz_places p, moz_historyvisits h
@@ -66,11 +66,13 @@ mozplaces() (
 
       fn-trace "Examine \"$_places\"."
       # use a copy to avoid potential DB corruption (s.a. https://www.sqlite.org/c3ref/open.html)
-      cp -f "$_places"* /tmp/
+      _tmp="$(mktemp --directory --tmpdir mozplaces-XXXXX)"
+      cp -f "$_places"* "$_tmp/"
 
       fn-trace "Search for pattern $_pattern."
       # not unusual that bookmark titles contain the default sqlite delimiter "|"
-      sqlite3 -separator "¦" -header -readonly /tmp/places.sqlite "$_query" | grep --ignore-case --extended-regexp --color="$_color" "$_pattern"
+      sqlite3 -separator "¦" -header -readonly "$_tmp/places.sqlite" "$_query" | grep --ignore-case --extended-regexp --color="$_color" "$_pattern"
+      rm -rf "$_tmp"
       break
 
     fi
