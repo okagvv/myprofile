@@ -12,8 +12,8 @@ new-alias timers 'systemctl list-timers'
 
 if in-path ausearch ; then
 
-  new-alias avctoday sudo 'ausearch -ts today -m avc'
-  new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc'
+  new-alias avctoday sudo 'ausearch -ts today -m avc -i'
+  new-alias avcyesterday sudo 'ausearch -ts yesterday -m avc -i'
 
 fi
 
