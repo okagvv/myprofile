@@ -223,4 +223,4 @@ if in-path podman ; then
 
 fi
 
-fn-export "$MYPROFILE"/{common,fn} "^_fzf-[[:alnum:]-]+$" rpm-owner ffprobes
+fn-export "$MYPROFILE"/lib/{common,fn} "^_fzf-[[:alnum:]-]+$" rpm-owner ffprobes

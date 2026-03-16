@@ -137,7 +137,7 @@ fzf-ffprobes() (
     cd "$1"
     myprofile _fzf
 
-    FZF_DEFAULT_COMMAND=_ffprobes_load \
+    _ffprobes_load | \
     _fzf-wrapper --ansi \
                  --accept-nth 7 \
                  --bind "alt-a:clear-multi" \
