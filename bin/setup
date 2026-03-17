@@ -6,7 +6,7 @@ myprofile() {
   local -a _scripts _search
 
   _self="$MYPROFILE/bin/${BASH_SOURCE[0]##*/}"
-  _search=("$HOME/.local/$FUNCNAME" "/usr/local/share/$FUNCNAME" "$MYPROFILE")
+  _search=("$HOME/.local/share/$FUNCNAME" "/usr/local/share/$FUNCNAME" "$MYPROFILE")
   
   while [ $# -gt 0 ] ; do
     case "$1" in

@@ -157,7 +157,7 @@ if in-path rg && [ -z "$RIPGREP_CONFIG_PATH" ] ; then
                 --line-number \
                 --no-heading \
                 --smart-case \
-                --ignore-file="$MYPROFILE/etc/ripgrep.ignore" \
+                --ignore-file="$(myprofile --search etc/ripgrep.ignore)" \
                 "$@"
   }
 
