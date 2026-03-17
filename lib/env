@@ -17,7 +17,7 @@ export PS4="+ \${FUNCNAME[0]} \$LINENO: "
 export SYSTEMD_COLORS=0
 export TIME_STYLE="+%F %T"
 
-in-path bat   && export BAT_CONFIG_PATH="$MYPROFILE/etc/bat.conf"
+in-path bat   && export BAT_CONFIG_PATH="$(myprofile --search etc/bat.conf)"
 in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"

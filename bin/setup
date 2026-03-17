@@ -6,10 +6,11 @@ myprofile() {
   local -a _scripts _search
 
   _self="$MYPROFILE/bin/${BASH_SOURCE[0]##*/}"
-
+  _search=("$HOME/.local/$FUNCNAME" "/usr/local/share/$FUNCNAME" "$MYPROFILE")
+  
   while [ $# -gt 0 ] ; do
     case "$1" in
-         -h|--help) echo "Usage: $FUNCNAME [--help | --install | [--default] [--verbose] [{script}] | function [{arg}]]";
+         -h|--help) echo "Usage: $FUNCNAME [--help | --install | --search path | [--default] [--verbose] [{script}] | function [{arg}]]";
                     return 0;;
       -d|--default) _default=y;;
       -i|--install) if [[ "$(id -u)" == "0" ]] ; then
@@ -21,6 +22,18 @@ myprofile() {
                       grep --with-filename "$_self" ~/.bash_profile
                     fi
                     return 0;;
+       -s|--search) if [ -n "$2" ] ; then
+                      for _dir in ${_search[@]} ; do
+                        if [ -e "$_dir/$2" ] ; then
+                          echo "$_dir/$2"
+                          return 0
+                        fi
+                      done
+                      echo "$FUNCNAME: \"$2\" not found in search paths!" >&2
+                    else
+                      echo "$FUNCNAME: Missing --search argument!" >&2
+                    fi
+                    return 1;;
       -v|--verbose) _verbose=echo;;
                 -*) echo "$FUNCNAME: Unsupported option: $1" >&2;
                     return 1;;
@@ -41,8 +54,6 @@ myprofile() {
       return $?
     fi
   fi
-
-  _search=("$HOME/.local/$FUNCNAME" "/usr/local/share/$FUNCNAME" "$MYPROFILE")
 
   if [[ ${#_scripts[@]} -eq 0 && -n "$PS1$_default" ]] ; then
     for _dir in ${_search[@]} ; do
