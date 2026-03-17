@@ -85,12 +85,22 @@ fzf-mozplaces() (
     myprofile _fzf
 
     _label-text() {
-      printf " %s fetched from \"places.sqlite\". Press F1 for supported key bindings. " "${1^}"
+      echo " ${1^} fetched from \"places.sqlite\". ${2:+ Query column \"$2\". }"
+    }
+    _set_nth() {
+      local _nth _prompt
+      case "$FZF_NTH" in
+           3) _nth=2; _prompt="Folder";;
+           2) _nth=1; _prompt="Added";;
+           1) _nth=".."; _prompt=;;
+           *) _nth=3; _prompt="Title";;
+      esac
+      echo "transform-nth(echo \"$_nth\")+transform-prompt(echo \"$_prompt> \")"
     }
     _mozplaces() {
       mozplaces "$@" | column -t -s "¦" -o $'\u00a0 ' -l 4
     }
-    export -f mozplaces _mozplaces _label-text
+    export -f mozplaces _mozplaces _label-text _set_nth
 
     scope="$1"
     case "$scope" in
@@ -103,18 +113,22 @@ fzf-mozplaces() (
     export args scope
 
     _mozplaces "$scope" $args | \
-    _fzf-wrapper --border-label "$(_label-text "$_scope")" \
+    _fzf-wrapper --border-label "$(_label-text "$scope")" \
                  --bind "alt-b:reload(_mozplaces bookmarks $args)+transform-border-label(_label-text bookmarks)" \
                  --bind "alt-h:reload(_mozplaces history $args)+transform-border-label(_label-text history)" \
                  --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
+                 --bind 'alt-y:transform(_set_nth)' \
                  --bind 'start:unbind(f4)+unbind(f5)' \
+                 --bind 'esc:clear-query' \
+                 --bind 'ctrl-x:abort' \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
                  --exit-0 \
                  --header-lines 1 \
                  --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Ctrl-c:Copy URL to clipboard
-                         Enter:Open selected entry in default browser" \
+                         Ctrl-x:Abort;Enter:Open selected entry in default browser
+                         Alt-y:Iterate over column specific search scopes" \
                  --list-border none \
                  --no-multi \
                  --preview "echo {2}" \
