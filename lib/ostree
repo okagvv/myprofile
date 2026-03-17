@@ -4,6 +4,7 @@ if  is-root ; then
 
   if ostree admin status 2>/dev/null >&2 ; then
 
+    new-alias upgrade-os "rpm-ostree upgrade --reboot --bypass-driver"
     new-alias upgrade-preview "rpm-ostree upgrade --preview --bypass-driver"
     new-alias upgrade-status "rpm-ostree status --verbose"
     
