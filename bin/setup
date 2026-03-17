@@ -49,7 +49,7 @@ myprofile() {
     read -r _fn _lno _script <<<"$(declare -F "${_scripts[0]}")"
     shopt -u extdebug
     if [ -s "$_script" ] ; then
-      [ -z "$_verbose" ] || echo "Source \"$_script\"."
+      [ -z "$_verbose" ] || echo "Source \"$_script\"." >&2
       source "$_script" && "${_scripts[@]}"
       return $?
     fi
@@ -84,13 +84,13 @@ myprofile() {
     fi
 
     if [ -s "$_src" ] ; then
-      [ -z "$_verbose" ] || echo "Source \"$_src\"."
+      [ -z "$_verbose" ] || echo "Source \"$_src\"." >&2
       if ! source "$_src" ; then
         echo "Load of myprofile script \"$_src\" has failed!" >&2
         return 1
       fi
     elif [ -n "$_opt" ] ; then
-      [ -z "$_verbose" ] || echo "Skip missing optional script \"$_script\"."
+      [ -z "$_verbose" ] || echo "Skip missing optional script \"$_script\"." >&2
     else
       echo "Missing myprofile script \"$_script\"!" >&2
       return 1

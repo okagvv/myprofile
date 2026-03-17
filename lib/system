@@ -157,7 +157,7 @@ service-aliases() {
       new-alias "$1-stat" "systemctl status --lines=27 $1.service"
       new-alias "$1-journal" "journalctl --boot --pager-end --no-hostname --follow --lines=42 --unit $1.service"
     else
-      echo "Service \"$1\" does not exist!"
+      echo "Service \"$1\" does not exist!" >&2
       return 1
     fi
   else
