@@ -89,18 +89,21 @@ fzf-mozplaces() (
     }
     _set_nth() {
       local _nth _prompt
-      case "$FZF_NTH" in
-           3) _nth=2; _prompt="Folder";;
-           2) _nth=1; _prompt="Added";;
-           1) _nth=".."; _prompt=;;
-           *) _nth=3; _prompt="Title";;
+      case "${1:-$FZF_NTH}" in
+        3) _nth=2; _prompt="Folder";;
+        2) _nth=1; _prompt="Added";;
+        1) _nth=".."; _prompt=;;
+        *) _nth=3; _prompt="Title";;
       esac
       echo "transform-nth(echo \"$_nth\")+transform-prompt(echo \"$_prompt> \")"
+    }
+    _folder2query() {
+      echo "$(_set_nth 1)+transform-query(echo \"'$(sed -r 's~ ~\\ ~g' <<<"$1")'\")"
     }
     _mozplaces() {
       mozplaces "$@" | column -t -s "¦" -o $'\u00a0 ' -l 4
     }
-    export -f mozplaces _mozplaces _label-text _set_nth
+    export -f mozplaces _mozplaces _label-text _set_nth _folder2query
 
     scope="$1"
     case "$scope" in
@@ -116,9 +119,10 @@ fzf-mozplaces() (
     _fzf-wrapper --border-label "$(_label-text "$scope")" \
                  --bind "alt-b:reload(_mozplaces bookmarks $args)+transform-border-label(_label-text bookmarks)" \
                  --bind "alt-h:reload(_mozplaces history $args)+transform-border-label(_label-text history)" \
+                 --bind 'alt-f:transform(_folder2query {3})' \
+                 --bind 'alt-y:transform(_set_nth)' \
                  --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
-                 --bind 'alt-y:transform(_set_nth)' \
                  --bind 'start:unbind(f4)+unbind(f5)' \
                  --bind 'esc:clear-query' \
                  --bind 'ctrl-x:abort' \
@@ -127,8 +131,9 @@ fzf-mozplaces() (
                  --exit-0 \
                  --header-lines 1 \
                  --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Ctrl-c:Copy URL to clipboard
-                         Ctrl-x:Abort;Enter:Open selected entry in default browser
-                         Alt-y:Iterate over column specific search scopes" \
+                         Alt-f:Use current folder name as query
+                         Alt-y:Iterate over column specific search scopes
+                         Ctrl-x:Abort;Enter:Open selected entry in default browser" \
                  --list-border none \
                  --no-multi \
                  --preview "echo {2}" \
