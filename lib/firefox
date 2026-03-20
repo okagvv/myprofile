@@ -89,21 +89,34 @@ fzf-mozplaces() (
     }
     _set_nth() {
       local _nth _prompt
-      case "${1:-$FZF_NTH}" in
-        3) _nth=2; _prompt="Folder";;
-        2) _nth=1; _prompt="Added";;
-        1) _nth=".."; _prompt=;;
-        *) _nth=3; _prompt="Title";;
-      esac
+      if [[ "$FZF_BORDER_LABEL" =~ Bookmark ]] ; then
+        case "${1:-$FZF_NTH}" in
+          3) _nth=2; _prompt="Folder";;
+          2) _nth=1; _prompt="Added";;
+          1) _nth=".."; _prompt=;;
+          *) _nth=3; _prompt="Title";;
+        esac
+      else
+        case "${1:-$FZF_NTH}" in
+          2) _nth=1; _prompt="Visited";;
+          1) _nth=".."; _prompt=;;
+          *) _nth=2; _prompt="Title";;
+        esac
+      fi
       echo "transform-nth(echo \"$_nth\")+transform-prompt(echo \"$_prompt> \")"
     }
     _folder2query() {
       echo "$(_set_nth 1)+transform-query(echo \"'$(sed -r 's~ ~\\ ~g' <<<"$1")'\")"
     }
-    _mozplaces() {
+    _title2query() {
+      if [[ "$FZF_BORDER_LABEL" =~ Bookmark ]] ; then
+        echo "$(_set_nth 0)+transform-query(echo \"'$(sed -r 's~ ~\\ ~g' <<<"$1")'\")"
+      fi
+    }
+    _mozplaces_tab() {
       mozplaces "$@" | column -t -s "¦" -o $'\u00a0 ' -l 4
     }
-    export -f mozplaces _mozplaces _label-text _set_nth _folder2query
+    export -f mozplaces _mozplaces_tab _label-text _set_nth _folder2query _title2query
 
     scope="$1"
     case "$scope" in
@@ -115,11 +128,12 @@ fzf-mozplaces() (
     args="$@"
     export args scope
 
-    _mozplaces "$scope" $args | \
+    _mozplaces_tab "$scope" $args | \
     _fzf-wrapper --border-label "$(_label-text "$scope")" \
-                 --bind "alt-b:reload(_mozplaces bookmarks $args)+transform-border-label(_label-text bookmarks)" \
-                 --bind "alt-h:reload(_mozplaces history $args)+transform-border-label(_label-text history)" \
+                 --bind "alt-b:reload(_mozplaces_tab bookmarks $args)+transform-border-label(_label-text bookmarks)+transform(_set_nth 1)" \
+                 --bind "alt-h:reload(_mozplaces_tab history $args)+transform-border-label(_label-text history)+transform(_set_nth 1)" \
                  --bind 'alt-f:transform(_folder2query {3})' \
+                 --bind 'alt-t:transform(_title2query {4})' \
                  --bind 'alt-y:transform(_set_nth)' \
                  --bind "ctrl-c:execute-silent(echo {2} | _fzf-copy)" \
                  --bind "enter:execute-silent(_fzf-browser {2})" \
@@ -131,7 +145,8 @@ fzf-mozplaces() (
                  --exit-0 \
                  --header-lines 1 \
                  --help "Alt-b:(Re)load bookmarks;Alt-h:(Re)load history;Ctrl-c:Copy URL to clipboard
-                         Alt-f:Use current folder name as query
+                         Alt-f:Use current folder name (for bookmarks) or title (for history) as query
+                         Alt-t:Use current title as query (for bookmarks only)
                          Alt-y:Iterate over column specific search scopes
                          Ctrl-x:Abort;Enter:Open selected entry in default browser" \
                  --list-border none \
