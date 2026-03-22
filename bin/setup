@@ -8,7 +8,7 @@ myprofile() {
   _self="$MYPROFILE/bin/${BASH_SOURCE[0]##*/}"
   _search=("$HOME/.local/share/$FUNCNAME" "/usr/local/share/$FUNCNAME" "$MYPROFILE")
   [ -z "$MYPROFILE_VERBOSE" ] || _verbose=echo
-  
+
   while [ $# -gt 0 ] ; do
     case "$1" in
          -h|--help) echo "Usage: $FUNCNAME [--help | --install | --search path | [--default] [--verbose] [{script}] | function [{arg}]]";
@@ -38,20 +38,21 @@ myprofile() {
       -v|--verbose) _verbose=echo;;
                 -*) echo "$FUNCNAME: Unsupported option: $1" >&2;
                     return 1;;
-                *) if [[ "$(type -t "$1")" == function ]] ; then
-                     shopt -s extdebug
-                     read -r _fn _lno _script <<<"$(declare -F "$1")"
-                     shopt -u extdebug
-                     if [[ "$_lno" =~ ^[[:digit:]]+$ && -s "$_script" ]] ; then
-                       [ -z "$_verbose" ] || echo "Source \"$_script\"." >&2
-                       source "$_script" && "$@"
-                       return $?
-                     else
-                       echo "$FUNCNAME: Failed to locate function \"$1\"!" >&2
-                     fi
-                   else
-                     _scripts+=("$1")
-                   fi;;
+                 *) if [[ "$(type -t "$1")" == function ]] ; then
+                      shopt -s extdebug
+                      read -r _fn _lno _script <<<"$(declare -F "$1")"
+                      shopt -u extdebug
+                      if [[ "$_lno" =~ ^[[:digit:]]+$ && -s "$_script" ]] ; then
+                        [ -z "$_verbose" ] || echo "Source \"$_script\"." >&2
+                        source "$_script" && "$@"
+                        return $?
+                      else
+                        echo "$FUNCNAME: Failed to locate function \"$1\"!" >&2
+                        return 1
+                      fi
+                    else
+                      _scripts+=("$1")
+                    fi;;
     esac
     shift
   done

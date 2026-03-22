@@ -96,12 +96,13 @@ dnf-search() (
 )
 
 dnf-upgrades() (
-  declare -g _testing _scopes
+  declare -g _testing _scopes _cache
   while [ $# -gt 0 ] ; do
     case "$1" in
            -b|--bugfix) _scopes+=" --bugfix";;
+        -c|--cacheonly) _cache+="--cacheonly";;
       -e|--enhancement) _scopes+=" --enhancement";;
-             -h|--help) fn-usage "[--bugfix] [--enhancement] [--help] [--security] [--testing|--testing-only] [pattern]"; return 0;;
+             -h|--help) fn-usage "[--cacheonly] [--bugfix] [--enhancement] [--help] [--security] [--testing|--testing-only] [pattern]"; return 0;;
          -s|--security) _scopes+=" --security";;
           -t|--testing) _testing="--enablerepo *updates-testing";;
      -T|--testing-only) _testing="--disable-repo=* --enablerepo *updates-testing";;
@@ -113,7 +114,7 @@ dnf-upgrades() (
   myprofile _dnf
   _dnf-upgrades "$@"
 )
-complete -W "--{bugfix,enhancement,help,security,testing}" dnf-upgrades
+complete -W "--{bugfix,enhancement,help,security,testing,cacheonly}" dnf-upgrades
 
 dnf-what() {
   local _installed _query _rpm _cap
