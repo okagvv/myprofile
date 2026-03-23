@@ -138,18 +138,6 @@ oom-killed() {
   myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
 }
 
-set-dns() {
-  case "$1" in
-    router|pihole) sudo resolvectl dns "$(resolvectl default-route | sed -rn 's/^Link [[:digit:]]+ \(([[:alnum:]]+)\): yes$/\1/p')" \
-                                       "$(host -t A "$1" | sed 's/^.* //')"
-                   sudo resolvectl flush-caches;;
-             curr) resolvectl status
-                   sudo resolvectl statistics;;
-                *) fn-usage "router|pihole|curr";;
-  esac
-}
-complete -W "{router,pihole,curr}" set-dns
-
 service-aliases() {
   if [ $# -eq 1 ] ; then
     systemctl is-failed --quiet "$1"
