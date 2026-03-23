@@ -59,11 +59,12 @@ _rpm-preview-docs() {
 _rpm-preview-what() {
   _fzf-preview-header "What installed packages relate to \"$1\""
   { is-fn dnf-what && dnf-what --installed "$1" || rpm-what "$1"
-  } | bat --color always --style plain --language yaml
+  } | _fzf-preview-bat-plain yaml
 }
 
 _rpm-preview() {
   _fzf-preview-header "$1 package \"$3\""
+  # $4 is optional, _fzf-preview-bat-plain() is not applicable
   rpm --query $2 "$3" | bat --color always --style plain --language $4
 }
 
@@ -129,7 +130,7 @@ _fzf-rpm() {
                --list-label " Matching packages " \
                --multi \
                --no-sort \
-               --preview-init "alt-i:_rpm-preview \"Info for\" -i $_nvr log" \
+               --preview-init "alt-i:_rpm-preview \"Info for\" -i $_nvr MemInfo" \
                --preview-label " Press F1 for help " \
                --preview-window "60%,~2:wrap" \
                --query "$1" \

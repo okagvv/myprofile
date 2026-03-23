@@ -34,6 +34,10 @@ _fzf-preview-bat() {
   bat --color=always ${FZF_PREVIEW_COLUMNS:+--terminal-width $FZF_PREVIEW_COLUMNS} "$@"
 }
 
+_fzf-preview-bat-plain() {
+  _fzf-preview-bat --style plain --language "$@"
+}
+
 _fzf-bat-highlight-args() {
   rg --no-config --ignore-case --line-number --color=never "$@" | sed -rn 's/^([[:digit:]]+):.*$/-H \1:\1/p' | tr '\n' ' '
 }
@@ -217,7 +221,7 @@ if in-path podman ; then
   _fzf-podman-query() {
     _fzf-preview-header "$1"
     shift
-    $* | gojq --yaml-output | _fzf-preview-bat --style plain --language yaml
+    $* | gojq --yaml-output | _fzf-preview-bat-plain yaml
   }
   export -f _fzf-podman-query
 
