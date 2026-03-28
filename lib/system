@@ -26,6 +26,21 @@ avcrecent() {
   fi
 }
 
+mymount() {
+  local _cmd
+  [[ "$1" =~ ^-+u(nmount)?$ ]] && _cmd="unmount" || _cmd="mount"
+
+  if [ $# -gt 0 ] ; then
+
+    udisksctl "$_cmd" -b "/dev/${@: -1}"
+
+  else
+
+    fn-usage " [--unmount] devname"
+
+  fi
+}
+
 if ! is-root ; then
 
   journalctl() { /usr/bin/journalctl --user "$@"; }
@@ -35,7 +50,7 @@ if ! is-root ; then
 fi
 
 if in-path firewall-cmd ; then
-  
+
   firewall-zones() {
     # CAUTION: "firewall-cmd --list-all" may not include all active zones!
     local _zone
@@ -43,7 +58,7 @@ if in-path firewall-cmd ; then
       firewall-cmd --info-zone=$_zone
     done
   }
-  
+
 fi
 
 fzf-units() (
