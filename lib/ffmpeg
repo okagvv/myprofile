@@ -29,7 +29,7 @@ ffprobes() {
 
       if [ -n "$_yaml" ] ; then
 
-        ffprobe -hide_banner -loglevel quiet -of json -pretty -show_error \
+        ffprobe -loglevel quiet -of json -pretty -show_error \
                 -show_entries "stream=index,codec_long_name,sample_aspect_ratio,display_aspect_ratio,width,height,channel_layout,channels,avg_frame_rate,profile,pix_fmt,level,bit_rate,duration:stream_tags=language,GENERATOR:format=format_long_name,duration,size,bit_rate:format_tags:chapter=start_time,end_time:chapter_tags:stream_disposition=default" \
                 -i  "$_input" | \
         gojq --yaml-output '[ .format, .streams[], .programs[], .chapters[] ]' | \
@@ -174,3 +174,19 @@ fzf-ffprobes() (
 
   fi
 )
+
+get_codec() {
+  ffprobe -v quiet -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$1" | sort -u
+}
+
+get_encoder() {
+  ffprobe -v quiet -select_streams v:0 -show_entries stream_tags=ENCODER -of default=noprint_wrappers=1:nokey=1 "$1"
+}
+
+get_bitrate() {
+  ffprobe -v quiet -select_streams v:0 -show_entries format=bit_rate -of default=noprint_wrappers=1:nokey=1 "$1"
+}
+
+get_duration() {
+  ffprobe -v quiet -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$1" | cut -f1 -d.
+}
