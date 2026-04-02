@@ -34,7 +34,8 @@ ffprobes() {
                 -i  "$_input" | \
         gojq --yaml-output '[ .format, .streams[], .programs[], .chapters[] ]' | \
         sed -r '/end_time:/ { N; s/\n// };s/(end_time: "[^"]+") +(.+)$/\2 \1/' | \
-        bat --language yaml --color always --paging never --style header-filename --file-name "$_input"
+        bat --language yaml --color always --paging never --style header-filename --file-name "$_input" \
+            --terminal-width ${FZF_PREVIEW_COLUMNS:-$(tput cols || echo 80)}
         echo
 
       else
