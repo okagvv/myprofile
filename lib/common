@@ -47,23 +47,37 @@ broken-symlinks() {
   find "${1:-.}" -xtype l -print0 | xargs -0r -i@ $_cmd
 }
 
-confirmed() {
-  echo -en "$1"
-  if read -p " Are you sure? (Y/*) " -s -t "${2:-7}" -n 1 -r ; then
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]] ; then
-      return
-    else
-      fn-error "Aborted b/o user request."
-    fi
-  elif [ $? -ge 128 ] ; then
-    echo
-    fn-error "Aborted b/o timeout."
+inquire() {
+  if [[ $# -ge 2 && $# -le 3 ]] ; then
+    local -n _var
+    _var="$1"
+    read -p "$2: " -i "${3:-$_var}" -e _var
   else
-    echo
-    fn-error "Aborted b/o read error."
+    fn-usage "var-name prompt [initial-value]"
   fi
-  false
+}
+
+confirmed() {
+  if [[ $# -ge 1 && $# -le 2 ]] ; then
+    echo -en "$1"
+    if read -p " (Y/*) " ${2:+ -t $2} -n 1 -r ; then
+      [ -z "$REPLY" ] || echo
+      if [[ $REPLY =~ ^[Yy]$ ]] ; then
+        return
+      else
+        fn-error "Aborted b/o user request."
+      fi
+    elif [ $? -ge 128 ] ; then
+      echo >&2
+      fn-error "Aborted b/o timeout."
+    else
+      echo >&2
+      fn-error "Aborted b/o read error."
+    fi
+    false
+  else
+    fn-usage "prompt [timeout-sec]"
+  fi
 }
 
 fdl() {
@@ -131,12 +145,12 @@ last-elapsed() {
   local _end _elapsed
   local -a _start
   _end="$(date +%s)"
-  
+
   # CAUTION: "history 1" returns wrong start time if $HISTCONTROL contains
   # - "{erase,ignore}dups" a/o "ignoreboth" for command lines repeated multiple times in a row
   # - "ignorespace" for command lines with leading space
   _start=($(HISTTIMEFORMAT='%s '; history 1))
-  
+
   ((_elapsed=_end-_start[1]))
   [ "$_elapsed" -eq 0 ] || TZ=UTC date "+%-H:%-M:%-S " --date "@$_elapsed"
 }
