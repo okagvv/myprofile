@@ -58,27 +58,31 @@ fn-parent() {
   echo -n "${_parent:-?}"
 }
 
+fn-colored() {
+  echo -e "\e[${1%,*}m\e[${1#*,}m$2\e[0m"
+}
+
 fn-usage() {
-  echo -e "\e[34mUsage: $(fn-parent) $1\e[0m" >&2
+  fn-colored 0,34 "Usage: $(fn-parent) $1" >&2
   return 2
 }
 
 fn-error() {
-  echo -e "\e[1m\e[31m$(fn-parent): $1\e[0m" >&2
+  fn-colored 1,31 "$(fn-parent): $1" >&2
   return 1
 }
 
 fn-info() {
-  echo -e "\e[1m\e[35m$(fn-parent): $1\e[0m"
+  fn-colored 1,35 "$(fn-parent): $1"
 }
 
 fn_trace=
 fn-trace() {
-  [ -z "$fn_trace" ] || echo -e "\e[1m\e[36m$(fn-parent): $1\e[0m" >&2
+  [ -z "$fn_trace" ] || fn-colored 1,36 "$(fn-parent): $1" >&2
 }
 
 fn-vars() {
-  echo -e "\e[1m\e[34m$(fn-parent): $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')\e[0m" >&2
+  fn-colored 1,34 "$(fn-parent): $(declare -p $@ | sed -r 's/(\[[[:digit:]]+\]=)/\n\1/g')" >&2
 }
 
 fn-abort() {
