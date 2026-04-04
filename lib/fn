@@ -5,13 +5,23 @@ is-fn() {
 }
 
 fn-temp() {
-  local _tmp
-  _tmp="${TMPDIR:-/tmp}/${FUNCNAME[1]}"
-  if [[ "$1" =~ ^-+c(leanup)?$ ]] ; then
-    rm -rf "$_tmp"
+  if [[ $# -gt 0 && $# -le 2 ]] ; then
+    local _dir _file
+    _dir="${TMPDIR:-/tmp}/${script:-${FUNCNAME[1]}}"
+    if [[ "$1" =~ ^-+c(leanup)?$ ]] ; then
+      rm -rf "$_dir"
+    else
+      if [ $# -gt 2 ] ; then
+        _file="$1"
+        shift
+      else
+        _file="${FUNCNAME[1]:-log}"
+      fi
+      [ -d "$_dir" ] || mkdir -p "$_dir"
+      mktemp --tmpdir="$_dir" --suffix=".$1" "$_file.XXXXX"
+    fi
   else
-    [ -d "$_tmp" ] || mkdir -p "$_tmp"
-    mktemp --tmpdir="$_tmp" --suffix=".$1" "${FUNCNAME[1]}.XXXXX"
+    fn-usage "[--cleanup] [filename] suffix"
   fi
 }
 
@@ -36,14 +46,12 @@ fn-parent() {
 
   elif [ -n "$FUNCNAME" ] ; then
 
-    for ((_i = 0 ; _i < ${#FUNCNAME[@]} ; _i++ )) ; do
+    for (( _i = 0 ; _i < ${#FUNCNAME[@]} ; _i++ )) ; do
 
-      [[ "${FUNCNAME[$_i]}" =~ ^fn- ]] && continue
+      _parent="${FUNCNAME[$_i]}"
+      [[ "$_parent" =~ ^fn- ]] && continue
+      [[ "$_parent" =~ ^[[:alpha:]] ]] && break
 
-      if [[ "${FUNCNAME[$_i]}" =~ ^[[:alpha:]] ]] ; then
-        _parent="${FUNCNAME[$_i]}"
-        break
-      fi
     done
   fi
 
@@ -78,7 +86,7 @@ fn-abort() {
 
     # abort scripts or subshell functions
     fn-error "$1"
-    exit "${2:1}"
+    exit "${2:-1}"
 
   else
 
