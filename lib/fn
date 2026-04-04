@@ -11,7 +11,7 @@ fn-temp() {
     if [[ "$1" =~ ^-+c(leanup)?$ ]] ; then
       rm -rf "$_dir"
     else
-      if [ $# -gt 2 ] ; then
+      if [ $# -gt 1 ] ; then
         _file="$1"
         shift
       else
