@@ -159,8 +159,8 @@ if in-path keepassxc-cli ; then
 
   mypassgen() {
     #CAUTION: Vault (root) token must not contain dots!
-    keepassxc-cli generate --length "${1:-14}" --lower --upper --numeric --special --exclude-similar \
-                           --every-group --exclude "({[<>]})&*?'\\\`\$\!\"."
+    keepassxc-cli generate --length "${1:-16}" --lower --upper --numeric --exclude-similar \
+                           --custom '^§%/=@+*~#|,;:-_' --every-group 
   }
 
 fi
