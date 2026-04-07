@@ -155,3 +155,7 @@ dnf-what() {
 
   fi
 }
+
+dnf-watch() {
+  fzf-watch --query "$1" "grep -v -E '(DEBUG|INFO RPM callback close file)' /var/log/dnf5.log"
+}

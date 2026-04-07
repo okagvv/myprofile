@@ -48,7 +48,7 @@ fzf-fn() (
       }
       export -f _fn-definition
       export _defs
-      
+
       myprofile _fzf
 
       echo ${_fns[@]} | \
@@ -177,6 +177,34 @@ fzf-monitor() (
                --reverse \
                --smart-case \
                --with-nth '6,5,7'
+)
+
+fzf-watch() (
+  local _query
+
+  while [ $# -gt 0 ] ; do
+    case "$1" in
+       -h|--help) fn-usage "[--help] [--query \"text\"] \"command\""; return 0;;
+      -q|--query) _query="$2"; shift;;
+               *) break;;
+    esac
+    shift
+  done
+
+  if [ $# -eq 0 ] ; then
+    fn-error "Missing command to watch!"
+  else
+    myprofile _fzf
+    _fzf-wrapper --bind "start,ctrl-r:reload:$@" \
+                 --border-label " $@ " \
+                 --border-label-pos 3:top \
+                 --color "label:reverse" \
+                 --help "Ctrl-r:Reload" \
+                 --list-border none \
+                 --no-sort \
+                 --query "$_query" \
+                 --tac
+  fi
 )
 
 if in-path plocate ; then \
