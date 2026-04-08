@@ -61,3 +61,29 @@ if in-path mutool ; then
 
 fi
 
+if in-path ocrmypdf ; then
+
+   ocrmypdf() {
+     if [[ $# -gt 0 && -s "${@: -1}" ]] ; then
+
+       local _author _in _title
+
+       if [ $# -gt 1 ] ; then
+         _author="$1"
+         shift
+       else
+         _author="$USER"
+       fi
+       _in="$1"
+       _title="${_in##*/}"
+
+       /usr/bin/ocrmypdf --force-ocr --deskew --clean --sidecar - -l deu --title "${_title%.*}" --author "$_author" "$_in" "${_in%.*}_ocr.pdf"
+
+     else
+
+       fn-usage "[author] pdf"
+
+     fi
+   }
+
+ fi
