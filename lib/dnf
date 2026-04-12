@@ -94,6 +94,7 @@ dnf-search() (
 
   fi
 )
+complete -W "--{all,help,cacheonly,showduplicates}" dnf-search
 
 dnf-upgrades() (
   declare -g _testing _scopes _cache
