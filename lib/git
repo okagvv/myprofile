@@ -2,6 +2,8 @@
 
 in-path git || return 0
 
+new-alias git-repo "git repo structure --format=table --progress"
+
 remotes() {
   git remote --verbose "$@" | \
   cut -f1 -d"(" | \
