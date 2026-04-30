@@ -81,7 +81,7 @@ _rpm-list() {
     byversion) _sort="--key=2 --key=1 --key=3";;
             *) _sort="--key=1 --key=2 --key=3";;
   esac
-  
+
   { echo "Name*Version*Architecture*Installed at"
     # CAUTION: "rpm --query --all --last --queryformat .." is not applicable here: creates redundant
     # output in --last *and* --querformat notations. Separate columns for version and release are
@@ -103,11 +103,11 @@ _fzf-rpm() {
          Alt-V:Sort by version;Alt-w:What packages relate to selected one"
 
   if is-fn _dnf-advisory ; then
-    _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1})"
+    _dnf_opt=(--bind "alt-a:change-preview(_dnf-advisory {1}-{2})"
               --bind "alt-b:execute(_bodhi-updates {1}-{2}.{3})")
     _help+=";Alt-a:Show advisories;Alt-b:Search package on Bodhi in default browser"
   fi
-  
+
   _rpm-list bydate | \
   _fzf-wrapper --bind "alt-c:change-preview(_rpm-preview-files \"Config files in\" --configfiles $_nvr)" \
                --bind "alt-D:change-prompt(..sort by date..> )+reload(_rpm-list bydate)" \
