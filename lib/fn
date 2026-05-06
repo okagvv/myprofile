@@ -125,14 +125,18 @@ fn-export() {
   fi
 }
 
+fn-ps4() {
+  export PS4="+ \${FUNCNAME[0]} \$LINENO: "
+}
+
 fn_xtrace=
 fn-xtrace() {
   # Enable xtrace until return from calling function.
   fn_xtrace="${FUNCNAME[1]}"
   [ -n "$fn_xtrace" ] || return 0
 
-  # ensure $PS4 has  value (for security reasons shells running as root do not inherit $PS4)
-  export PS4="+ \${FUNCNAME[0]} \$LINENO: "
+  # ensure $PS4 has value (for security reasons shells running as root do not inherit $PS4)
+  fn-ps4
 
   fn_trace=y
   trap 'if [[ "$FUNCNAME" == "$fn_xtrace" ]] ; then set +x; trap - RETURN ERR; echo "-===- Stopped xtrace for $fn_xtrace() -===-" >&2; fn_xtrace=; fn_trace=; fi' RETURN
