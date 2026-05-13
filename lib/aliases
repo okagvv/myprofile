@@ -22,7 +22,7 @@ new-alias rmemptydir 'find . -empty -type d -print0 | xargs -r -0 rmdir --verbos
 new-alias sane 'stty sane'
 new-alias st 'eval "$(starship init bash)"'
 new-alias tmux 'tmux -2'
-new-alias trans2de 'trans -t de'
-new-alias trans2en 'trans -t en'
+new-alias trans2de 'trans -s en -t de'
+new-alias trans2en 'trans -s de -t en'
 new-alias tree 'tree --prune --dirsfirst --du -a -h -p -D -C -F -I .git'
 new-alias vi TERM=xterm vim
