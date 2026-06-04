@@ -2,8 +2,7 @@
 
 rpm-changelog() (
   if [ $# -eq 1 ] ; then
-    myprofile _rpm
-    _rpm-inspect-scope changelog "$1"
+    rpm --query --changelog "$1" 2>&1 | m -P "Changelog for package \"$1\""
   else
     fn-usage "<package>"
   fi
