@@ -26,6 +26,10 @@ avcrecent() {
   fi
 }
 
+fedora_release() {
+  sed -rn 's/^Fedora release ([[:digit:]]+) .*$/fc\1/p' /etc/redhat-release
+}
+
 mymount() {
   local _cmd
   [[ "$1" =~ ^-+u(nmount)?$ ]] && _cmd="unmount" || _cmd="mount"
