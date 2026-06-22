@@ -122,7 +122,6 @@ fdl() {
     ${_sortcmd[@]}
   } | column -t -s"|" -o$' \u00a0' -l8 -R5
 }
-complete -o bashdefault -o default -o nosort -F _fd fdl
 
 find-last() {
   local _tail
@@ -139,7 +138,6 @@ find-last() {
 
   fdl "${_fdlargs[@]}" --sort date | tail -${_tail:-27}
 }
-complete -o bashdefault -o default -o nosort -F _fd find-last
 
 last-elapsed() {
   local _end _elapsed

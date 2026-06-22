@@ -5,6 +5,7 @@ PATH+=":/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin"
 [ -d "$HOME/bin" ] && PATH+=":$HOME/bin"
 cleanup-path
 
+export BASH_COMPLETION_USER_DIR="$MYPROFILE/share"
 export HISTCONTROL="ignorespace"
 export HISTSIZE=1000
 export HISTTIMEFORMAT="%m-%d %T "

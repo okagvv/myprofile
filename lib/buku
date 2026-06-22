@@ -17,9 +17,6 @@ buku() {
   fi
 }
 
-# CAUTION: For unknown reasons bash completion is not loaded on F40.
-source /usr/share/bash-completion/completions/buku-completion.bash
-
 buku-import() {
   # non-interactive (re)import sjuppressing error messages concerning repeated imports of same URLs
   /usr/bin/buku --nostdin --ai <<<"$(yes|head -3)" 2> >(grep -v -E ' URL .+ already exists at index ') > >(sed -r 's~^.*\(y/n\): ~~;/^$/d')
@@ -57,8 +54,3 @@ fzf-buku() (
                --smart-case \
                --wrap
 )
-_complete-fzf-buku() {
-  [ "${#COMP_WORDS[@]}" == 2 ] || return
-  COMPREPLY=($(compgen -W "--{deep,sall,sany,sreg,stag}" -- "${COMP_WORDS[1]}"))
-}
-complete -F _complete-fzf-buku fzf-buku

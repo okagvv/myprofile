@@ -3,7 +3,6 @@
 in-path kubectl || return 0
 
 alias k=kubectl
-complete -o default -F __start_kubectl k
 
 kevents() {
   k get events --sort-by='.metadata.creationTimestamp' "$@"

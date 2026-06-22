@@ -1,0 +1,3 @@
+source /usr/share/bash-completion/completions/fd.bash
+
+complete -o bashdefault -o default -o nosort -F _fd find-last

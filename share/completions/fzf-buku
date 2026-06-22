@@ -1,0 +1,8 @@
+source /usr/share/bash-completion/completions/buku-completion.bash
+
+_complete-fzf-buku() {
+  [ "${#COMP_WORDS[@]}" == 2 ] || return
+  COMPREPLY=($(compgen -W "--{deep,sall,sany,sreg,stag}" -- "${COMP_WORDS[1]}"))
+}
+
+complete -F _complete-fzf-buku fzf-buku
