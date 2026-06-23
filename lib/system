@@ -26,9 +26,10 @@ avcrecent() {
   fi
 }
 
-fedora_release() {
-  sed -rn 's/^Fedora release ([[:digit:]]+) .*$/fc\1/p' /etc/redhat-release
-}
+os-release() (
+  source /etc/os-release
+  echo -n "$ID-$VERSION_ID"
+)
 
 mymount() {
   local _cmd
