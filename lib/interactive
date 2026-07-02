@@ -173,7 +173,7 @@ ssh-loadkey() {
 
     if [[ "$(file "$_key")" =~ private\ key ]] ; then
 
-      if grep -q "$(cat "$_key.pub")" <<<"$(ssh-add -L)" ; then
+      if grep -q "$(cat "$_key.pub" | cut -d' ' -f1-2)" <<<"$(ssh-add -L | cut -d' ' -f1-2)" ; then
 
         fn-info "Private key \"${_key##*/}\" is already lodead."
 
