@@ -81,7 +81,7 @@ dnf-search() (
     { sudo -A dnf search --quiet "$@" | \
       sed -rn '/^Matched fields/d;
                s/[[:space:]]+/ /g;
-               s/^ ?([[:alnum:]_\.-]+)(.+)$/\1:\2/p' | \
+               s/^ ?([[:alnum:]_\.+-]+)(.+)$/\1:\2/p' | \
       sort | \
       uniq
     } | column -t -s: -l2 -C name=Package -C name=Summary | \
