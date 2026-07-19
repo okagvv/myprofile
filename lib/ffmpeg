@@ -142,12 +142,12 @@ fzf-ffprobes() (
     _fzf-wrapper --ansi \
                  --accept-nth 7 \
                  --bind "alt-a:clear-multi" \
-                 --bind "alt-D:execute(rm -vfi {+7})+reload(_ffprobes_load)" \
-                 --bind "alt-s:execute-silent(smplayer {+7})+clear-multi" \
-                 --bind "alt-v:execute(vlc-enqueue {+7})+clear-multi" \
-                 --bind "alt-<:execute-silent(_thumbnail {7})" \
+                 --bind "alt-D:execute(rm -vfi {+s7})+reload(_ffprobes_load)" \
+                 --bind "alt-s:execute-silent(smplayer {+s7})+clear-multi" \
+                 --bind "alt-v:execute(vlc-enqueue {+s7})+clear-multi" \
+                 --bind "alt-<:execute-silent(_thumbnail {s7})" \
                  --bind "alt->:execute-silent(_disable_thumbnails)" \
-                 --bind "enter:$([ -n "$_play" ] && echo "execute(vlc-enqueue {+7})+abort" || echo "accept")" \
+                 --bind "enter:$([ -n "$_play" ] && echo "execute(vlc-enqueue {+s7})+abort" || echo "accept")" \
                  --border none \
                  --color "label:reverse" \
                  --delimiter $'\u00a0' \
@@ -158,7 +158,7 @@ fzf-ffprobes() (
                  --list-label "[ Audio and video files in \"$(realpath "$1")/\" ]" \
                  --multi \
                  --no-sort \
-                 --preview-init "alt-i:_ffprobes-preview {7}" \
+                 --preview-init "alt-i:_ffprobes-preview {s7}" \
                  --preview-label "[ File stats and ffprobe output ]" \
                  --preview-window "60%,~2:wrap" \
                  --query "$2" \
