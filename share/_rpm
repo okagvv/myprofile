@@ -10,7 +10,7 @@ _rpm-inspect-scope() {
                  --list-label " ${1^} in package \"$2\" " \
                  --multi \
                  --preview '_fzf-preview-header {}; less {} | bat -n --color=always --file-name={}' \
-                 --preview-window '60%:~2:wrap' \
+                 --preview-window '50%:~2:wrap' \
                  $(_fzf-query-history 2) | \
     xargs --no-run-if-empty
 
@@ -132,7 +132,7 @@ _fzf-rpm() {
                --no-sort \
                --preview-init "alt-i:_rpm-preview \"Info for\" -i $_nvr MemInfo" \
                --preview-label " Press F1 for help " \
-               --preview-window "60%,~2:wrap" \
+               --preview-window "50%,~2:wrap" \
                --query "$1" \
                --reverse \
                --script "${FUNCNAME[1]}" | \
