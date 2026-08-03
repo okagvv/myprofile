@@ -8,6 +8,8 @@ mozplaces() (
   #   download history" is enabled in FF settings
   # - column "folder" returned for bookmarks only contains bookmark tags too (with folder path
   #   "/Tags/...")
+  # - CAUTION: Whithout ".../"places.sqlite" argument" it is assumed for current user exactly ONE
+  #   browser profile exists, i.e. only bookmarks from 1st found will be considered!
   local _color _query _pattern _places _tmp
   case "$1" in
       h|history) _query="SELECT datetime(h.visit_date/1000000,'unixepoch','localtime') AS Visited, p.url AS URL, p.title AS Title
@@ -60,7 +62,7 @@ mozplaces() (
     _color=never
   fi
 
-  for _places in $_places ~/.mozilla/firefox/*/places.sqlite ~/.librewolf/*/places.sqlite ; do
+  for _places in $_places ~/.{config/,}{mozilla/firefox,librewolf}/*/places.sqlite ; do
 
     if [ -s "$_places" ] ; then
 
