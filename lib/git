@@ -3,6 +3,7 @@
 in-path git || return 0
 
 new-alias git-repo "git repo structure --format=table --progress"
+new-alias git-reword "git history reword"
 
 remotes() {
   git remote --verbose "$@" | \
