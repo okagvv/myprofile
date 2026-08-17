@@ -97,19 +97,23 @@ dnf-search() (
 complete -W "--{all,help,cacheonly,showduplicates}" dnf-search
 
 dnf-upgrades() (
-  declare -g _testing _scopes _cache
+  declare -g _repos _scopes _cache
+  # OPEN: "dnf upgrade --enablerepo $repo $package ..." seems to skip packages available in multiple
+  # repos with different prio? Work-around: Enable all repos explicitely?
+  _repos="$(dnf repolist --enabled | tail -n +2 | sed -r 's/^([^ ]+).*/--enablerepo \1/g' | tr '\n' ' ')"
   while [ $# -gt 0 ] ; do
     case "$1" in
            -b|--bugfix) _scopes+=" --bugfix";;
         -c|--cacheonly) _cache+="--cacheonly";;
-      -e|--enhancement) _scopes+=" --enhancement";;
-             -h|--help) fn-usage "[--cacheonly] [--bugfix] [--enhancement] [--help] [--security] [--testing|--testing-only] [pattern]"; return 0;;
+      -E|--enhancement) _scopes+=" --enhancement";;
+           -e|--enable) _repos+=" --enablerepo $2"; shift;;
+             -h|--help) fn-usage "[--cacheonly] [--bugfix] [--enhancement] [--help] [--security] [--enable repo] [--testing|--testing-only] [pattern]"; return 0;;
          -s|--security) _scopes+=" --security";;
-          -t|--testing) _testing="--enablerepo *updates-testing";;
-     -T|--testing-only) _testing="--disable-repo=* --enablerepo *updates-testing";;
+          -t|--testing) _repos+=" --enablerepo *updates-testing";;
+     -T|--testing-only) _repos="--disable-repo=* --enablerepo *updates-testing";;
                      *) break;;
     esac
-    shift
+    [ $# -gt 0 ] && shift || fn-abort "Missing --enable argument."
   done
 
   myprofile _dnf

@@ -108,15 +108,15 @@ _dnf-upgrades() {
     _bodhi-updates "$(__package "$1" "$2")"
   }
   __dnf() {
-    sudo -A dnf $1 $_testing --quiet "${@: 4}" "$(__package "$2" "$3")"
+    sudo -A dnf $1 $_repos --quiet "${@: 4}" "$(__package "$2" "$3")"
   }
   __advisory() {
-    _dnf-cached-advisory "$(__package "$1" "$2")" "updates" "$_testing"
+    _dnf-cached-advisory "$(__package "$1" "$2")" "updates" "$_repos"
   }
   __upgrades() {
     {
       echo "Package Version Repository Build Size(MB) Reason"
-      sudo -A dnf repoquery --upgrades $_testing $_scopes $_cache --quiet \
+      sudo -A dnf repoquery --upgrades $_repos $_scopes $_cache --quiet \
                             --queryformat="%{name}.%{arch} %{evr} %{repoid} %{buildtime} %{downloadsize};%{reason}\n" ${_pattern[@]} | \
       perl -MDate::Format -pe 's~(\d+) (\d+);(.*)$~time2str("%Y-%m-%d",$1) . sprintf " %0.3f %s",$2/1048576,$3~e' | \
       sort -k${1:-2b} -k1d
@@ -134,7 +134,7 @@ _dnf-upgrades() {
     __dnf changelog "$1" "$2" | _fzf-preview-bat-plain log
   }
   export -f __advisory __bodhi __dnf __package __upgrades __info __changelog
-  export _testing _scopes _cache
+  export _repos _scopes _cache
 
   FZF_DEFAULT_COMMAND=__upgrades \
   _fzf-wrapper --bind "ctrl-a:toggle-all" \
@@ -170,7 +170,7 @@ _dnf-upgrades() {
                --query "$1" \
                --reverse \
                --sudo | \
-  xargs --no-run-if-empty --open-tty sudo dnf upgrade --skip-unavailable $_testing
+  xargs --no-run-if-empty --open-tty sudo dnf upgrade --skip-unavailable $_repos
 }
 
 _dnf-history() {
