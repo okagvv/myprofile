@@ -21,7 +21,24 @@ _journal() {
     fi
   }
 }
-export -f _journal
+
+_journal_filter() {
+  local _journal _recent _field
+  [[ "$1" == identifier ]] && _field=SYSLOG_IDENTIFIER || _field=UNIT
+
+  sed -rn "s/^$_field=(.+)/\1/p" | \
+  sort | \
+  uniq -c |
+  while read _journal ; do
+    _recent="$(journalctl --output=export --lines=1 --$1="${_journal##* }" | sed -rn 's/^__REALTIME_TIMESTAMP=(.+).{6}$/\1/p')"
+    echo "$_journal $(date -d "@$_recent" "+%F^%T" 2>/dev/null)"
+  done | \
+  sort -k3r | \
+  column -t -C name=Entries,right -C name="${1^}" -C name=Recent -O "${1^},Entries,Recent" -c unlimited | \
+  tr ^ ' '
+}
+
+export -f _journal _journal_filter
 
 _fzf-journal() {
   _journal-params
@@ -35,11 +52,9 @@ _fzf-journal() {
 
   _fetch_journal() {
     $_sudo journalctl --output=export --output-fields=SYSLOG_IDENTIFIER --boot $_boot --since "$_since" --priority="$_priorange" $_grep | \
-    sed -rn 's/^SYSLOG_IDENTIFIER=(.+)/\1/p' | \
-    sort | \
-    uniq -c | \
-    column -t -C name=Entries,right -C name=Identifier -O Identifier,Entries -c unlimited
+    _journal_filter identifier
   }
+
   export -f _fetch_journal
   export _boot _since _priorange _grep _sudo
 
@@ -84,10 +99,7 @@ _fzf-units() {
     if [[ -z "$_all$_failed" && -n "$_prio" ]] ; then
       $_sudo journalctl --output=export --output-fields=$([[ "$_user" == root ]] && echo _SYSTEMD_UNIT,UNIT || echo _SYSTEMD_USER_UNIT,USER_UNIT) \
                         --boot $_boot --since "$_since" --priority="$_priorange" $_grep | \
-      sed -rn 's/^.*UNIT=(.+)$/\1/p' | \
-      sort | \
-      uniq -c | \
-      column -t -C name=Entries,right -C name=Unit -O Unit,Entries -c unlimited
+      _journal_filter unit
     else
       $_sudo systemctl --plain $_all $_failed | \
       sed '/^$/,$d'
