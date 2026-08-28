@@ -6,6 +6,15 @@ a() {
 }
 complete -A alias a
 
+clr() {
+  if [[ -z "$1" || "$1" =~ ^-+r(emove)?$ ]] ; then
+    find . -name .git -prune -o -type f -regextype posix-extended -iregex '.*(~|#.*#|\.o|.saves-.*)$' -print0 | \
+    xargs --no-run-if-empty --null $([ -n "$1" ] && echo "rm -vf" || echo "ls -lt")
+  else
+    fn-usage "[--help] [--remove]"
+  fi
+}
+
 e() {
   # list current shell environment excluding
   # - $LS_COLORS (very long generated value, must be reformated for visual inspection)
