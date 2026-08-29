@@ -155,7 +155,7 @@ last-elapsed() {
 
 if in-path keepassxc-cli ; then
 
-  mypassgen() {
+  my-passgen() {
     #CAUTION: Vault (root) token must not contain dots!
     keepassxc-cli generate --length "${1:-16}" --lower --upper --numeric --exclude-similar \
                            --custom '^§%/=@+*~#|,;:-_' --every-group 

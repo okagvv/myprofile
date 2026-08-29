@@ -31,7 +31,7 @@ os-release() (
   echo -n "$ID-$VERSION_ID"
 )
 
-mymount() {
+my-mount() {
   local _cmd
   [[ "$1" =~ ^-+u(nmount)?$ ]] && _cmd="unmount" || _cmd="mount"
 
@@ -115,7 +115,7 @@ fzf-journal() (
   _fzf-journal "$@"
 )
 
-myjournalctl() {
+my-journalctl() {
   journalctl --no-hostname --output=with-unit "$@"
 }
 
@@ -136,14 +136,14 @@ juser() {
   if [ $# -gt 0 ] ; then
     local _uid="$(id -u "$1")"
     shift
-    myjournalctl --pager-end _UID="$_uid" "$@"
+    my-journalctl --pager-end _UID="$_uid" "$@"
   else
     fn-usage "user [journalct options]"
   fi
 }
 complete -A user -o default juser
 
-mysu() {
+my-su() {
   # Start command-line via su for user derived from path owner of last argument.
   # Preserves white spaces in arguments.
   if [ $# -ge 2 ] ; then
@@ -152,10 +152,10 @@ mysu() {
     fn-usage "command [options|args] file"
   fi
 }
-complete -A command -o default mysu
+complete -A command -o default my-su
 
 oom-killed() {
-  myjournalctl --dmesg --since today "$@" | grep -i 'killed process'
+  my-journalctl --dmesg --since today "$@" | grep -i 'killed process'
 }
 
 service-aliases() {
