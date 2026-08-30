@@ -134,7 +134,7 @@ fzf-monitor() (
 
   while [ $# -gt 0 ] ; do
     case "$1" in
-       -h|--help) fn-usage "[--tail n] [--query \"text\"] [--sort r?(date|path|size)] [{<fd arg>}]"; return 0;;
+       -h|--help) fn-usage "[--tail n] [--query \"text\"] [--sort r?(atime|birth|ctime|mtime|path|size)] [{<fd arg>}]"; return 0;;
        -t|--tail) _tail="$2"; shift;;
       -q|--query) _query="$2"; shift;;
        -s|--sort) _sort="$2"; shift;;

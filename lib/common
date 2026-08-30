@@ -90,12 +90,16 @@ fdl() {
   #   And even this sorting is partly broken.
   # - $TIME_STYLE is set to ensure that "sort --general-numeric-sort .." works for "Modified" column.
 
-  local _header _sort
+  local _header _sort _details
   local -a _fdargs _sortcmd
+  _details="--list-details"
+
   while [ $# -gt 0 ] ; do
     case "$1" in
-        -h|--help) fn-usage "[--help] [--header] [--sort r?(date|path|size)] [{fd-argument}]"; return 0;;
-        -s|--sort) [[ "$2" =~ ^r?(date|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"; shift;;
+        -h|--help) fn-usage "[--help] [--header] [--sort r?(atime|birth|ctime|mtime|path|size)] [{fd-argument}]"; return 0;;
+        -s|--sort) [[ "$2" =~ ^r?(atime|birth|ctime|mtime|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"
+                   _details="--exec-batch ls -l --time=${_sort#r}"
+                   shift;;
          --header) _header=y;;
                 *) _fdargs+=("$1");;
     esac
@@ -108,13 +112,14 @@ fdl() {
   fi
 
   case "$_sort" in
-    date|rdate) _sortcmd=(sort -t"|" -k6d${_sort/date/});;
-         rpath) _sortcmd=(tac);;
-    size|rsize) _sortcmd=(sort -t"|" -k5h${_sort/size/});;
-             *) _sortcmd=(cat);;
+     *time|r*time) _sortcmd=(sort -t"|" -k6d${_sort/?time/});;
+    *birth|rbirth) _sortcmd=(sort -t"|" -k6d${_sort/birth/});;
+            rpath) _sortcmd=(tac);;
+       size|rsize) _sortcmd=(sort -t"|" -k5h${_sort/size/});;
+                *) _sortcmd=(cat);;
   esac
 
-  TIME_STYLE="+%F %T" fd "${_fdargs[@]}" --exclude .git --color=always --list-details | \
+  TIME_STYLE="+%F %T" fd "${_fdargs[@]}" --exclude .git --color=always $_details | \
   sed -r 's~^([^ ]+ +[^ ]+ +[^ ]+ +[^ ]+ +[0-9]+,) ([0-9]+)~\1\2~;
           s~^([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ]+) +([^ ][^\x1B]+) +([/\.\x1B])~\1|\2|\3|\4|\5|\6|\7~;
           s~(|\x1B\[[0-9\;]m)\./~\1~' | \
@@ -158,7 +163,7 @@ if in-path keepassxc-cli ; then
   my-passgen() {
     #CAUTION: Vault (root) token must not contain dots!
     keepassxc-cli generate --length "${1:-16}" --lower --upper --numeric --exclude-similar \
-                           --custom '^§%/=@+*~#|,;:-_' --every-group 
+                           --custom '^§%/=@+*~#|,;:-_' --every-group
   }
 
 fi

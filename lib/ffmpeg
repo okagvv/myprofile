@@ -72,7 +72,7 @@ fzf-ffprobes() (
   while [ $# -gt 0 ] ; do
     case "$1" in
        -a|--all) _all=y;;
-      -h|--help) fn-usage "[--help] | [--all] [--play] [--sort date|name|size] <dir> [<query>]"; return 0;;
+      -h|--help) fn-usage "[--help] | [--all] [--play] [--sort r?(atime|birth|ctime|mtime|name|size)] <dir> [<query>]"; return 0;;
       -p|--play) _play=y;;
       -s|--sort) _sort="$2"; shift;;
               *) break;;
