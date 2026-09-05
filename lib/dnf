@@ -57,11 +57,12 @@ search. Otherwise argument is treated as fzf query."
   else
 
     myprofile _dnf
+    _dnf_tethering
     local _search _query
     [[ "$1" =~ / ]] && _search="$1" || _query="$1"
     _dnf-packages $_search | \
     _fzf-dnf-packages "Install packages via DNF" "Available DNF packages" "$_query" | \
-    xargs --no-run-if-empty --open-tty sudo dnf install
+    xargs --no-run-if-empty --open-tty sudo dnf install $DNF_TETHERING
 
   fi
 )
@@ -77,6 +78,7 @@ dnf-search() (
   if [ $# -gt 0 ] ; then
 
     myprofile _dnf
+    _dnf_tethering
 
     { sudo -A dnf search --quiet "$@" | \
       sed -rn '/^Matched fields/d;
@@ -86,7 +88,7 @@ dnf-search() (
       uniq
     } | column -t -s: -l2 -C name=Package -C name=Summary | \
     _fzf-dnf-packages "Search package matching $*" "Matching packages" "" "Install select package(s)" | \
-    xargs --no-run-if-empty --open-tty sudo dnf install
+    xargs --no-run-if-empty --open-tty sudo dnf install $DNF_TETHERING
 
   else
 
