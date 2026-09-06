@@ -98,7 +98,7 @@ fdl() {
     case "$1" in
         -h|--help) fn-usage "[--help] [--header] [--sort r?(atime|birth|ctime|mtime|path|size)] [{fd-argument}]"; return 0;;
         -s|--sort) [[ "$2" =~ ^r?(atime|birth|ctime|mtime|path|size)$ ]] && _sort="$2" || fn-abort "Unsupported --sort value: $2"
-                   _details="--exec-batch ls -l --time=${_sort#r}"
+                   _details="--exec-batch ls -l --color=always --human-readable --time=${_sort#r}"
                    shift;;
          --header) _header=y;;
                 *) _fdargs+=("$1");;
