@@ -63,9 +63,11 @@ _rpm-preview-what() {
 }
 
 _rpm-preview() {
-  _fzf-preview-header "$1 package \"$3\""
+  local _nvr
+  _nvr="${3//.(none)/}"
+  _fzf-preview-header "$1 package \"$_nvr\""
   # $4 is optional, _fzf-preview-bat-plain() is not applicable
-  rpm --query $2 "$3" | bat --color always --style plain --language $4
+  rpm --query $2 "$_nvr" | bat --color always --style plain --language $4
 }
 
 _rpm-preview-files() {
