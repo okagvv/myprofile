@@ -87,7 +87,8 @@ _fzf-preview-header() {
 }
 
 _fzf-help() {
-  local _help _w _h _scroll
+  local _help _title _w _h _scroll
+  _title="$1 key bindings"
   _help="$({ echo "$(if [ -n "$1" ] ; then tr ';' '\n'  <<<"$2" | sed -r 's/^[[:space:]]+//;s/([^\.])$/\1./' | sort --ignore-case; echo -; fi)
 ESC:Cancel.
 Tab:Toggle selection for current match.
@@ -123,13 +124,25 @@ Ctrl-q:Replace query by clipboard content.
 Ctrl-v:Insert clipboard content in query.")"
   } | column -t -s: -o": " | sed 's/^- *://')"
 
+  # CAUTION: Zellij session context in ~/.cache/zellij/ is only accessible for processes running with
+  # desktop user!
   eval "$(wc -l -L <<<"$_help" | sed -rn 's/^[[:space:]]+([[:digit:]]+)[[:space:]]+([[:digit:]]+)/_h=\1;_w=\2/p')"
-  ((_w+=8))
-  ((_h+=8))
+  if [ -n "$ZELLIJ_SESSION_NAME" ] ; then
+    ((_w+=3))
+    ((_h+=4))
+  else
+    ((_w+=8))
+    ((_h+=8))
+  fi
   [ "$FZF_COLUMNS" -gt "$_w" ] || _w="$FZF_COLUMNS"
   [ "$FZF_LINES" -gt "$_h" ] || { _h="$FZF_LINES"; _scroll="--scrolltext"; }
 
-  whiptail $_scroll --ok-button Close --fullbuttons --title "$1 key bindings" --msgbox "$_help" "$_h" "$_w"
+  if [ -n "$ZELLIJ_SESSION_NAME" ] ; then
+    zellij action new-pane --name "$_title" --height "$_h" --width "$_w" --floating --close-on-exit --pinned true -- \
+           bash -c "echo -e \"$_help\n\"; read -s -p 'Press ENTER to continue.'"
+  else
+    whiptail $_scroll --ok-button Close --fullbuttons --title "$_title" --msgbox "$_help" "$_h" "$_w"
+  fi
 }
 
 _fzf-wrapper() {
