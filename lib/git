@@ -29,42 +29,68 @@ is-worktree() {
 complete -A directory is-worktree
 
 git-changed() (
+  local _ref _target _help
+
+  if [[ "$1" =~ ^-+t(arget)?$ && $# -gt 1 ]] ; then
+    if [ -d "$2" ] ; then
+      _target="$2"
+      shift 2
+    else
+      fn-error "Target \"$2\" does not exist or is not a directory!"
+      return 1
+    fi
+  fi
+
   if [[ $# -ge 1 && $# -le 2 ]] ; then
 
     if is-worktree ; then
 
-      local _ref
-      _ref="${2:-HEAD}"
-      export _ref
-      
+      export _ref="${2:-HEAD}"
+      export _target
+
       myprofile _fzf
 
       _changed() {
-        git log --since-as-filter="$1" --pretty="" --name-only "$_ref"
+        git log --since-as-filter="$1" --pretty="" --name-only "$_ref" | sort -u
+      }
+      _delta() {
+        delta | sed -r 's/^[[:space:]]+$//' | cat -s
       }
       _changes() {
-        git log --since-as-filter="$1" --patch "$_ref" -- "$2"
+        git log --since-as-filter="$1" --patch "$_ref" -- "$2" | _delta
       }
-      _label() {
-        echo "[ commits changing \"$1\" in \"$_ref\" history ]"
+      _target_diff() {
+        diff --report-identical-files "$_target/$1" "$1" 2>&1 | _delta
       }
-      export -f _changes _label
+      _target_update() {
+        cp --interactive --verbose --force "$1" "$_target/$1" || read -p "Press ENTER to continue."
+      }
+      export -f _changes _delta _target_diff _target_update
+
+      local -a _target_opt
+      [ -z "$_target" ] || _target_opt=(--bind "alt-c:change-preview(_changes \"$1\" {})"
+                                        --bind "alt-t:change-preview(_target_diff {})"
+                                        --bind "alt-u:execute(_target_update {})"
+                                        --help "Alt-c:Changes since $1
+                                                Alt-t:Diff to target version
+                                                Alt-u:Update version in target"
+                                       )
 
       _changed "$1" | \
-      sort -u | \
       _fzf-wrapper --bind "enter:execute(_changes \"$1\" {})" \
-                   --bind "focus:transform-preview-label(_label {})" \
+                   --bind "focus:transform-preview-label(echo \"[ changes for {} ]\")" \
+                   "${_target_opt[@]}" \
                    --border none \
                    --color "label:reverse" \
                    --exit-0 \
-                   --list-label "[ Files changed since \"$1\" ]" \
+                   --list-label "[ Files changed since \"$1\" in \"$_ref\" history ]" \
                    --no-sort \
-                   --preview "_changes \"$1\" {} | bat --color always --style plain --language diff" \
+                   --preview "_changes \"$1\" {}" \
                    --preview-window "70%:wrap"
     fi
 
   else
-    fn-usage "since-date [ref]"
+    fn-usage "[--target worktree] since-date [ref]"
   fi
 )
 
@@ -85,7 +111,7 @@ git-files() {
       [[ "${_files[$_i]}" =~ [\*/] ]] && continue
       _files[$_i]="*${_files[$_i]}*"
     done
-    
+
     tig --all -- "${_files[@]}"
 
   else
