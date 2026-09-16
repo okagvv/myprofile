@@ -1,0 +1,15 @@
+# -*- mode: Shell-script -*-
+
+in-path zellij || return 0
+
+rename-tab() {
+  if [[ $# -gt 3 || "$1" =~ ^-+h(elp)?$ ]] ; then
+    fn-usage "[--help] [[tab-id] \"new-name\"]"
+  elif [ $# -eq 0 ] ; then
+    zellij action list-tabs | column -t
+  elif [ $# -eq 1 ] ; then
+    zellij action rename-tab "$1"
+  else
+    zellij action rename-tab --tab-id "$1" "$2"
+  fi
+}
