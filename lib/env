@@ -24,18 +24,3 @@ in-path virsh && export LIBVIRT_DEFAULT_URI="qemu:///system"
 [[ -n "$DISPLAY" && -s /usr/libexec/openssh/gnome-ssh-askpass ]] && export SUDO_ASKPASS="/usr/libexec/openssh/gnome-ssh-askpass"
 [ -n "$XDG_SESSION_TYPE" ] || export XDG_SESSION_TYPE="$(loginctl show-session "$XDG_SESSION_ID" --value --property=Type 2>/dev/null || true)"
 
-if [ -n "$PS1" ] ; then
-  if in-path starship && [ -s ~/.config/starship.toml ] ; then
-
-    eval "$(starship init "${SHELL##*/}")"
-
-  elif in-path git ; then
-
-    export PS1="${SUBSHELL:+[\[\033[36m\]$SUBSHELL\[\033[00m\]] }\$? \$(last-elapsed)\u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
-
-  else
-
-    export PS1="${SUBSHELL:+[\[\033[36m\]$SUBSHELL\[\033[00m\]] }\$? \$(last-elapsed)\u@\h:\$(abbr-pwd) \$ "
-
-  fi
-fi

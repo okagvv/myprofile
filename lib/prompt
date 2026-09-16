@@ -1,0 +1,29 @@
+# -*- mode: Shell-script -*-
+
+if [ -n "$PS1" ] ; then
+  if in-path starship && [ -s ~/.config/starship.toml ] ; then
+
+    eval "$(starship init "${SHELL##*/}")"
+
+  else
+    
+    # Minimal bash integration using PROMPT_COMMAND and PS0
+    # derived from https://vtdn.dev/docs/osc/osc133/
+    __prompt_command() {
+        local _rc=$?
+        # Mark end of previous command
+        PS1='\[\e]133;D;'$_rc'\a\]'
+        # Mark prompt start
+        PS1+='\[\e]133;A\a\]'
+        # Actual prompt content
+        PS1+="${SUBSHELL:+[\[\033[36m\]$SUBSHELL\[\033[00m\]] }"
+        PS1+="$_rc \$(last-elapsed)\u@\h:\$(abbr-pwd) (\[\033[31m\]\$(git branch --show-current 2>/dev/null || echo ?)\[\033[00m\]) \$ "
+        # Mark command start (after prompt)
+        PS1+='\[\e]133;B\a\]'
+    }
+    PROMPT_COMMAND=__prompt_command
+    # PS0 marks output start when a command is executed
+    PS0='\e]133;C\a'
+
+  fi
+fi
