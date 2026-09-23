@@ -63,14 +63,14 @@ git-changed() (
         diff --report-identical-files "$_target/$1" "$1" 2>&1 | _delta
       }
       _target_update() {
-        cp --interactive --verbose --force "$1" "$_target/$1" || read -p "Press ENTER to continue."
+        cp --interactive --verbose --no-dereference --force "$1" "$_target/$1" || read -p "Press ENTER to continue."
       }
       export -f _changes _delta _target_diff _target_update
 
       local -a _target_opt
       [ -z "$_target" ] || _target_opt=(--bind "alt-c:change-preview(_changes \"$1\" {})"
                                         --bind "alt-t:change-preview(_target_diff {})"
-                                        --bind "alt-u:execute(_target_update {})"
+                                        --bind "alt-u:execute(_target_update {})+refresh-preview"
                                         --help "Alt-c:Changes since $1
                                                 Alt-t:Diff to target version
                                                 Alt-u:Update version in target"
