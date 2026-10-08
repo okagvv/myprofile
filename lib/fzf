@@ -3,7 +3,13 @@
 in-path fzf || return 0
 
 # if packaged for RH derivates the default bash key bindings are not contained in bash completion for fzf
-[ -s /usr/share/fzf/shell/key-bindings.bash ] && source /usr/share/fzf/shell/key-bindings.bash
+if [ -s /usr/share/fzf/shell/key-bindings.bash ] ; then
+  source /usr/share/fzf/shell/key-bindings.bash
+  # CAUTION: --popup is ignored in ssh a/o su{,do} sessions
+  export FZF_CTRL_R_OPTS="--wrap --exact --layout=default --popup right,50%"
+  export FZF_CTRL_T_OPTS="$FZF_CTRL_R_OPTS"
+  export FZF_ALT_C_OPTS="$FZF_CTRL_R_OPTS"
+fi
 
 _fzf_comprun () {
   # S.a. https://github.com/junegunn/fzf?tab=readme-ov-file#customizing-fzf-options-for-completion
