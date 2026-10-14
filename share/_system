@@ -30,7 +30,7 @@ _journal_filter() {
   sort | \
   uniq -c |
   while read _journal ; do
-    _recent="$(journalctl --output=export --lines=1 --$1="${_journal##* }" | sed -rn 's/^__REALTIME_TIMESTAMP=(.+).{6}$/\1/p')"
+    _recent="$(journalctl --output=export  --boot $_boot --lines=1 --$1="${_journal##* }" | sed -rn 's/^__REALTIME_TIMESTAMP=(.+).{6}$/\1/p')"
     echo "$_journal $(date -d "@$_recent" "+%F^%T" 2>/dev/null)"
   done | \
   sort -k3r | \
