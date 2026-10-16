@@ -63,7 +63,10 @@ git-changed() (
         diff --report-identical-files "$_target/$1" "$1" 2>&1 | _delta
       }
       _target_update() {
-        cp --interactive --verbose --no-dereference --force "$1" "$_target/$1" || read -p "Press ENTER to continue."
+        local _tgt
+        _tgt="$_target/$1"
+        [ -d "${_tgt%/*}" ] || mkdir -v -p "${_tgt%/*}"
+        cp --interactive --verbose --no-dereference --force "$1" "$_tgt" || read -p "Press ENTER to continue."
       }
       export -f _changes _delta _target_diff _target_update
 
